@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ListingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum EquipmentCategory {
+  BAT
+  GLOVES
+  PADS
+  HELMET
+  SHOES
+  KIT
+  OTHER
+}
+
+enum EquipmentCondition {
+  LIKE_NEW
+  GOOD
+  FAIR
+  NEEDS_REPAIR
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+model User {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  password  String
+  phone     String?
+  city      String?
+  role      UserRole  @default(USER)
+  listings  Listing[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Listing {
+  id           String             @id @default(cuid())
+  title        String
+  brand        String?
+  category     EquipmentCategory
+  condition    EquipmentCondition
+  price        Int
+  city         String
+  usedDuration String
+  defects      String
+  description  String
+  status       ListingStatus      @default(PENDING)
+  rejectReason String?
+  sellerId     String
+  seller       User               @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  media        ListingMedia[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([city])
+}
+
+model ListingMedia {
+  id        String    @id @default(cuid())
+  url       String
+  publicId  String?
+  type      MediaType
+  listingId String
+  listing   Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+}
