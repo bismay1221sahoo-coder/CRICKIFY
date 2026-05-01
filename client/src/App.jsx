@@ -1,15 +1,21 @@
 import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
+import Sell from "./pages/Sell";
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/admin" element={<Admin />} />
-    </Routes>
+    <div className="min-h-screen bg-slate-50 text-slate-950">
+      <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/sell" element={<Sell />} />
+        <Route path="/admin" element={<Admin />} />
+      </Routes>
+    </div>
   );
 }
 
