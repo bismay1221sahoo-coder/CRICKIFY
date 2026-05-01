@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiRequest, getToken } from "../lib/api";
+import { apiRequest, getToken, uploadListingMedia } from "../lib/api";
 
 const categories = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
 const conditions = ["LIKE_NEW", "GOOD", "FAIR", "NEEDS_REPAIR"];
@@ -15,7 +15,6 @@ const initialForm = {
   usedDuration: "",
   defects: "",
   description: "",
-  mediaUrl: "",
 };
 
 function Sell() {
@@ -24,6 +23,8 @@ function Sell() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [media, setMedia] = useState([]);
 
   const isLoggedIn = Boolean(getToken());
 
@@ -34,6 +35,28 @@ function Sell() {
     }));
   };
 
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setError("");
+    setUploading(true);
+
+    try {
+      const uploadedMedia = await uploadListingMedia(file);
+      setMedia((current) => [...current, uploadedMedia]);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+      event.target.value = "";
+    }
+  };
+
+  const removeMedia = (publicId) => {
+    setMedia((current) => current.filter((item) => item.publicId !== publicId));
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
@@ -41,14 +64,9 @@ function Sell() {
     setLoading(true);
 
     try {
-      const media = form.mediaUrl
-        ? [
-            {
-              url: form.mediaUrl,
-              type: form.mediaUrl.match(/\.(mp4|mov|webm)$/i) ? "VIDEO" : "IMAGE",
-            },
-          ]
-        : [];
+      if (media.length === 0) {
+        throw new Error("Upload at least one photo or video before submitting.");
+      }
 
       await apiRequest("/api/listings", {
         method: "POST",
@@ -60,6 +78,7 @@ function Sell() {
       });
 
       setForm(initialForm);
+      setMedia([]);
       setMessage("Listing submitted for admin verification.");
     } catch (err) {
       setError(err.message);
@@ -141,9 +160,36 @@ function Sell() {
         </label>
 
         <label className="grid gap-2 text-sm font-semibold text-slate-700">
-          Photo or video URL
-          <input name="mediaUrl" value={form.mediaUrl} onChange={updateField} className="rounded-md border border-slate-300 px-3 py-2" />
+          Photos or video
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+            onChange={handleFileUpload}
+            className="rounded-md border border-slate-300 px-3 py-2"
+          />
         </label>
+
+        {uploading && <p className="text-sm font-semibold text-slate-600">Uploading media...</p>}
+
+        {media.length > 0 && (
+          <div className="grid gap-3 md:grid-cols-3">
+            {media.map((item) => (
+              <div key={item.publicId || item.url} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-bold text-slate-600">{item.type}</p>
+                <a href={item.url} target="_blank" rel="noreferrer" className="mt-1 block truncate text-sm font-semibold text-emerald-700">
+                  View uploaded file
+                </a>
+                <button
+                  type="button"
+                  onClick={() => removeMedia(item.publicId)}
+                  className="mt-3 rounded-md border border-slate-300 px-2 py-1 text-xs font-bold text-slate-700"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <label className="grid gap-2 text-sm font-semibold text-slate-700">
           Description
@@ -153,7 +199,7 @@ function Sell() {
         {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</p>}
         {message && <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">{message}</p>}
 
-        <button disabled={loading} className="rounded-md bg-emerald-700 px-4 py-3 font-bold text-white hover:bg-emerald-800 disabled:opacity-60">
+        <button disabled={loading || uploading} className="rounded-md bg-emerald-700 px-4 py-3 font-bold text-white hover:bg-emerald-800 disabled:opacity-60">
           {loading ? "Submitting..." : "Submit for verification"}
         </button>
       </form>

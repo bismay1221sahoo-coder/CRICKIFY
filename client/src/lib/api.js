@@ -37,3 +37,25 @@ export const apiRequest = async (path, options = {}) => {
 
   return data;
 };
+
+export const uploadListingMedia = async (file) => {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append("media", file);
+
+  const response = await fetch(`${API_URL}/api/uploads/listing-media`, {
+    method: "POST",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.message || "Upload failed.");
+  }
+
+  return data.media;
+};

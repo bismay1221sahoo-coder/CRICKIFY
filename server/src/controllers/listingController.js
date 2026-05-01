@@ -54,6 +54,10 @@ export const createListing = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid equipment condition." });
     }
 
+    if (!Array.isArray(media) || normalizeMedia(media).length === 0) {
+      return res.status(400).json({ message: "At least one photo or video is required." });
+    }
+
     const parsedPrice = Number(price);
 
     if (!Number.isInteger(parsedPrice) || parsedPrice <= 0) {
@@ -72,9 +76,7 @@ export const createListing = async (req, res, next) => {
         defects: defects.trim(),
         description: description.trim(),
         sellerId: req.user.id,
-        media: {
-          create: normalizeMedia(media),
-        },
+        media: { create: normalizeMedia(media) },
       },
       include: listingInclude,
     });
