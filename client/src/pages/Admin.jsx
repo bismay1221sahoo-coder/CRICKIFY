@@ -62,10 +62,10 @@ function Admin() {
   };
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10">
+    <main className="mx-auto max-w-7xl px-6 py-12 lg:px-10">
       <div className="mb-8">
         <p className="text-sm font-semibold uppercase text-emerald-700">Admin verification</p>
-        <h1 className="mt-2 text-3xl font-black text-slate-950">Pending listings</h1>
+        <h1 className="mt-2 text-4xl font-black text-slate-950">Pending listings</h1>
       </div>
 
       {loading && <p className="text-slate-600">Loading pending listings...</p>}

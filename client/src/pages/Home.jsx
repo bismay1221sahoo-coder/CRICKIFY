@@ -34,23 +34,40 @@ function Home() {
   return (
     <main>
       <section className="border-b border-emerald-100/80 bg-white/70">
-        <div className="mx-auto max-w-6xl px-4 py-10">
-          <p className="text-sm font-semibold uppercase text-emerald-700">Verified cricket marketplace</p>
-          <h1 className="mt-3 max-w-3xl text-4xl font-black leading-tight text-slate-950">
-            Affordable used cricket gear, checked before it goes live.
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm text-slate-600">
-            Trusted second-hand cricket essentials with manual admin verification for every listing.
-          </p>
+        <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-12 lg:grid-cols-[1.3fr_0.7fr] lg:px-10">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Verified cricket marketplace</p>
+            <h1 className="mt-4 max-w-4xl text-5xl font-black leading-[1.05] text-slate-950">
+              Affordable used cricket gear, checked before it goes live.
+            </h1>
+            <p className="mt-4 max-w-3xl text-base text-slate-600">
+              Trusted second-hand cricket essentials with manual admin verification for every listing.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-sky-100 bg-gradient-to-b from-sky-50 to-emerald-50 p-6 shadow-sm">
+            <p className="text-sm font-semibold text-slate-600">Why players trust CRICKIFY</p>
+            <div className="mt-5 grid grid-cols-2 gap-4">
+              <div className="rounded-xl bg-white/80 p-4">
+                <p className="text-2xl font-black text-emerald-800">100%</p>
+                <p className="text-xs font-medium text-slate-600">Admin-verified listings</p>
+              </div>
+              <div className="rounded-xl bg-white/80 p-4">
+                <p className="text-2xl font-black text-sky-700">Local</p>
+                <p className="text-xs font-medium text-slate-600">City-level buying focus</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-8">
-        <div className="mb-6 grid gap-3 md:grid-cols-[220px_1fr]">
+      <section className="mx-auto w-full max-w-7xl px-6 py-10 lg:px-10">
+        <div className="mb-8 rounded-2xl border border-emerald-100 bg-white/90 p-4 shadow-sm md:p-5">
+          <div className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Filter Listings</div>
+          <div className="grid gap-3 md:grid-cols-[220px_1fr]">
           <select
             value={filters.category}
             onChange={(event) => setFilters((current) => ({ ...current, category: event.target.value }))}
-            className="rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm outline-none focus:border-emerald-400"
+            className="rounded-lg border border-emerald-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm outline-none focus:border-emerald-400"
           >
             {categories.map((category) => (
               <option key={category || "ALL"} value={category}>
@@ -62,26 +79,27 @@ function Home() {
             value={filters.city}
             onChange={(event) => setFilters((current) => ({ ...current, city: event.target.value }))}
             placeholder="Search city"
-            className="rounded-md border border-sky-200 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:border-sky-400"
+            className="rounded-lg border border-sky-200 bg-white px-4 py-3 text-sm shadow-sm outline-none focus:border-sky-400"
           />
+        </div>
         </div>
 
         {loading && <p className="text-slate-600">Loading listings...</p>}
         {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</p>}
 
         {!loading && !error && listings.length === 0 && (
-          <div className="rounded-lg border border-dashed border-emerald-200 bg-white/90 p-8 text-center shadow-sm">
-            <h2 className="text-xl font-black text-slate-950">No verified listings yet</h2>
+          <div className="rounded-2xl border border-dashed border-emerald-200 bg-white/90 p-12 text-center shadow-sm">
+            <h2 className="text-2xl font-black text-slate-950">No verified listings yet</h2>
             <p className="mt-2 text-slate-600">Approved equipment will appear here after admin verification.</p>
           </div>
         )}
 
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {listings.map((listing) => {
             const cover = listing.media?.find((item) => item.type === "IMAGE");
 
             return (
-              <article key={listing.id} className="overflow-hidden rounded-xl border border-emerald-100 bg-white/95 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+              <article key={listing.id} className="overflow-hidden rounded-2xl border border-emerald-100 bg-white/95 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                 <div className="aspect-[4/3] bg-sky-50">
                   {cover ? (
                     <img src={cover.url} alt={listing.title} className="h-full w-full object-cover" />
@@ -91,10 +109,10 @@ function Home() {
                     </div>
                   )}
                 </div>
-                <div className="grid gap-3 p-4">
+                <div className="grid gap-3 p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h2 className="text-lg font-black text-slate-950">{listing.title}</h2>
+                      <h2 className="text-xl font-black text-slate-950">{listing.title}</h2>
                       <p className="text-sm text-slate-600">{listing.city}</p>
                     </div>
                     <p className="shrink-0 text-lg font-black text-sky-700">Rs. {listing.price}</p>

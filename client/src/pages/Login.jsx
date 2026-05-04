@@ -51,8 +51,8 @@ function Login() {
   };
 
   return (
-    <main className="mx-auto grid min-h-[calc(100vh-73px)] max-w-6xl items-center px-4 py-10">
-      <section className="mx-auto w-full max-w-md rounded-xl border border-emerald-100 bg-white/95 p-6 shadow-md">
+    <main className="mx-auto grid min-h-[calc(100vh-88px)] max-w-7xl items-center px-6 py-14 lg:px-10">
+      <section className="mx-auto w-full max-w-md rounded-2xl border border-emerald-100 bg-white/95 p-8 shadow-md">
         <div className="mb-6 flex rounded-md bg-emerald-50 p-1">
           <button
             onClick={() => setMode("login")}
@@ -68,7 +68,7 @@ function Login() {
           </button>
         </div>
 
-        <h1 className="text-2xl font-black text-slate-950">
+        <h1 className="text-3xl font-black text-slate-950">
           {mode === "login" ? "Welcome back" : "Create account"}
         </h1>
 

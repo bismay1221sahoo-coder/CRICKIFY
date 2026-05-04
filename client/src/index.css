@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -19,8 +20,10 @@
 }
 
 body {
-  font-family: "Segoe UI", "Inter", sans-serif;
+  font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
   color: var(--text-main);
+  letter-spacing: 0;
+  line-height: 1.5;
   background:
     radial-gradient(circle at 10% 5%, rgba(31, 143, 116, 0.12), transparent 35%),
     radial-gradient(circle at 90% 0%, rgba(47, 127, 217, 0.12), transparent 30%),
