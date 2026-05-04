@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { apiRequest, saveSession } from "../lib/api";
+import { Navigate, useNavigate } from "react-router-dom";
+import { apiRequest, getUser, saveSession } from "../lib/api";
 
 const initialForm = { name: "", email: "", password: "", phone: "", city: "" };
 
 function Login() {
   const navigate = useNavigate();
+
+  // Already logged in → redirect to home, don't show login page
+  if (getUser()) return <Navigate to="/" replace />;
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState("");

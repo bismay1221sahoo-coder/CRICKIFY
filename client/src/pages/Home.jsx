@@ -202,9 +202,17 @@ function Home() {
             <div className="float mx-auto mb-4 text-5xl">🏏</div>
             <h2 className="text-xl font-black text-slate-900">No listings found</h2>
             <p className="mt-2 text-sm text-slate-500">Try a different category or city.</p>
-            <Link to="/sell" className="btn-primary mt-6 inline-flex px-6 py-3">
-              Be the first to list gear →
-            </Link>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => setFilters({ category: null, city: "" })}
+                className="glass rounded-xl px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-white/80 transition-all"
+              >
+                ← Browse categories
+              </button>
+              <Link to="/sell" className="btn-primary px-5 py-2.5 text-sm">
+                List gear →
+              </Link>
+            </div>
           </div>
         )}
 
