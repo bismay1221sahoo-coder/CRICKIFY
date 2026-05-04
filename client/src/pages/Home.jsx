@@ -11,19 +11,26 @@ const CONDITION_META = {
   NEEDS_REPAIR: { label: "Needs Repair", cls: "bg-red-100/80 text-red-600 border border-red-200/60" },
 };
 
+const CATEGORY_ICONS = {
+  BAT: "🏏", GLOVES: "🧤", PADS: "🦵", HELMET: "⛑️", SHOES: "👟", KIT: "🎒", OTHER: "📦",
+};
+
 function Home() {
   const [listings, setListings] = useState([]);
-  const [filters, setFilters] = useState({ category: "", city: "" });
-  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({ category: null, city: "" });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // Don't fetch until a category is selected
+    if (!filters.category) return;
+
     const load = async () => {
       setLoading(true);
       setError("");
       try {
         const params = new URLSearchParams();
-        if (filters.category) params.set("category", filters.category);
+        if (filters.category !== "ALL") params.set("category", filters.category);
         if (filters.city) params.set("city", filters.city);
         const data = await apiRequest(`/api/listings?${params.toString()}`);
         setListings(data.listings);
@@ -107,39 +114,26 @@ function Home() {
       {/* ── Listings ── */}
       <section id="listings" className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-10">
 
-        {/* Filter bar */}
+        {/* ── Category scroll strip ── */}
         <div className="glass mb-8 rounded-2xl p-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-              <button
-                onClick={() => setFilters((c) => ({ ...c, category: "" }))}
-                className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 ${
-                  filters.category === ""
-                    ? "bg-slate-900 text-white shadow-md"
-                    : "glass text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                All
-              </button>
-              {CATEGORIES.map((cat) => (
+              {[{ key: "ALL", label: "All" }, ...CATEGORIES.map((c) => ({ key: c, label: c.replace("_", " ") }))].map(({ key, label }) => (
                 <button
-                  key={cat}
-                  onClick={() => setFilters((c) => ({ ...c, category: c.category === cat ? "" : cat }))}
-                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 ${
-                    filters.category === cat
+                  key={key}
+                  onClick={() => setFilters((c) => ({ ...c, category: key }))}
+                  className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 ${
+                    filters.category === key
                       ? "text-white shadow-md glow-emerald"
                       : "glass text-slate-600 hover:text-emerald-700"
                   }`}
-                  style={filters.category === cat
-                    ? { background: "linear-gradient(135deg, #059669, #0d9488)" }
-                    : {}}
+                  style={filters.category === key ? { background: "linear-gradient(135deg, #059669, #0d9488)" } : {}}
                 >
-                  {cat.replace("_", " ")}
+                  {label}
                 </button>
               ))}
             </div>
-
-            <div className="relative">
+            <div className="relative shrink-0">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="13" height="13" viewBox="0 0 13 13" fill="none">
                 <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.5" />
                 <path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -148,14 +142,33 @@ function Home() {
                 value={filters.city}
                 onChange={(e) => setFilters((c) => ({ ...c, city: e.target.value }))}
                 placeholder="Search by city..."
-                className="input-field pl-9 sm:w-52"
+                className="input-field pl-9 w-44"
               />
             </div>
           </div>
         </div>
 
-        {/* Skeleton */}
-        {loading && (
+        {/* ── Default: no category selected — show big category picker ── */}
+        {!filters.category && (
+          <div className="fade-in-up">
+            <p className="mb-6 text-center text-sm font-semibold text-slate-500">Select a category to browse listings</p>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {[{ key: "ALL", label: "All Gear", icon: "🏏" }, ...CATEGORIES.map((c) => ({ key: c, label: c.replace("_", " "), icon: CATEGORY_ICONS[c] }))].map(({ key, label, icon }) => (
+                <button
+                  key={key}
+                  onClick={() => setFilters((c) => ({ ...c, category: key }))}
+                  className="glass card-hover group flex flex-col items-center gap-3 rounded-2xl p-6 text-center shadow-sm"
+                >
+                  <span className="text-4xl transition-transform duration-300 group-hover:scale-110">{icon}</span>
+                  <span className="text-sm font-black text-slate-800">{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Skeleton ── */}
+        {filters.category && loading && (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="glass overflow-hidden rounded-2xl">
@@ -176,34 +189,27 @@ function Home() {
           </div>
         )}
 
-        {!loading && !error && (
+        {filters.category && !loading && !error && (
           <p className="mb-5 text-sm font-semibold text-slate-500">
-            {listings.length === 0
-              ? "No listings found"
-              : `${listings.length} listing${listings.length !== 1 ? "s" : ""} found`}
-            {filters.category && <span className="ml-1 text-emerald-700">in {filters.category}</span>}
+            {listings.length === 0 ? "No listings found" : `${listings.length} listing${listings.length !== 1 ? "s" : ""} found`}
+            {filters.category !== "ALL" && <span className="ml-1 text-emerald-700">in {filters.category}</span>}
             {filters.city && <span className="ml-1 text-sky-700">near "{filters.city}"</span>}
           </p>
         )}
 
-        {!loading && !error && listings.length === 0 && (
+        {filters.category && !loading && !error && listings.length === 0 && (
           <div className="glass rounded-2xl p-16 text-center">
             <div className="float mx-auto mb-4 text-5xl">🏏</div>
             <h2 className="text-xl font-black text-slate-900">No listings found</h2>
-            <p className="mt-2 text-sm text-slate-500">
-              {filters.category || filters.city
-                ? "Try clearing your filters."
-                : "Approved equipment will appear here after admin verification."}
-            </p>
-            {!filters.category && !filters.city && (
-              <Link to="/sell" className="btn-primary mt-6 inline-flex px-6 py-3">
-                Be the first to list gear →
-              </Link>
-            )}
+            <p className="mt-2 text-sm text-slate-500">Try a different category or city.</p>
+            <Link to="/sell" className="btn-primary mt-6 inline-flex px-6 py-3">
+              Be the first to list gear →
+            </Link>
           </div>
         )}
 
         {/* Cards */}
+        {filters.category && (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {listings.map((listing) => {
             const cover = listing.media?.find((m) => m.type === "IMAGE");
@@ -296,6 +302,7 @@ function Home() {
             );
           })}
         </div>
+        )}
       </section>
     </main>
   );
