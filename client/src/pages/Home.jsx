@@ -1,53 +1,213 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiRequest } from "../lib/api";
 
 const CATEGORIES = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
 
+const CATEGORY_META = {
+  ALL:     { icon: "🏏", label: "All Gear",  gradient: "from-emerald-500 to-teal-500",  bg: "from-emerald-950/80 to-teal-900/80" },
+  BAT:     { icon: "🏏", label: "Bats",      gradient: "from-amber-500 to-orange-500",  bg: "from-amber-950/80 to-orange-900/80" },
+  GLOVES:  { icon: "🧤", label: "Gloves",    gradient: "from-sky-500 to-blue-600",      bg: "from-sky-950/80 to-blue-900/80" },
+  PADS:    { icon: "🦵", label: "Pads",      gradient: "from-violet-500 to-purple-600", bg: "from-violet-950/80 to-purple-900/80" },
+  HELMET:  { icon: "⛑️", label: "Helmets",   gradient: "from-red-500 to-rose-600",      bg: "from-red-950/80 to-rose-900/80" },
+  SHOES:   { icon: "👟", label: "Shoes",     gradient: "from-cyan-500 to-sky-600",      bg: "from-cyan-950/80 to-sky-900/80" },
+  KIT:     { icon: "🎒", label: "Full Kits", gradient: "from-lime-500 to-green-600",    bg: "from-lime-950/80 to-green-900/80" },
+  OTHER:   { icon: "📦", label: "Other",     gradient: "from-slate-500 to-slate-600",   bg: "from-slate-800/80 to-slate-900/80" },
+};
+
 const CONDITION_META = {
-  LIKE_NEW: { label: "Like New", cls: "bg-emerald-100/80 text-emerald-700 border border-emerald-200/60" },
-  GOOD:     { label: "Good",     cls: "bg-sky-100/80 text-sky-700 border border-sky-200/60" },
-  FAIR:     { label: "Fair",     cls: "bg-amber-100/80 text-amber-700 border border-amber-200/60" },
-  NEEDS_REPAIR: { label: "Needs Repair", cls: "bg-red-100/80 text-red-600 border border-red-200/60" },
+  LIKE_NEW:     { label: "Like New",    cls: "bg-emerald-100/80 text-emerald-700 border border-emerald-200/60" },
+  GOOD:         { label: "Good",        cls: "bg-sky-100/80 text-sky-700 border border-sky-200/60" },
+  FAIR:         { label: "Fair",        cls: "bg-amber-100/80 text-amber-700 border border-amber-200/60" },
+  NEEDS_REPAIR: { label: "Needs Repair",cls: "bg-red-100/80 text-red-600 border border-red-200/60" },
 };
 
-const CATEGORY_ICONS = {
-  BAT: "🏏", GLOVES: "🧤", PADS: "🦵", HELMET: "⛑️", SHOES: "👟", KIT: "🎒", OTHER: "📦",
-};
+const ALL_SECTIONS = ["ALL", ...CATEGORIES];
 
-function Home() {
+function CategorySection({ catKey, cityFilter }) {
   const [listings, setListings] = useState([]);
-  const [filters, setFilters] = useState({ category: null, city: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const meta = CATEGORY_META[catKey];
 
   useEffect(() => {
-    // Don't fetch until a category is selected
-    if (!filters.category) return;
-
     const load = async () => {
       setLoading(true);
-      setError("");
       try {
         const params = new URLSearchParams();
-        if (filters.category !== "ALL") params.set("category", filters.category);
-        if (filters.city) params.set("city", filters.city);
+        if (catKey !== "ALL") params.set("category", catKey);
+        if (cityFilter) params.set("city", cityFilter);
         const data = await apiRequest(`/api/listings?${params.toString()}`);
         setListings(data.listings);
-      } catch (err) {
-        setError(err.message);
+      } catch {
+        setListings([]);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [filters]);
+  }, [catKey, cityFilter]);
+
+  return (
+    <section id={`cat-${catKey}`} className="relative overflow-hidden">
+      {/* Category hero banner */}
+      <div className="relative flex min-h-[38vh] items-end overflow-hidden"
+        style={{ background: `linear-gradient(135deg, var(--tw-gradient-stops))` }}>
+        {/* Dark gradient bg */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${meta.bg}`} />
+        {/* Decorative big emoji */}
+        <div className="pointer-events-none absolute right-8 top-1/2 -translate-y-1/2 select-none text-[10rem] opacity-10 sm:text-[14rem]">
+          {meta.icon}
+        </div>
+        {/* Blob */}
+        <div className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full blur-3xl opacity-20"
+          style={{ background: "radial-gradient(circle, white, transparent)" }} />
+
+        <div className="relative w-full px-4 pb-8 pt-12 sm:px-6 lg:px-10">
+          <span className="text-5xl">{meta.icon}</span>
+          <h2 className={`mt-3 text-5xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl bg-gradient-to-r ${meta.gradient} bg-clip-text text-transparent`}>
+            {meta.label}
+          </h2>
+          <p className="mt-2 text-sm font-semibold text-white/60">
+            {loading ? "Loading..." : `${listings.length} verified listing${listings.length !== 1 ? "s" : ""}`}
+          </p>
+        </div>
+      </div>
+
+      {/* Listings grid */}
+      <div className="px-4 py-8 sm:px-6 lg:px-10">
+        {loading && (
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="glass overflow-hidden rounded-2xl">
+                <div className="shimmer aspect-[4/3]" />
+                <div className="p-4 grid gap-2">
+                  <div className="shimmer h-4 w-3/4 rounded-lg" />
+                  <div className="shimmer h-3 w-1/2 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && listings.length === 0 && (
+          <div className="glass rounded-2xl px-6 py-10 text-center">
+            <p className="text-2xl mb-2">{meta.icon}</p>
+            <p className="text-sm font-bold text-slate-600">No {meta.label.toLowerCase()} listed yet</p>
+            <Link to="/sell" className="btn-primary mt-4 inline-flex px-5 py-2 text-xs">
+              Be first to list →
+            </Link>
+          </div>
+        )}
+
+        {!loading && listings.length > 0 && (
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {listings.map((listing) => {
+              const cover = listing.media?.find((m) => m.type === "IMAGE");
+              const cond = CONDITION_META[listing.condition] || { label: listing.condition, cls: "bg-slate-100 text-slate-600" };
+              return (
+                <article key={listing.id} className="glass card-hover group overflow-hidden rounded-2xl">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                    {cover ? (
+                      <img src={cover.url} alt={listing.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    ) : (
+                      <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-50 to-sky-50">
+                        <span className="text-4xl">{meta.icon}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">No photo</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute left-2.5 top-2.5">
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow backdrop-blur-sm"
+                        style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}>
+                        ✓ Verified
+                      </span>
+                    </div>
+                    <div className="absolute right-2.5 top-2.5">
+                      <span className="glass rounded-full px-2 py-0.5 text-xs font-black text-sky-700 shadow backdrop-blur-md">
+                        Rs. {listing.price.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="absolute bottom-2.5 left-0 right-0 flex justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                      <Link to={`/listings/${listing.id}`}
+                        className="glass-dark rounded-xl px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
+                        View Details →
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="truncate text-sm font-black text-slate-900">{listing.title}</h3>
+                    {listing.brand && <p className="mt-0.5 text-xs font-semibold text-emerald-700">{listing.brand}</p>}
+                    <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
+                      <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+                        <path d="M5 1C3.34 1 2 2.34 2 4c0 2.5 3 5 3 5s3-2.5 3-5c0-1.66-1.34-3-3-3z" stroke="currentColor" strokeWidth="1.2" />
+                        <circle cx="5" cy="4" r="1" fill="currentColor" />
+                      </svg>
+                      {listing.city}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${cond.cls}`}>
+                        {cond.label}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between border-t border-slate-100/60 pt-3">
+                      <p className="text-xs text-slate-500">by {listing.seller?.name}</p>
+                      <Link to={`/listings/${listing.id}`}
+                        className="rounded-lg px-2.5 py-1 text-xs font-bold text-white"
+                        style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}>
+                        View →
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Divider */}
+      <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mx-4 sm:mx-6 lg:mx-10" />
+    </section>
+  );
+}
+
+function Home() {
+  const [activeSection, setActiveSection] = useState("ALL");
+  const [cityFilter, setCityFilter] = useState("");
+  const pillsRef = useRef(null);
+
+  // Highlight pill based on scroll position
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.id.replace("cat-", "");
+            setActiveSection(id);
+            // Scroll active pill into view
+            const pill = pillsRef.current?.querySelector(`[data-cat="${id}"]`);
+            pill?.scrollIntoView({ inline: "center", behavior: "smooth", block: "nearest" });
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+    ALL_SECTIONS.forEach((cat) => {
+      const el = document.getElementById(`cat-${cat}`);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  const scrollTo = (catKey) => {
+    document.getElementById(`cat-${catKey}`)?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <main>
       {/* ── Hero ── */}
       <section className="relative overflow-hidden border-b border-white/40 py-14 lg:py-20">
-        {/* Decorative blobs */}
         <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full opacity-30 blur-3xl"
           style={{ background: "radial-gradient(circle, #6ee7b7, transparent 70%)" }} />
         <div className="pointer-events-none absolute -right-24 top-0 h-80 w-80 rounded-full opacity-20 blur-3xl"
@@ -58,22 +218,19 @@ function Home() {
             <div className="fade-in-up">
               <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200/70 bg-emerald-50/80 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-emerald-700 backdrop-blur-sm">
                 <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
                 </span>
                 Verified cricket marketplace
               </span>
-
               <h1 className="mt-6 text-5xl font-black leading-[1.06] tracking-tight text-slate-950 sm:text-6xl lg:text-7xl">
                 Buy & sell used<br />
                 <span className="gradient-text">cricket gear</span><br />
                 <span className="text-slate-400 text-4xl sm:text-5xl lg:text-6xl font-black">locally.</span>
               </h1>
-
               <p className="mt-6 max-w-lg text-base leading-relaxed text-slate-500">
-                Every listing is manually verified by our admin before going live. No scams, no surprises — just trusted second-hand cricket equipment.
+                Every listing is manually verified by our admin before going live. No scams, no surprises.
               </p>
-
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link to="/sell" className="btn-primary">
                   List your gear
@@ -81,28 +238,23 @@ function Home() {
                     <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </Link>
-                <a href="#listings"
+                <button onClick={() => scrollTo("ALL")}
                   className="glass inline-flex items-center rounded-xl px-5 py-3 text-sm font-bold text-slate-700 hover:bg-white/80 transition-all duration-200">
                   Browse listings
-                </a>
+                </button>
               </div>
             </div>
 
-            {/* Stats grid */}
             <div className="grid grid-cols-2 gap-3">
               {[
-                { value: "100%", label: "Admin verified", gradient: "from-emerald-500 to-teal-500" },
+                { value: "100%", label: "Admin verified",   gradient: "from-emerald-500 to-teal-500" },
                 { value: "Local", label: "City-level focus", gradient: "from-sky-500 to-blue-500" },
-                { value: "Free", label: "No listing fee", gradient: "from-violet-500 to-purple-500" },
-                { value: "Safe", label: "No payment needed", gradient: "from-amber-500 to-orange-500" },
-              ].map((stat, i) => (
-                <div key={stat.label}
-                  className="glass card-hover relative overflow-hidden rounded-2xl p-5"
-                  style={{ animationDelay: `${i * 0.08}s` }}>
+                { value: "Free",  label: "No listing fee",   gradient: "from-violet-500 to-purple-500" },
+                { value: "Safe",  label: "No payment needed",gradient: "from-amber-500 to-orange-500" },
+              ].map((stat) => (
+                <div key={stat.label} className="glass card-hover relative overflow-hidden rounded-2xl p-5">
                   <div className={`absolute -right-4 -top-4 h-16 w-16 rounded-full bg-gradient-to-br ${stat.gradient} opacity-10 blur-xl`} />
-                  <p className={`text-2xl font-black bg-gradient-to-br ${stat.gradient} bg-clip-text text-transparent`}>
-                    {stat.value}
-                  </p>
+                  <p className={`text-2xl font-black bg-gradient-to-br ${stat.gradient} bg-clip-text text-transparent`}>{stat.value}</p>
                   <p className="mt-1 text-xs font-semibold text-slate-500">{stat.label}</p>
                 </div>
               ))}
@@ -111,209 +263,66 @@ function Home() {
         </div>
       </section>
 
-      {/* ── Listings ── */}
-      <section id="listings" className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-10">
-
-        {/* ── Category scroll strip ── */}
-        <div className="glass mb-8 rounded-2xl p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-              {[{ key: "ALL", label: "All" }, ...CATEGORIES.map((c) => ({ key: c, label: c.replace("_", " ") }))].map(({ key, label }) => (
+      {/* ── Sticky nav strip ── */}
+      <div className="sticky top-[57px] z-10 glass border-b border-white/40 shadow-sm">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2.5 sm:px-6 lg:px-10">
+          <div ref={pillsRef} className="flex gap-2 overflow-x-auto scrollbar-none">
+            {ALL_SECTIONS.map((cat) => {
+              const meta = CATEGORY_META[cat];
+              return (
                 <button
-                  key={key}
-                  onClick={() => setFilters((c) => ({ ...c, category: key }))}
-                  className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 ${
-                    filters.category === key
-                      ? "text-white shadow-md glow-emerald"
-                      : "glass text-slate-600 hover:text-emerald-700"
+                  key={cat}
+                  data-cat={cat}
+                  onClick={() => scrollTo(cat)}
+                  className={`shrink-0 flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all duration-200 ${
+                    activeSection === cat
+                      ? "text-white shadow-md"
+                      : "glass text-slate-600 hover:text-slate-900"
                   }`}
-                  style={filters.category === key ? { background: "linear-gradient(135deg, #059669, #0d9488)" } : {}}
+                  style={activeSection === cat ? { background: `linear-gradient(135deg, ${getGradientColors(meta.gradient)})` } : {}}
                 >
-                  {label}
+                  <span>{meta.icon}</span>
+                  <span>{meta.label}</span>
                 </button>
-              ))}
-            </div>
-            <div className="relative shrink-0">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="13" height="13" viewBox="0 0 13 13" fill="none">
-                <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-              <input
-                value={filters.city}
-                onChange={(e) => setFilters((c) => ({ ...c, city: e.target.value }))}
-                placeholder="Search by city..."
-                className="input-field pl-9 w-44"
-              />
-            </div>
+              );
+            })}
+          </div>
+          <div className="relative shrink-0">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="12" height="12" viewBox="0 0 13 13" fill="none">
+              <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <input
+              value={cityFilter}
+              onChange={(e) => setCityFilter(e.target.value)}
+              placeholder="Filter by city..."
+              className="input-field pl-8 w-36 py-2 text-xs sm:w-44"
+            />
           </div>
         </div>
+      </div>
 
-        {/* ── Default: no category selected — show big category picker ── */}
-        {!filters.category && (
-          <div className="fade-in-up">
-            <p className="mb-6 text-center text-sm font-semibold text-slate-500">Select a category to browse listings</p>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {[{ key: "ALL", label: "All Gear", icon: "🏏" }, ...CATEGORIES.map((c) => ({ key: c, label: c.replace("_", " "), icon: CATEGORY_ICONS[c] }))].map(({ key, label, icon }) => (
-                <button
-                  key={key}
-                  onClick={() => setFilters((c) => ({ ...c, category: key }))}
-                  className="glass card-hover group flex flex-col items-center gap-3 rounded-2xl p-6 text-center shadow-sm"
-                >
-                  <span className="text-4xl transition-transform duration-300 group-hover:scale-110">{icon}</span>
-                  <span className="text-sm font-black text-slate-800">{label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── Skeleton ── */}
-        {filters.category && loading && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="glass overflow-hidden rounded-2xl">
-                <div className="shimmer aspect-[4/3]" />
-                <div className="p-5 grid gap-3">
-                  <div className="shimmer h-5 w-3/4 rounded-lg" />
-                  <div className="shimmer h-4 w-1/2 rounded-lg" />
-                  <div className="shimmer h-4 w-full rounded-lg" />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {error && (
-          <div className="glass rounded-xl border border-red-200/60 bg-red-50/60 px-4 py-3 text-sm font-semibold text-red-700">
-            {error}
-          </div>
-        )}
-
-        {filters.category && !loading && !error && (
-          <p className="mb-5 text-sm font-semibold text-slate-500">
-            {listings.length === 0 ? "No listings found" : `${listings.length} listing${listings.length !== 1 ? "s" : ""} found`}
-            {filters.category !== "ALL" && <span className="ml-1 text-emerald-700">in {filters.category}</span>}
-            {filters.city && <span className="ml-1 text-sky-700">near "{filters.city}"</span>}
-          </p>
-        )}
-
-        {filters.category && !loading && !error && listings.length === 0 && (
-          <div className="glass rounded-2xl p-16 text-center">
-            <div className="float mx-auto mb-4 text-5xl">🏏</div>
-            <h2 className="text-xl font-black text-slate-900">No listings found</h2>
-            <p className="mt-2 text-sm text-slate-500">Try a different category or city.</p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <button
-                onClick={() => setFilters({ category: null, city: "" })}
-                className="glass rounded-xl px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-white/80 transition-all"
-              >
-                ← Browse categories
-              </button>
-              <Link to="/sell" className="btn-primary px-5 py-2.5 text-sm">
-                List gear →
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {/* Cards */}
-        {filters.category && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {listings.map((listing) => {
-            const cover = listing.media?.find((m) => m.type === "IMAGE");
-            const cond = CONDITION_META[listing.condition] || { label: listing.condition, cls: "bg-slate-100 text-slate-600" };
-
-            return (
-              <article
-                key={listing.id}
-                className="glass card-hover group overflow-hidden rounded-2xl"
-              >
-                {/* Image */}
-                <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                  {cover ? (
-                    <img
-                      src={cover.url}
-                      alt={listing.title}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                  ) : (
-                    <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-50 to-sky-50">
-                      <span className="text-4xl">🏏</span>
-                      <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">No photo</span>
-                    </div>
-                  )}
-
-                  {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                  {/* Badges */}
-                  <div className="absolute left-3 top-3">
-                    <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-md backdrop-blur-sm"
-                      style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}>
-                      ✓ Verified
-                    </span>
-                  </div>
-                  <div className="absolute right-3 top-3">
-                    <span className="glass rounded-full px-2.5 py-1 text-xs font-black text-sky-700 shadow backdrop-blur-md">
-                      Rs. {listing.price.toLocaleString()}
-                    </span>
-                  </div>
-
-                  {/* View button on hover */}
-                  <div className="absolute bottom-3 left-0 right-0 flex justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                    <Link
-                      to={`/listings/${listing.id}`}
-                      className="glass-dark rounded-xl px-4 py-2 text-xs font-bold text-white backdrop-blur-md hover:bg-white/20 transition-colors"
-                    >
-                      View Details →
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div className="p-5">
-                  <h2 className="truncate text-base font-black text-slate-900">{listing.title}</h2>
-                  {listing.brand && (
-                    <p className="mt-0.5 text-xs font-semibold text-emerald-700">{listing.brand}</p>
-                  )}
-                  <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                      <path d="M5 1C3.34 1 2 2.34 2 4c0 2.5 3 5 3 5s3-2.5 3-5c0-1.66-1.34-3-3-3z" stroke="currentColor" strokeWidth="1.2" />
-                      <circle cx="5" cy="4" r="1" fill="currentColor" />
-                    </svg>
-                    {listing.city}
-                  </p>
-
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    <span className="rounded-full bg-slate-100/80 px-2.5 py-1 text-[10px] font-bold uppercase text-slate-600 backdrop-blur-sm">
-                      {listing.category}
-                    </span>
-                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase backdrop-blur-sm ${cond.cls}`}>
-                      {cond.label}
-                    </span>
-                  </div>
-
-                  <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-slate-500">{listing.description}</p>
-
-                  <div className="mt-4 flex items-center justify-between border-t border-slate-100/80 pt-4">
-                    <p className="text-xs font-semibold text-slate-500">by {listing.seller?.name}</p>
-                    <Link
-                      to={`/listings/${listing.id}`}
-                      className="rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-all duration-200 hover:shadow-md"
-                      style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
-                    >
-                      View →
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-        )}
-      </section>
+      {/* ── Category sections ── */}
+      {ALL_SECTIONS.map((cat) => (
+        <CategorySection key={cat} catKey={cat} cityFilter={cityFilter} />
+      ))}
     </main>
   );
+}
+
+// Helper to extract gradient colors for inline style
+function getGradientColors(gradientClass) {
+  const map = {
+    "from-emerald-500 to-teal-500":   "#10b981, #14b8a6",
+    "from-amber-500 to-orange-500":   "#f59e0b, #f97316",
+    "from-sky-500 to-blue-600":       "#0ea5e9, #2563eb",
+    "from-violet-500 to-purple-600":  "#8b5cf6, #9333ea",
+    "from-red-500 to-rose-600":       "#ef4444, #e11d48",
+    "from-cyan-500 to-sky-600":       "#06b6d4, #0284c7",
+    "from-lime-500 to-green-600":     "#84cc16, #16a34a",
+    "from-slate-500 to-slate-600":    "#64748b, #475569",
+  };
+  return map[gradientClass] || "#059669, #0d9488";
 }
 
 export default Home;
