@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { apiRequest } from "../lib/api";
 
 const categories = ["", "BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
@@ -34,10 +35,10 @@ function Home() {
   return (
     <main>
       <section className="border-b border-emerald-100/80 bg-white/70">
-        <div className="mx-auto grid w-full max-w-7xl gap-6 px-6 py-12 lg:grid-cols-[1.3fr_0.7fr] lg:px-10">
+        <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1.3fr_0.7fr] lg:px-10 lg:py-12">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Verified cricket marketplace</p>
-            <h1 className="mt-4 max-w-4xl text-5xl font-black leading-[1.05] text-slate-950">
+            <h1 className="mt-4 max-w-4xl text-4xl font-black leading-[1.05] text-slate-950 sm:text-5xl">
               Affordable used cricket gear, checked before it goes live.
             </h1>
             <p className="mt-4 max-w-3xl text-base text-slate-600">
@@ -60,7 +61,7 @@ function Home() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-6 py-10 lg:px-10">
+      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
         <div className="mb-8 rounded-2xl border border-emerald-100 bg-white/90 p-4 shadow-sm md:p-5">
           <div className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Filter Listings</div>
           <div className="grid gap-3 md:grid-cols-[220px_1fr]">
@@ -123,6 +124,12 @@ function Home() {
                   </div>
                   <p className="line-clamp-2 text-sm text-slate-600">{listing.description}</p>
                   <p className="text-sm font-semibold text-slate-700">Seller: {listing.seller?.name}</p>
+                  <Link
+                    to={`/listings/${listing.id}`}
+                    className="inline-flex w-fit rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-slate-800"
+                  >
+                    View Details
+                  </Link>
                 </div>
               </article>
             );
