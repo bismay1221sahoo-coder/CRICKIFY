@@ -11,8 +11,7 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const updateField = (e) =>
-    setForm((c) => ({ ...c, [e.target.name]: e.target.value }));
+  const updateField = (e) => setForm((c) => ({ ...c, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,38 +30,43 @@ function Login() {
     }
   };
 
-  const inputClass =
-    "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white transition-colors";
-
   return (
-    <main className="flex min-h-[calc(100vh-57px)] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        {/* Logo mark */}
+    <main className="relative flex min-h-[calc(100vh-57px)] items-center justify-center overflow-hidden px-4 py-12">
+      {/* Background blobs */}
+      <div className="pointer-events-none absolute -left-40 top-10 h-96 w-96 rounded-full opacity-25 blur-3xl"
+        style={{ background: "radial-gradient(circle, #6ee7b7, transparent 70%)" }} />
+      <div className="pointer-events-none absolute -right-32 bottom-10 h-80 w-80 rounded-full opacity-20 blur-3xl"
+        style={{ background: "radial-gradient(circle, #7dd3fc, transparent 70%)" }} />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-10 blur-3xl"
+        style={{ background: "radial-gradient(circle, #c4b5fd, transparent 70%)" }} />
+
+      <div className="fade-in-up relative w-full max-w-md">
+        {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-700 text-sm font-black text-white shadow-md">
+          <div className="float mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl text-base font-black text-white shadow-xl"
+            style={{ background: "linear-gradient(135deg, #059669 0%, #0d9488 100%)" }}>
             CR
           </div>
           <h1 className="text-2xl font-black text-slate-900">
             {mode === "login" ? "Welcome back" : "Join CRICKIFY"}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            {mode === "login"
-              ? "Login to buy or sell cricket gear"
-              : "Create your free account today"}
+            {mode === "login" ? "Login to buy or sell cricket gear" : "Create your free account today"}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-100 bg-white p-8 shadow-sm">
+        {/* Card */}
+        <div className="glass rounded-3xl p-8 shadow-xl">
           {/* Tab switcher */}
-          <div className="mb-6 flex rounded-xl bg-slate-100 p-1">
+          <div className="mb-6 flex rounded-2xl bg-slate-100/80 p-1 backdrop-blur-sm">
             {["login", "register"].map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => { setMode(m); setError(""); }}
-                className={`flex-1 rounded-lg py-2 text-sm font-bold capitalize transition-all ${
+                className={`flex-1 rounded-xl py-2.5 text-sm font-bold capitalize transition-all duration-200 ${
                   mode === m
-                    ? "bg-white text-emerald-700 shadow-sm"
+                    ? "bg-white text-emerald-700 shadow-md"
                     : "text-slate-500 hover:text-slate-700"
                 }`}
               >
@@ -74,32 +78,35 @@ function Login() {
           <form onSubmit={handleSubmit} className="grid gap-3">
             {mode === "register" && (
               <>
-                <input name="name" value={form.name} onChange={updateField} placeholder="Full name" className={inputClass} required />
+                <input name="name" value={form.name} onChange={updateField} placeholder="Full name" className="input-field" required />
                 <div className="grid grid-cols-2 gap-3">
-                  <input name="phone" value={form.phone} onChange={updateField} placeholder="Phone number" className={inputClass} />
-                  <input name="city" value={form.city} onChange={updateField} placeholder="City" className={inputClass} />
+                  <input name="phone" value={form.phone} onChange={updateField} placeholder="Phone" className="input-field" />
+                  <input name="city" value={form.city} onChange={updateField} placeholder="City" className="input-field" />
                 </div>
               </>
             )}
-            <input name="email" type="email" value={form.email} onChange={updateField} placeholder="Email address" className={inputClass} required />
-            <input name="password" type="password" value={form.password} onChange={updateField} placeholder="Password" className={inputClass} required />
+            <input name="email" type="email" value={form.email} onChange={updateField} placeholder="Email address" className="input-field" required />
+            <input name="password" type="password" value={form.password} onChange={updateField} placeholder="Password" className="input-field" required />
 
             {error && (
-              <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/><path d="M7 4v3M7 9.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <div className="flex items-center gap-2 rounded-xl border border-red-200/60 bg-red-50/70 px-4 py-3 text-sm font-semibold text-red-700 backdrop-blur-sm">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M7 4v3M7 9.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
                 {error}
               </div>
             )}
 
-            <button
-              disabled={loading}
-              className="mt-1 w-full rounded-xl bg-emerald-700 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 disabled:opacity-60 transition-colors"
-            >
-              {loading
-                ? "Please wait..."
-                : mode === "login"
-                ? "Login to account"
-                : "Create account"}
+            <button disabled={loading} className="btn-primary mt-1 w-full py-3">
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="20 10" />
+                  </svg>
+                  Please wait...
+                </span>
+              ) : mode === "login" ? "Login to account" : "Create account"}
             </button>
           </form>
 
