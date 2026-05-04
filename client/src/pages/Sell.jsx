@@ -36,15 +36,25 @@ function Sell() {
   };
 
   const handleFileUpload = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
 
     setError("");
     setUploading(true);
 
     try {
-      const uploadedMedia = await uploadListingMedia(file);
-      setMedia((current) => [...current, uploadedMedia]);
+      const uploadedMedia = [];
+
+      for (const file of files) {
+        // Upload one by one to keep progress/errors predictable for MVP.
+        const result = await uploadListingMedia(file);
+        uploadedMedia.push({
+          ...result,
+          localId: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        });
+      }
+
+      setMedia((current) => [...current, ...uploadedMedia]);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -53,8 +63,8 @@ function Sell() {
     }
   };
 
-  const removeMedia = (publicId) => {
-    setMedia((current) => current.filter((item) => item.publicId !== publicId));
+  const removeMedia = (localId) => {
+    setMedia((current) => current.filter((item) => item.localId !== localId));
   };
 
   const handleSubmit = async (event) => {
@@ -163,6 +173,7 @@ function Sell() {
           Photos or video
           <input
             type="file"
+            multiple
             accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
             onChange={handleFileUpload}
             className="rounded-md border border-slate-300 px-3 py-2"
@@ -174,14 +185,14 @@ function Sell() {
         {media.length > 0 && (
           <div className="grid gap-3 md:grid-cols-3">
             {media.map((item) => (
-              <div key={item.publicId || item.url} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+              <div key={item.localId} className="rounded-md border border-slate-200 bg-slate-50 p-3">
                 <p className="text-xs font-bold text-slate-600">{item.type}</p>
                 <a href={item.url} target="_blank" rel="noreferrer" className="mt-1 block truncate text-sm font-semibold text-emerald-700">
                   View uploaded file
                 </a>
                 <button
                   type="button"
-                  onClick={() => removeMedia(item.publicId)}
+                  onClick={() => removeMedia(item.localId)}
                   className="mt-3 rounded-md border border-slate-300 px-2 py-1 text-xs font-bold text-slate-700"
                 >
                   Remove
