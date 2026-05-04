@@ -148,6 +148,9 @@ function ListingDetails() {
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <h1 className="text-2xl font-black leading-tight text-slate-900">{listing.title}</h1>
+                {listing.brand && (
+                  <p className="mt-1 text-sm font-semibold text-emerald-700">{listing.brand}</p>
+                )}
                 <p className="mt-1.5 flex items-center gap-1 text-sm text-slate-500">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <path d="M6 1C4.34 1 3 2.34 3 4c0 2.5 3 7 3 7s3-4.5 3-7c0-1.66-1.34-3-3-3z" stroke="currentColor" strokeWidth="1.2" />

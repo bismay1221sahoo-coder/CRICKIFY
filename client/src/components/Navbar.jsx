@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { clearSession, getUser } from "../lib/api";
 
 function Navbar() {
@@ -7,6 +7,13 @@ function Navbar() {
   const [user, setUser] = useState(getUser);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const location = useLocation();
+
+  // re-sync on every route change so same-tab login/logout reflects instantly
+  useEffect(() => {
+    setUser(getUser());
+  }, [location.pathname]);
 
   useEffect(() => {
     const syncUser = () => setUser(getUser());
@@ -86,6 +93,11 @@ function Navbar() {
           <NavLink to="/sell" className={linkClass} onClick={() => setMenuOpen(false)}>
             Sell Gear
           </NavLink>
+          {user && (
+            <NavLink to="/my-listings" className={linkClass} onClick={() => setMenuOpen(false)}>
+              My Listings
+            </NavLink>
+          )}
           {user?.role === "ADMIN" && (
             <NavLink to="/admin" className={linkClass} onClick={() => setMenuOpen(false)}>
               Admin

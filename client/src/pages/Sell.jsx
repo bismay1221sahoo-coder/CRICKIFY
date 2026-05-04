@@ -15,7 +15,6 @@ const labelClass = "grid gap-1.5 text-sm font-semibold text-slate-700";
 function Sell() {
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -71,9 +70,7 @@ function Sell() {
         method: "POST",
         body: JSON.stringify({ ...form, price: Number(form.price), media }),
       });
-      setForm(initialForm);
-      setMedia([]);
-      setMessage("Listing submitted! Admin will verify it shortly.");
+      navigate("/my-listings");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -114,17 +111,7 @@ function Sell() {
         <p className="mt-2 text-sm text-slate-500">Fill in the details below. Admin will verify your listing before it goes live.</p>
       </div>
 
-      {message && (
-        <div className="glass-emerald mb-6 flex items-center gap-3 rounded-2xl px-5 py-4 shadow-sm">
-          <span className="float text-2xl">✅</span>
-          <div>
-            <p className="text-sm font-bold text-emerald-800">{message}</p>
-            <p className="text-xs text-emerald-600">You'll be notified once it's approved.</p>
-          </div>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="grid gap-5">
+<form onSubmit={handleSubmit} className="grid gap-5">
         {/* Equipment details */}
         <div className="glass rounded-2xl p-6 shadow-sm">
           <p className="mb-5 text-xs font-bold uppercase tracking-widest text-slate-400">Equipment details</p>

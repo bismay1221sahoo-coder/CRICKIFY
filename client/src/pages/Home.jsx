@@ -110,7 +110,7 @@ function Home() {
         {/* Filter bar */}
         <div className="glass mb-8 rounded-2xl p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
               <button
                 onClick={() => setFilters((c) => ({ ...c, category: "" }))}
                 className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all duration-200 ${
@@ -176,6 +176,16 @@ function Home() {
           </div>
         )}
 
+        {!loading && !error && (
+          <p className="mb-5 text-sm font-semibold text-slate-500">
+            {listings.length === 0
+              ? "No listings found"
+              : `${listings.length} listing${listings.length !== 1 ? "s" : ""} found`}
+            {filters.category && <span className="ml-1 text-emerald-700">in {filters.category}</span>}
+            {filters.city && <span className="ml-1 text-sky-700">near "{filters.city}"</span>}
+          </p>
+        )}
+
         {!loading && !error && listings.length === 0 && (
           <div className="glass rounded-2xl p-16 text-center">
             <div className="float mx-auto mb-4 text-5xl">🏏</div>
@@ -185,6 +195,11 @@ function Home() {
                 ? "Try clearing your filters."
                 : "Approved equipment will appear here after admin verification."}
             </p>
+            {!filters.category && !filters.city && (
+              <Link to="/sell" className="btn-primary mt-6 inline-flex px-6 py-3">
+                Be the first to list gear →
+              </Link>
+            )}
           </div>
         )}
 
@@ -208,7 +223,10 @@ function Home() {
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-4xl">🏏</div>
+                    <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-50 to-sky-50">
+                      <span className="text-4xl">🏏</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">No photo</span>
+                    </div>
                   )}
 
                   {/* Gradient overlay */}
@@ -241,6 +259,9 @@ function Home() {
                 {/* Body */}
                 <div className="p-5">
                   <h2 className="truncate text-base font-black text-slate-900">{listing.title}</h2>
+                  {listing.brand && (
+                    <p className="mt-0.5 text-xs font-semibold text-emerald-700">{listing.brand}</p>
+                  )}
                   <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                       <path d="M5 1C3.34 1 2 2.34 2 4c0 2.5 3 5 3 5s3-2.5 3-5c0-1.66-1.34-3-3-3z" stroke="currentColor" strokeWidth="1.2" />

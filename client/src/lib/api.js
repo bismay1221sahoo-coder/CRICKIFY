@@ -5,6 +5,7 @@ export const getToken = () => localStorage.getItem("crickify_token");
 export const saveSession = ({ token, user }) => {
   localStorage.setItem("crickify_token", token);
   localStorage.setItem("crickify_user", JSON.stringify(user));
+  window.dispatchEvent(new Event("storage"));
 };
 
 export const getUser = () => {
