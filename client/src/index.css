@@ -1,19 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap");
 @import "tailwindcss";
 
-:root {
-  --bg-mint: #f4fbf8;
-  --bg-blue: #edf6ff;
-  --surface: #ffffff;
-  --border-soft: #d9e8e3;
-  --text-main: #0f172a;
-  --text-soft: #4b5563;
-  --brand-green: #1f8f74;
-  --brand-green-dark: #16715b;
-  --accent-blue: #2f7fd9;
-}
-
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -21,11 +9,27 @@
 
 body {
   font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
-  color: var(--text-main);
-  letter-spacing: 0;
+  color: #0f172a;
   line-height: 1.5;
-  background:
-    radial-gradient(circle at 10% 5%, rgba(31, 143, 116, 0.12), transparent 35%),
-    radial-gradient(circle at 90% 0%, rgba(47, 127, 217, 0.12), transparent 30%),
-    linear-gradient(180deg, var(--bg-mint) 0%, #f8fcfa 55%, var(--bg-blue) 100%);
+  -webkit-font-smoothing: antialiased;
+  background-color: #f8fafc;
+  background-image:
+    radial-gradient(ellipse at 0% 0%, rgba(16, 185, 129, 0.07) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 0%, rgba(56, 189, 248, 0.07) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

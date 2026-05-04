@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiRequest, getToken, uploadListingMedia } from "../lib/api";
 
-const categories = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
-const conditions = ["LIKE_NEW", "GOOD", "FAIR", "NEEDS_REPAIR"];
+const CATEGORIES = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
+const CONDITIONS = ["LIKE_NEW", "GOOD", "FAIR", "NEEDS_REPAIR"];
 
 const initialForm = {
   title: "",
@@ -17,6 +17,11 @@ const initialForm = {
   description: "",
 };
 
+const inputClass =
+  "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white transition-colors";
+
+const labelClass = "grid gap-1.5 text-sm font-semibold text-slate-700";
+
 function Sell() {
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
@@ -28,68 +33,53 @@ function Sell() {
 
   const isLoggedIn = Boolean(getToken());
 
-  const updateField = (event) => {
-    setForm((current) => ({
-      ...current,
-      [event.target.name]: event.target.value,
-    }));
-  };
+  const updateField = (e) =>
+    setForm((c) => ({ ...c, [e.target.name]: e.target.value }));
 
-  const handleFileUpload = async (event) => {
-    const files = Array.from(event.target.files || []);
-    if (files.length === 0) return;
-
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
     setError("");
     setUploading(true);
-
     try {
-      const uploadedMedia = [];
-
+      const uploaded = [];
       for (const file of files) {
-        // Upload one by one to keep progress/errors predictable for MVP.
         const result = await uploadListingMedia(file);
-        uploadedMedia.push({
+        uploaded.push({
           ...result,
           localId: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          previewUrl: result.type === "IMAGE" ? result.url : null,
         });
       }
-
-      setMedia((current) => [...current, ...uploadedMedia]);
+      setMedia((c) => [...c, ...uploaded]);
     } catch (err) {
       setError(err.message);
     } finally {
       setUploading(false);
-      event.target.value = "";
+      e.target.value = "";
     }
   };
 
-  const removeMedia = (localId) => {
-    setMedia((current) => current.filter((item) => item.localId !== localId));
-  };
+  const removeMedia = (localId) =>
+    setMedia((c) => c.filter((m) => m.localId !== localId));
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError("");
     setMessage("");
+    if (!media.length) {
+      setError("Upload at least one photo or video before submitting.");
+      return;
+    }
     setLoading(true);
-
     try {
-      if (media.length === 0) {
-        throw new Error("Upload at least one photo or video before submitting.");
-      }
-
       await apiRequest("/api/listings", {
         method: "POST",
-        body: JSON.stringify({
-          ...form,
-          price: Number(form.price),
-          media,
-        }),
+        body: JSON.stringify({ ...form, price: Number(form.price), media }),
       });
-
       setForm(initialForm);
       setMedia([]);
-      setMessage("Listing submitted for admin verification.");
+      setMessage("Listing submitted! Admin will verify it shortly.");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -99,119 +89,172 @@ function Sell() {
 
   if (!isLoggedIn) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-16">
-        <h1 className="text-3xl font-black text-slate-950">Login required</h1>
-        <p className="mt-3 text-slate-600">Create an account or login before submitting cricket equipment.</p>
-        <button
-          onClick={() => navigate("/login")}
-          className="mt-6 rounded-md bg-emerald-700 px-4 py-2 font-semibold text-white hover:bg-emerald-800"
-        >
-          Go to login
-        </button>
+      <main className="flex min-h-[calc(100vh-57px)] items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-2xl border border-slate-100 bg-white p-10 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-2xl">
+            🔒
+          </div>
+          <h1 className="text-xl font-black text-slate-900">Login required</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            You need an account to list cricket equipment for sale.
+          </p>
+          <button
+            onClick={() => navigate("/login")}
+            className="mt-6 w-full rounded-xl bg-emerald-700 py-3 text-sm font-bold text-white hover:bg-emerald-800 transition-colors"
+          >
+            Go to login
+          </button>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12">
+    <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <div className="mb-8">
-        <p className="text-sm font-semibold uppercase text-emerald-700">Seller submission</p>
-        <h1 className="mt-2 text-4xl font-black text-slate-950">Sell used cricket equipment</h1>
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
+          Seller submission
+        </span>
+        <h1 className="mt-3 text-3xl font-black text-slate-900">Sell your cricket gear</h1>
+        <p className="mt-2 text-sm text-slate-500">
+          Fill in the details below. Admin will verify your listing before it goes live.
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-5 rounded-2xl border border-emerald-100 bg-white/95 p-8 shadow-md">
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2 text-sm font-semibold text-slate-700">
-            Title
-            <input name="title" value={form.title} onChange={updateField} className="rounded-md border border-emerald-200 px-3 py-2 outline-none focus:border-emerald-400" />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-slate-700">
-            Brand
-            <input name="brand" value={form.brand} onChange={updateField} className="rounded-md border border-sky-200 px-3 py-2 outline-none focus:border-sky-400" />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-slate-700">
-            Category
-            <select name="category" value={form.category} onChange={updateField} className="rounded-md border border-emerald-200 px-3 py-2 outline-none focus:border-emerald-400">
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category.replace("_", " ")}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-slate-700">
-            Condition
-            <select name="condition" value={form.condition} onChange={updateField} className="rounded-md border border-sky-200 px-3 py-2 outline-none focus:border-sky-400">
-              {conditions.map((condition) => (
-                <option key={condition} value={condition}>
-                  {condition.replace("_", " ")}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-slate-700">
-            Price
-            <input name="price" type="number" min="1" value={form.price} onChange={updateField} className="rounded-md border border-emerald-200 px-3 py-2 outline-none focus:border-emerald-400" />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-slate-700">
-            City
-            <input name="city" value={form.city} onChange={updateField} className="rounded-md border border-sky-200 px-3 py-2 outline-none focus:border-sky-400" />
-          </label>
+      {message && (
+        <div className="mb-6 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+          <span className="text-xl">✅</span>
+          <div>
+            <p className="text-sm font-bold text-emerald-800">{message}</p>
+            <p className="text-xs text-emerald-600">You'll be notified once it's approved.</p>
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="grid gap-6">
+        {/* Section 1 — Basic info */}
+        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+          <p className="mb-5 text-xs font-bold uppercase tracking-wide text-slate-400">Equipment details</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className={labelClass}>
+              Title *
+              <input name="title" value={form.title} onChange={updateField} placeholder="e.g. SS Ton cricket bat" className={inputClass} required />
+            </label>
+            <label className={labelClass}>
+              Brand
+              <input name="brand" value={form.brand} onChange={updateField} placeholder="e.g. SS, SG, Kookaburra" className={inputClass} />
+            </label>
+            <label className={labelClass}>
+              Category *
+              <select name="category" value={form.category} onChange={updateField} className={inputClass}>
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c.replace("_", " ")}</option>
+                ))}
+              </select>
+            </label>
+            <label className={labelClass}>
+              Condition *
+              <select name="condition" value={form.condition} onChange={updateField} className={inputClass}>
+                {CONDITIONS.map((c) => (
+                  <option key={c} value={c}>{c.replace(/_/g, " ")}</option>
+                ))}
+              </select>
+            </label>
+            <label className={labelClass}>
+              Price (Rs.) *
+              <input name="price" type="number" min="1" value={form.price} onChange={updateField} placeholder="e.g. 1500" className={inputClass} required />
+            </label>
+            <label className={labelClass}>
+              City *
+              <input name="city" value={form.city} onChange={updateField} placeholder="e.g. Bhubaneswar" className={inputClass} required />
+            </label>
+          </div>
         </div>
 
-        <label className="grid gap-2 text-sm font-semibold text-slate-700">
-          Used duration
-          <input name="usedDuration" value={form.usedDuration} onChange={updateField} placeholder="3 months" className="rounded-md border border-emerald-200 px-3 py-2 outline-none focus:border-emerald-400" />
-        </label>
+        {/* Section 2 — Condition details */}
+        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+          <p className="mb-5 text-xs font-bold uppercase tracking-wide text-slate-400">Condition details</p>
+          <div className="grid gap-4">
+            <label className={labelClass}>
+              How long have you used it? *
+              <input name="usedDuration" value={form.usedDuration} onChange={updateField} placeholder="e.g. 3 months, 1 season" className={inputClass} required />
+            </label>
+            <label className={labelClass}>
+              Any defects or damage? *
+              <input name="defects" value={form.defects} onChange={updateField} placeholder="e.g. No defects / minor toe crack / grip worn" className={inputClass} required />
+            </label>
+            <label className={labelClass}>
+              Description *
+              <textarea name="description" value={form.description} onChange={updateField} rows="4" placeholder="Describe the item in detail — brand, size, weight, why selling, etc." className={inputClass} required />
+            </label>
+          </div>
+        </div>
 
-        <label className="grid gap-2 text-sm font-semibold text-slate-700">
-          Defects
-          <input name="defects" value={form.defects} onChange={updateField} placeholder="No defects / toe crack / grip worn" className="rounded-md border border-sky-200 px-3 py-2 outline-none focus:border-sky-400" />
-        </label>
+        {/* Section 3 — Media */}
+        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Photos & videos *</p>
+          <p className="mb-4 text-xs text-slate-500">Upload clear photos from multiple angles. Max 25MB per file.</p>
 
-        <label className="grid gap-2 text-sm font-semibold text-slate-700">
-          Photos or video
-          <input
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
-            onChange={handleFileUpload}
-            className="rounded-md border border-emerald-200 px-3 py-2 outline-none focus:border-emerald-400"
-          />
-        </label>
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center hover:border-emerald-400 hover:bg-emerald-50/40 transition-colors">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm text-xl">
+              📷
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-700">Click to upload photos or videos</p>
+              <p className="mt-0.5 text-xs text-slate-400">JPG, PNG, WEBP, MP4, MOV, WEBM</p>
+            </div>
+            <input
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </label>
 
-        {uploading && <p className="text-sm font-semibold text-slate-600">Uploading media...</p>}
+          {uploading && (
+            <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-slate-500">
+              <svg className="animate-spin" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="20 10"/></svg>
+              Uploading...
+            </div>
+          )}
 
-        {media.length > 0 && (
-          <div className="grid gap-3 md:grid-cols-3">
-            {media.map((item) => (
-              <div key={item.localId} className="rounded-md border border-emerald-100 bg-emerald-50/40 p-3">
-                <p className="text-xs font-bold text-slate-600">{item.type}</p>
-                <a href={item.url} target="_blank" rel="noreferrer" className="mt-1 block truncate text-sm font-semibold text-emerald-700">
-                  View uploaded file
-                </a>
-                <button
-                  type="button"
-                  onClick={() => removeMedia(item.localId)}
-                  className="mt-3 rounded-md border border-sky-200 px-2 py-1 text-xs font-bold text-sky-700"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
+          {media.length > 0 && (
+            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
+              {media.map((item) => (
+                <div key={item.localId} className="group relative aspect-square overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                  {item.previewUrl ? (
+                    <img src={item.previewUrl} alt="upload" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-xs font-bold text-slate-500">
+                      VIDEO
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeMedia(item.localId)}
+                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white opacity-0 shadow transition-opacity group-hover:opacity-100 text-xs font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/><path d="M7 4v3M7 9.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            {error}
           </div>
         )}
 
-        <label className="grid gap-2 text-sm font-semibold text-slate-700">
-          Description
-          <textarea name="description" value={form.description} onChange={updateField} rows="4" className="rounded-md border border-emerald-200 px-3 py-2 outline-none focus:border-emerald-400" />
-        </label>
-
-        {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</p>}
-        {message && <p className="rounded-md bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">{message}</p>}
-
-        <button disabled={loading || uploading} className="rounded-md bg-emerald-700 px-4 py-3 font-bold text-white hover:bg-emerald-800 disabled:opacity-60">
-          {loading ? "Submitting..." : "Submit for verification"}
+        <button
+          disabled={loading || uploading}
+          className="w-full rounded-xl bg-emerald-700 py-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 disabled:opacity-60 transition-colors"
+        >
+          {loading ? "Submitting..." : "Submit for verification →"}
         </button>
       </form>
     </main>

@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiRequest } from "../lib/api";
 
-const categories = ["", "BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
+const CATEGORIES = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
+
+const CONDITION_COLORS = {
+  LIKE_NEW: "bg-emerald-100 text-emerald-700",
+  GOOD: "bg-sky-100 text-sky-700",
+  FAIR: "bg-amber-100 text-amber-700",
+  NEEDS_REPAIR: "bg-red-100 text-red-600",
+};
 
 function Home() {
   const [listings, setListings] = useState([]);
@@ -11,15 +18,13 @@ function Home() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const loadListings = async () => {
+    const load = async () => {
       setLoading(true);
       setError("");
-
       try {
         const params = new URLSearchParams();
         if (filters.category) params.set("category", filters.category);
         if (filters.city) params.set("city", filters.city);
-
         const data = await apiRequest(`/api/listings?${params.toString()}`);
         setListings(data.listings);
       } catch (err) {
@@ -28,108 +33,204 @@ function Home() {
         setLoading(false);
       }
     };
-
-    loadListings();
+    load();
   }, [filters]);
 
   return (
     <main>
-      <section className="border-b border-emerald-100/80 bg-white/70">
-        <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-[1.3fr_0.7fr] lg:px-10 lg:py-12">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Verified cricket marketplace</p>
-            <h1 className="mt-4 max-w-4xl text-4xl font-black leading-[1.05] text-slate-950 sm:text-5xl">
-              Affordable used cricket gear, checked before it goes live.
-            </h1>
-            <p className="mt-4 max-w-3xl text-base text-slate-600">
-              Trusted second-hand cricket essentials with manual admin verification for every listing.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-sky-100 bg-gradient-to-b from-sky-50 to-emerald-50 p-6 shadow-sm">
-            <p className="text-sm font-semibold text-slate-600">Why players trust CRICKIFY</p>
-            <div className="mt-5 grid grid-cols-2 gap-4">
-              <div className="rounded-xl bg-white/80 p-4">
-                <p className="text-2xl font-black text-emerald-800">100%</p>
-                <p className="text-xs font-medium text-slate-600">Admin-verified listings</p>
+      {/* Hero */}
+      <section className="border-b border-slate-100 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
+          <div className="grid gap-10 lg:grid-cols-[1fr_380px] lg:items-center">
+            <div>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-emerald-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                Verified cricket marketplace
+              </span>
+              <h1 className="mt-5 text-4xl font-black leading-[1.08] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                Buy & sell used<br />
+                <span className="text-emerald-700">cricket gear</span> locally.
+              </h1>
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-500">
+                Every listing is manually verified by our admin before going live. No scams, no surprises — just trusted second-hand cricket equipment.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  to="/sell"
+                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 transition-colors"
+                >
+                  List your gear
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </Link>
+                <a
+                  href="#listings"
+                  className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  Browse listings
+                </a>
               </div>
-              <div className="rounded-xl bg-white/80 p-4">
-                <p className="text-2xl font-black text-sky-700">Local</p>
-                <p className="text-xs font-medium text-slate-600">City-level buying focus</p>
-              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: "100%", label: "Admin verified", color: "text-emerald-700" },
+                { value: "Local", label: "City-level focus", color: "text-sky-700" },
+                { value: "Free", label: "No listing fee", color: "text-violet-700" },
+                { value: "Safe", label: "No payment needed", color: "text-amber-600" },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+                  <p className={`text-2xl font-black ${stat.color}`}>{stat.value}</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-500">{stat.label}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
-        <div className="mb-8 rounded-2xl border border-emerald-100 bg-white/90 p-4 shadow-sm md:p-5">
-          <div className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Filter Listings</div>
-          <div className="grid gap-3 md:grid-cols-[220px_1fr]">
-          <select
-            value={filters.category}
-            onChange={(event) => setFilters((current) => ({ ...current, category: event.target.value }))}
-            className="rounded-lg border border-emerald-200 bg-white px-4 py-3 text-sm font-semibold shadow-sm outline-none focus:border-emerald-400"
-          >
-            {categories.map((category) => (
-              <option key={category || "ALL"} value={category}>
-                {category ? category.replace("_", " ") : "All categories"}
-              </option>
+      {/* Listings */}
+      <section id="listings" className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-10">
+        {/* Filters */}
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setFilters((c) => ({ ...c, category: "" }))}
+              className={`rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${
+                filters.category === ""
+                  ? "bg-slate-900 text-white"
+                  : "border border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+              }`}
+            >
+              All
+            </button>
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setFilters((c) => ({ ...c, category: c.category === cat ? "" : cat }))}
+                className={`rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${
+                  filters.category === cat
+                    ? "bg-emerald-700 text-white"
+                    : "border border-slate-200 bg-white text-slate-600 hover:border-emerald-300 hover:text-emerald-700"
+                }`}
+              >
+                {cat.replace("_", " ")}
+              </button>
             ))}
-          </select>
-          <input
-            value={filters.city}
-            onChange={(event) => setFilters((current) => ({ ...current, city: event.target.value }))}
-            placeholder="Search city"
-            className="rounded-lg border border-sky-200 bg-white px-4 py-3 text-sm shadow-sm outline-none focus:border-sky-400"
-          />
-        </div>
+          </div>
+          <div className="relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M10 10l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <input
+              value={filters.city}
+              onChange={(e) => setFilters((c) => ({ ...c, city: e.target.value }))}
+              placeholder="Search by city..."
+              className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-4 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-emerald-400 sm:w-52"
+            />
+          </div>
         </div>
 
-        {loading && <p className="text-slate-600">Loading listings...</p>}
-        {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</p>}
+        {loading && (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="animate-pulse rounded-2xl border border-slate-100 bg-white">
+                <div className="aspect-[4/3] rounded-t-2xl bg-slate-100" />
+                <div className="p-5 grid gap-3">
+                  <div className="h-5 w-3/4 rounded bg-slate-100" />
+                  <div className="h-4 w-1/2 rounded bg-slate-100" />
+                  <div className="h-4 w-full rounded bg-slate-100" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            {error}
+          </div>
+        )}
 
         {!loading && !error && listings.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-emerald-200 bg-white/90 p-12 text-center shadow-sm">
-            <h2 className="text-2xl font-black text-slate-950">No verified listings yet</h2>
-            <p className="mt-2 text-slate-600">Approved equipment will appear here after admin verification.</p>
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-16 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-2xl">
+              🏏
+            </div>
+            <h2 className="text-xl font-black text-slate-900">No listings found</h2>
+            <p className="mt-2 text-sm text-slate-500">
+              {filters.category || filters.city
+                ? "Try clearing your filters."
+                : "Approved equipment will appear here after admin verification."}
+            </p>
           </div>
         )}
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {listings.map((listing) => {
-            const cover = listing.media?.find((item) => item.type === "IMAGE");
+            const cover = listing.media?.find((m) => m.type === "IMAGE");
+            const conditionClass = CONDITION_COLORS[listing.condition] || "bg-slate-100 text-slate-600";
 
             return (
-              <article key={listing.id} className="overflow-hidden rounded-2xl border border-emerald-100 bg-white/95 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                <div className="aspect-[4/3] bg-sky-50">
+              <article
+                key={listing.id}
+                className="group overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
+              >
+                <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
                   {cover ? (
-                    <img src={cover.url} alt={listing.title} className="h-full w-full object-cover" />
+                    <img
+                      src={cover.url}
+                      alt={listing.title}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-500">
-                      CRICKIFY VERIFIED
-                    </div>
+                    <div className="flex h-full items-center justify-center text-3xl">🏏</div>
                   )}
+                  <div className="absolute left-3 top-3 flex gap-1.5">
+                    <span className="rounded-full bg-emerald-700 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow">
+                      ✓ Verified
+                    </span>
+                  </div>
+                  <div className="absolute right-3 top-3">
+                    <span className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-black text-sky-700 shadow backdrop-blur-sm">
+                      Rs. {listing.price.toLocaleString()}
+                    </span>
+                  </div>
                 </div>
-                <div className="grid gap-3 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h2 className="text-xl font-black text-slate-950">{listing.title}</h2>
-                      <p className="text-sm text-slate-600">{listing.city}</p>
+
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h2 className="truncate text-base font-black text-slate-900">{listing.title}</h2>
+                      <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1C3.34 1 2 2.34 2 4c0 2.5 3 5 3 5s3-2.5 3-5c0-1.66-1.34-3-3-3z" stroke="currentColor" strokeWidth="1.2"/><circle cx="5" cy="4" r="1" fill="currentColor"/></svg>
+                        {listing.city}
+                      </p>
                     </div>
-                    <p className="shrink-0 text-lg font-black text-sky-700">Rs. {listing.price}</p>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">Admin Verified</span>
-                    <span className="rounded-md bg-sky-50 px-2 py-1 text-xs font-bold text-sky-700">{listing.condition.replace("_", " ")}</span>
+
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase text-slate-600">
+                      {listing.category}
+                    </span>
+                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${conditionClass}`}>
+                      {listing.condition.replace("_", " ")}
+                    </span>
                   </div>
-                  <p className="line-clamp-2 text-sm text-slate-600">{listing.description}</p>
-                  <p className="text-sm font-semibold text-slate-700">Seller: {listing.seller?.name}</p>
-                  <Link
-                    to={`/listings/${listing.id}`}
-                    className="inline-flex w-fit rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white hover:bg-slate-800"
-                  >
-                    View Details
-                  </Link>
+
+                  <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-slate-500">{listing.description}</p>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <p className="text-xs font-semibold text-slate-500">
+                      by {listing.seller?.name}
+                    </p>
+                    <Link
+                      to={`/listings/${listing.id}`}
+                      className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors"
+                    >
+                      View →
+                    </Link>
+                  </div>
                 </div>
               </article>
             );
