@@ -5,14 +5,14 @@ import { apiRequest } from "../lib/api";
 const CATEGORIES = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
 
 const CATEGORY_META = {
-  ALL:     { icon: "🏏", label: "All Gear",  gradient: "from-emerald-500 to-teal-500",  bg: "from-emerald-950/80 to-teal-900/80" },
-  BAT:     { icon: "🏏", label: "Bats",      gradient: "from-amber-500 to-orange-500",  bg: "from-amber-950/80 to-orange-900/80" },
-  GLOVES:  { icon: "🧤", label: "Gloves",    gradient: "from-sky-500 to-blue-600",      bg: "from-sky-950/80 to-blue-900/80" },
-  PADS:    { icon: "🦵", label: "Pads",      gradient: "from-violet-500 to-purple-600", bg: "from-violet-950/80 to-purple-900/80" },
-  HELMET:  { icon: "⛑️", label: "Helmets",   gradient: "from-red-500 to-rose-600",      bg: "from-red-950/80 to-rose-900/80" },
-  SHOES:   { icon: "👟", label: "Shoes",     gradient: "from-cyan-500 to-sky-600",      bg: "from-cyan-950/80 to-sky-900/80" },
-  KIT:     { icon: "🎒", label: "Full Kits", gradient: "from-lime-500 to-green-600",    bg: "from-lime-950/80 to-green-900/80" },
-  OTHER:   { icon: "📦", label: "Other",     gradient: "from-slate-500 to-slate-600",   bg: "from-slate-800/80 to-slate-900/80" },
+  ALL:     { icon: "🏏", label: "All Gear",  gradient: "from-emerald-500 to-teal-500",  bg: "from-emerald-950/80 to-teal-900/80",    bgImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=1600&q=80" },
+  BAT:     { icon: "🏏", label: "Bats",      gradient: "from-amber-500 to-orange-500",  bg: "from-amber-950/80 to-orange-900/80",   bgImage: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=1600&q=80" },
+  GLOVES:  { icon: "🧤", label: "Gloves",    gradient: "from-sky-500 to-blue-600",      bg: "from-sky-950/80 to-blue-900/80",       bgImage: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=1600&q=80" },
+  PADS:    { icon: "🦵", label: "Pads",      gradient: "from-violet-500 to-purple-600", bg: "from-violet-950/80 to-purple-900/80",  bgImage: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1600&q=80" },
+  HELMET:  { icon: "⛑️", label: "Helmets",   gradient: "from-red-500 to-rose-600",      bg: "from-red-950/80 to-rose-900/80",       bgImage: "https://images.unsplash.com/photo-1593341646782-e0b495cff86d?w=1600&q=80" },
+  SHOES:   { icon: "👟", label: "Shoes",     gradient: "from-cyan-500 to-sky-600",      bg: "from-cyan-950/80 to-sky-900/80",       bgImage: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1600&q=80" },
+  KIT:     { icon: "🎒", label: "Full Kits", gradient: "from-lime-500 to-green-600",    bg: "from-lime-950/80 to-green-900/80",     bgImage: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1600&q=80" },
+  OTHER:   { icon: "📦", label: "Other",     gradient: "from-slate-500 to-slate-600",   bg: "from-slate-800/80 to-slate-900/80",    bgImage: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1600&q=80" },
 };
 
 const CONDITION_META = {
@@ -50,10 +50,20 @@ function CategorySection({ catKey, cityFilter }) {
   return (
     <section id={`cat-${catKey}`} className="relative overflow-hidden">
       {/* Category hero banner */}
-      <div className="relative flex min-h-[38vh] items-end overflow-hidden"
+      <div className="group relative flex min-h-[38vh] items-end overflow-hidden"
         style={{ background: `linear-gradient(135deg, var(--tw-gradient-stops))` }}>
-        {/* Dark gradient bg */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${meta.bg}`} />
+        {/* Background image with dark overlay */}
+        {meta.bgImage ? (
+          <>
+            <div
+              className="absolute inset-0 scale-100 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+              style={{ backgroundImage: `url(${meta.bgImage})` }}
+            />
+            <div className="absolute inset-0 bg-black/55" />
+          </>
+        ) : (
+          <div className={`absolute inset-0 bg-gradient-to-br ${meta.bg}`} />
+        )}
         {/* Decorative big emoji */}
         <div className="pointer-events-none absolute right-8 top-1/2 -translate-y-1/2 select-none text-[10rem] opacity-10 sm:text-[14rem]">
           {meta.icon}
