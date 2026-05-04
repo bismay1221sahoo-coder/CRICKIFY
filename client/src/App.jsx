@@ -7,7 +7,7 @@ import Sell from "./pages/Sell";
 
 function App() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
+    <div className="min-h-screen text-slate-950">
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />

@@ -119,19 +119,19 @@ function Sell() {
         <h1 className="mt-2 text-3xl font-black text-slate-950">Sell used cricket equipment</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-5 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <form onSubmit={handleSubmit} className="grid gap-5 rounded-xl border border-emerald-100 bg-white/95 p-6 shadow-md">
         <div className="grid gap-4 md:grid-cols-2">
           <label className="grid gap-2 text-sm font-semibold text-slate-700">
             Title
-            <input name="title" value={form.title} onChange={updateField} className="rounded-md border border-slate-300 px-3 py-2" />
+            <input name="title" value={form.title} onChange={updateField} className="rounded-md border border-emerald-200 px-3 py-2 outline-none focus:border-emerald-400" />
           </label>
           <label className="grid gap-2 text-sm font-semibold text-slate-700">
             Brand
-            <input name="brand" value={form.brand} onChange={updateField} className="rounded-md border border-slate-300 px-3 py-2" />
+            <input name="brand" value={form.brand} onChange={updateField} className="rounded-md border border-sky-200 px-3 py-2 outline-none focus:border-sky-400" />
           </label>
           <label className="grid gap-2 text-sm font-semibold text-slate-700">
             Category
-            <select name="category" value={form.category} onChange={updateField} className="rounded-md border border-slate-300 px-3 py-2">
+            <select name="category" value={form.category} onChange={updateField} className="rounded-md border border-emerald-200 px-3 py-2 outline-none focus:border-emerald-400">
               {categories.map((category) => (
                 <option key={category} value={category}>
                   {category.replace("_", " ")}
@@ -141,7 +141,7 @@ function Sell() {
           </label>
           <label className="grid gap-2 text-sm font-semibold text-slate-700">
             Condition
-            <select name="condition" value={form.condition} onChange={updateField} className="rounded-md border border-slate-300 px-3 py-2">
+            <select name="condition" value={form.condition} onChange={updateField} className="rounded-md border border-sky-200 px-3 py-2 outline-none focus:border-sky-400">
               {conditions.map((condition) => (
                 <option key={condition} value={condition}>
                   {condition.replace("_", " ")}
@@ -151,22 +151,22 @@ function Sell() {
           </label>
           <label className="grid gap-2 text-sm font-semibold text-slate-700">
             Price
-            <input name="price" type="number" min="1" value={form.price} onChange={updateField} className="rounded-md border border-slate-300 px-3 py-2" />
+            <input name="price" type="number" min="1" value={form.price} onChange={updateField} className="rounded-md border border-emerald-200 px-3 py-2 outline-none focus:border-emerald-400" />
           </label>
           <label className="grid gap-2 text-sm font-semibold text-slate-700">
             City
-            <input name="city" value={form.city} onChange={updateField} className="rounded-md border border-slate-300 px-3 py-2" />
+            <input name="city" value={form.city} onChange={updateField} className="rounded-md border border-sky-200 px-3 py-2 outline-none focus:border-sky-400" />
           </label>
         </div>
 
         <label className="grid gap-2 text-sm font-semibold text-slate-700">
           Used duration
-          <input name="usedDuration" value={form.usedDuration} onChange={updateField} placeholder="3 months" className="rounded-md border border-slate-300 px-3 py-2" />
+          <input name="usedDuration" value={form.usedDuration} onChange={updateField} placeholder="3 months" className="rounded-md border border-emerald-200 px-3 py-2 outline-none focus:border-emerald-400" />
         </label>
 
         <label className="grid gap-2 text-sm font-semibold text-slate-700">
           Defects
-          <input name="defects" value={form.defects} onChange={updateField} placeholder="No defects / toe crack / grip worn" className="rounded-md border border-slate-300 px-3 py-2" />
+          <input name="defects" value={form.defects} onChange={updateField} placeholder="No defects / toe crack / grip worn" className="rounded-md border border-sky-200 px-3 py-2 outline-none focus:border-sky-400" />
         </label>
 
         <label className="grid gap-2 text-sm font-semibold text-slate-700">
@@ -176,7 +176,7 @@ function Sell() {
             multiple
             accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
             onChange={handleFileUpload}
-            className="rounded-md border border-slate-300 px-3 py-2"
+            className="rounded-md border border-emerald-200 px-3 py-2 outline-none focus:border-emerald-400"
           />
         </label>
 
@@ -185,7 +185,7 @@ function Sell() {
         {media.length > 0 && (
           <div className="grid gap-3 md:grid-cols-3">
             {media.map((item) => (
-              <div key={item.localId} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+              <div key={item.localId} className="rounded-md border border-emerald-100 bg-emerald-50/40 p-3">
                 <p className="text-xs font-bold text-slate-600">{item.type}</p>
                 <a href={item.url} target="_blank" rel="noreferrer" className="mt-1 block truncate text-sm font-semibold text-emerald-700">
                   View uploaded file
@@ -193,7 +193,7 @@ function Sell() {
                 <button
                   type="button"
                   onClick={() => removeMedia(item.localId)}
-                  className="mt-3 rounded-md border border-slate-300 px-2 py-1 text-xs font-bold text-slate-700"
+                  className="mt-3 rounded-md border border-sky-200 px-2 py-1 text-xs font-bold text-sky-700"
                 >
                   Remove
                 </button>
@@ -204,7 +204,7 @@ function Sell() {
 
         <label className="grid gap-2 text-sm font-semibold text-slate-700">
           Description
-          <textarea name="description" value={form.description} onChange={updateField} rows="4" className="rounded-md border border-slate-300 px-3 py-2" />
+          <textarea name="description" value={form.description} onChange={updateField} rows="4" className="rounded-md border border-emerald-200 px-3 py-2 outline-none focus:border-emerald-400" />
         </label>
 
         {error && <p className="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">{error}</p>}
