@@ -1,7 +1,8 @@
 export const errorHandler = (error, req, res, next) => {
   console.error(error);
 
-  return res.status(500).json({
-    message: "Something went wrong. Please try again later.",
+  const status = error.status || error.statusCode || 500;
+  return res.status(status).json({
+    message: error.message || "Something went wrong. Please try again later.",
   });
 };

@@ -1,14 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { clearSession, getUser } from "../lib/api";
 
 function Navbar() {
   const navigate = useNavigate();
-  const user = getUser();
+  const [user, setUser] = useState(getUser);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const syncUser = () => setUser(getUser());
+    window.addEventListener("storage", syncUser);
+    return () => window.removeEventListener("storage", syncUser);
+  }, []);
 
   const handleLogout = () => {
     clearSession();
+    setUser(null);
     navigate("/login");
     setMenuOpen(false);
   };

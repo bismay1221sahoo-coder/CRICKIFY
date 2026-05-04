@@ -21,44 +21,31 @@ function Admin() {
   };
 
   useEffect(() => {
-    let isMounted = true;
-
-    apiRequest("/api/admin/listings/pending")
-      .then((data) => {
-        if (isMounted) {
-          setListings(data.listings);
-        }
-      })
-      .catch((err) => {
-        if (isMounted) {
-          setError(err.message);
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
+    loadPendingListings();
   }, []);
 
   const approveListing = async (id) => {
-    await apiRequest(`/api/admin/listings/${id}/approve`, { method: "PATCH" });
-    loadPendingListings();
+    try {
+      await apiRequest(`/api/admin/listings/${id}/approve`, { method: "PATCH" });
+      loadPendingListings();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const rejectListing = async (id) => {
     const reason = window.prompt("Reject reason");
     if (!reason) return;
 
-    await apiRequest(`/api/admin/listings/${id}/reject`, {
-      method: "PATCH",
-      body: JSON.stringify({ reason }),
-    });
-    loadPendingListings();
+    try {
+      await apiRequest(`/api/admin/listings/${id}/reject`, {
+        method: "PATCH",
+        body: JSON.stringify({ reason }),
+      });
+      loadPendingListings();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
