@@ -144,7 +144,23 @@ export const getListingById = async (req, res, next) => {
   }
 };
 
-export const getMyListings = async (req, res, next) => {
+export const deleteListing = async (req, res, next) => {
+  try {
+    const listing = await prisma.listing.findFirst({
+      where: { id: req.params.id, sellerId: req.user.id },
+    });
+
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found." });
+    }
+
+    await prisma.listing.delete({ where: { id: req.params.id } });
+    return res.json({ message: "Listing deleted." });
+  } catch (error) {
+    next(error);
+  }
+};
+
   try {
     const listings = await prisma.listing.findMany({
       where: { sellerId: req.user.id },

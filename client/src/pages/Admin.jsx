@@ -116,12 +116,17 @@ function Admin() {
               className="glass card-hover overflow-hidden rounded-2xl shadow-sm"
             >
               <div className="flex">
-                {/* Thumbnail */}
+                {/* Thumbnail strip */}
                 <div className="relative h-auto w-36 shrink-0 overflow-hidden bg-slate-100 sm:w-44">
                   {cover ? (
                     <img src={cover.url} alt={listing.title} className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" />
                   ) : (
                     <div className="flex h-full min-h-[130px] items-center justify-center text-3xl">🏏</div>
+                  )}
+                  {listing.media?.length > 1 && (
+                    <div className="absolute bottom-1.5 right-1.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+                      +{listing.media.length - 1}
+                    </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/5" />
                 </div>

@@ -6,13 +6,13 @@ const initialForm = { name: "", email: "", password: "", phone: "", city: "" };
 
 function Login() {
   const navigate = useNavigate();
-
-  // Already logged in → redirect to home, don't show login page
-  if (getUser()) return <Navigate to="/" replace />;
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Already logged in → redirect to home
+  if (getUser()) return <Navigate to="/" replace />;
 
   const updateField = (e) => setForm((c) => ({ ...c, [e.target.name]: e.target.value }));
 

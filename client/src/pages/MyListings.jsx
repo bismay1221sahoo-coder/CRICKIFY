@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { apiRequest } from "../lib/api";
 
 const STATUS_META = {
@@ -9,37 +9,66 @@ const STATUS_META = {
 };
 
 const CONDITION_META = {
-  LIKE_NEW:     "Like New",
-  GOOD:         "Good",
-  FAIR:         "Fair",
-  NEEDS_REPAIR: "Needs Repair",
+  LIKE_NEW: "Like New", GOOD: "Good", FAIR: "Fair", NEEDS_REPAIR: "Needs Repair",
 };
 
 function MyListings() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [toast, setToast] = useState("");
+  const location = useLocation();
 
+  // Show success toast if redirected from Sell page
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const data = await apiRequest("/api/listings/mine");
-        setListings(data.listings);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    if (location.state?.submitted) {
+      setToast("Listing submitted! Admin will verify it shortly.");
+      setTimeout(() => setToast(""), 4000);
+      window.history.replaceState({}, "");
+    }
   }, []);
+
+  const load = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await apiRequest("/api/listings/mine");
+      setListings(data.listings);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const deleteListing = async (id, title) => {
+    if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
+    try {
+      await apiRequest(`/api/listings/${id}`, { method: "DELETE" });
+      setListings((c) => c.filter((l) => l.id !== id));
+      setToast("Listing deleted.");
+      setTimeout(() => setToast(""), 3000);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   return (
     <main className="relative mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-10">
       <div className="pointer-events-none absolute -right-32 top-0 h-80 w-80 rounded-full opacity-15 blur-3xl"
         style={{ background: "radial-gradient(circle, #6ee7b7, transparent)" }} />
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 fade-in-up">
+          <div className="glass-emerald flex items-center gap-3 rounded-2xl px-5 py-3 shadow-xl">
+            <span className="text-lg">✅</span>
+            <p className="text-sm font-bold text-emerald-800">{toast}</p>
+          </div>
+        </div>
+      )}
 
       <div className="fade-in-up mb-8 flex items-start justify-between gap-4">
         <div>
@@ -55,12 +84,11 @@ function MyListings() {
       </div>
 
       {error && (
-        <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-200/60 bg-red-50/70 px-4 py-3 text-sm font-semibold text-red-700 backdrop-blur-sm">
+        <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-200/60 bg-red-50/70 px-4 py-3 text-sm font-semibold text-red-700">
           {error}
         </div>
       )}
 
-      {/* Skeleton */}
       {loading && (
         <div className="grid gap-4">
           {[...Array(3)].map((_, i) => (
@@ -78,7 +106,6 @@ function MyListings() {
         </div>
       )}
 
-      {/* Empty state */}
       {!loading && !error && listings.length === 0 && (
         <div className="glass rounded-2xl p-16 text-center shadow-md">
           <div className="float mx-auto mb-4 text-5xl">📦</div>
@@ -90,7 +117,6 @@ function MyListings() {
         </div>
       )}
 
-      {/* Listing cards */}
       <div className="grid gap-4">
         {listings.map((listing) => {
           const cover = listing.media?.find((m) => m.type === "IMAGE");
@@ -99,7 +125,6 @@ function MyListings() {
           return (
             <article key={listing.id} className="glass card-hover overflow-hidden rounded-2xl shadow-sm">
               <div className="flex">
-                {/* Thumbnail */}
                 <div className="relative h-auto w-36 shrink-0 overflow-hidden bg-slate-100 sm:w-44">
                   {cover ? (
                     <img src={cover.url} alt={listing.title} className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" />
@@ -108,7 +133,6 @@ function MyListings() {
                   )}
                 </div>
 
-                {/* Content */}
                 <div className="flex flex-1 flex-col justify-between gap-2 p-5">
                   <div>
                     <div className="flex flex-wrap items-start justify-between gap-2">
@@ -120,7 +144,7 @@ function MyListings() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <p className="text-base font-black gradient-text">Rs. {listing.price.toLocaleString()}</p>
-                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase backdrop-blur-sm ${status.cls}`}>
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${status.cls}`}>
                           {status.label}
                         </span>
                       </div>
@@ -129,37 +153,41 @@ function MyListings() {
                     <p className="mt-2 line-clamp-2 text-sm text-slate-500">{listing.description}</p>
 
                     {listing.status === "REJECTED" && listing.rejectReason && (
-                      <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-200/60 bg-red-50/60 px-3 py-2.5 backdrop-blur-sm">
+                      <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-200/60 bg-red-50/60 px-3 py-2.5">
                         <svg className="mt-0.5 shrink-0 text-red-500" width="12" height="12" viewBox="0 0 12 12" fill="none">
                           <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.5" />
                           <path d="M6 3.5v3M6 8.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                         </svg>
-                        <p className="text-xs font-semibold text-red-700">
-                          Rejected: {listing.rejectReason}
-                        </p>
+                        <p className="text-xs font-semibold text-red-700">Rejected: {listing.rejectReason}</p>
                       </div>
                     )}
 
                     {listing.status === "PENDING" && (
-                      <p className="mt-2 text-xs text-amber-600 font-semibold">
-                        ⏳ Awaiting admin verification
-                      </p>
+                      <p className="mt-2 text-xs font-semibold text-amber-600">⏳ Awaiting admin verification</p>
                     )}
                   </div>
 
                   <div className="flex items-center justify-between border-t border-slate-100/60 pt-3">
                     <p className="text-xs text-slate-400">
-                      Submitted {new Date(listing.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      {new Date(listing.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                     </p>
-                    {listing.status === "APPROVED" && (
-                      <Link
-                        to={`/listings/${listing.id}`}
-                        className="rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-all duration-200 hover:shadow-md"
-                        style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
+                    <div className="flex items-center gap-2">
+                      {listing.status === "APPROVED" && (
+                        <Link
+                          to={`/listings/${listing.id}`}
+                          className="rounded-lg px-3 py-1.5 text-xs font-bold text-white"
+                          style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
+                        >
+                          View live →
+                        </Link>
+                      )}
+                      <button
+                        onClick={() => deleteListing(listing.id, listing.title)}
+                        className="rounded-lg border border-red-200/60 bg-red-50/60 px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-100 transition-colors"
                       >
-                        View live →
-                      </Link>
-                    )}
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

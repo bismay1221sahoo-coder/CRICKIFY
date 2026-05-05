@@ -69,7 +69,7 @@ function Sell() {
         method: "POST",
         body: JSON.stringify({ ...form, price: Number(form.price), media }),
       });
-      navigate("/my-listings");
+      navigate("/my-listings", { state: { submitted: true } });
     } catch (err) {
       setError(err.message);
     } finally {
