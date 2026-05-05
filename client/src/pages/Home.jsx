@@ -76,7 +76,7 @@ function CategorySection({ catKey, cityFilter }) {
           <p className="text-sm font-semibold text-white/70">
             {loading ? "Loading..." : listings.length > 0
               ? `${listings.length} verified listing${listings.length !== 1 ? "s" : ""} — tap to browse`
-              : "No listings yet — tap to see"}
+              : "Tap to browse"}
           </p>
           {/* Arrow indicator */}
           <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm transition-transform duration-300 group-hover:translate-y-1">
