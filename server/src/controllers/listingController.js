@@ -161,6 +161,7 @@ export const deleteListing = async (req, res, next) => {
   }
 };
 
+export const getMyListings = async (req, res, next) => {
   try {
     const listings = await prisma.listing.findMany({
       where: { sellerId: req.user.id },
