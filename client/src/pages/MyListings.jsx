@@ -56,7 +56,7 @@ function MyListings() {
   };
 
   return (
-    <main className="relative mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-10">
+    <main className="relative mx-auto max-w-8xl px-4 py-10 sm:px-6 lg:px-10">
       <div className="pointer-events-none absolute -right-32 top-0 h-80 w-80 rounded-full opacity-15 blur-3xl"
         style={{ background: "radial-gradient(circle, #6ee7b7, transparent)" }} />
 
