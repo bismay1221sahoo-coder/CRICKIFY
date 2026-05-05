@@ -97,7 +97,7 @@ function Sell() {
   }
 
   return (
-    <main className="relative mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <main className="relative mx-auto max-w-7.5xl px-4 py-10 sm:px-6 lg:px-8">
       {/* Blob */}
       <div className="pointer-events-none fixed -right-32 top-0 h-80 w-80 rounded-full opacity-15 blur-3xl"
         style={{ background: "radial-gradient(circle, #6ee7b7, transparent)" }} />
