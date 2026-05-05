@@ -5,6 +5,15 @@ import { apiRequest, getToken, uploadListingMedia } from "../lib/api";
 const CATEGORIES = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
 const CONDITIONS = ["LIKE_NEW", "GOOD", "FAIR", "NEEDS_REPAIR"];
 
+const EXTRA_FIELDS = {
+  BAT: [
+    { name: "batWeight",   label: "Bat Weight (approx)",  type: "text",   placeholder: "e.g. 1.1kg, 1.2kg",          required: true },
+    { name: "willowType",  label: "Willow Type",           type: "select", options: ["English Willow", "Kashmir Willow", "Tennis Ball Bat"], required: true },
+    { name: "batSize",     label: "Bat Size",              type: "select", options: ["Boys", "Mens"],                 required: true },
+    { name: "handleType",  label: "Handle Type (optional)",type: "select", options: ["", "Round", "Oval"],            required: false },
+  ],
+};
+
 const initialForm = {
   title: "", brand: "", category: "BAT", condition: "GOOD",
   price: "", city: "", usedDuration: "", defects: "", description: "",
@@ -20,9 +29,17 @@ function Sell() {
   const [uploading, setUploading] = useState(false);
   const [media, setMedia] = useState([]);
   const [dragOver, setDragOver] = useState(false);
+  const [extraDetails, setExtraDetails] = useState({});
 
   const isLoggedIn = Boolean(getToken());
   const updateField = (e) => setForm((c) => ({ ...c, [e.target.name]: e.target.value }));
+  const updateExtra = (e) => setExtraDetails((c) => ({ ...c, [e.target.name]: e.target.value }));
+
+  // Reset extra details when category changes
+  const handleCategoryChange = (e) => {
+    setForm((c) => ({ ...c, category: e.target.value }));
+    setExtraDetails({});
+  };
 
   const uploadFiles = async (files) => {
     if (!files.length) return;
@@ -65,9 +82,17 @@ function Sell() {
     if (!media.length) { setError("Upload at least one photo or video before submitting."); return; }
     setLoading(true);
     try {
+      const extraFields = EXTRA_FIELDS[form.category] || [];
+      const extraLines = extraFields
+        .filter((f) => extraDetails[f.name])
+        .map((f) => `${f.label.replace(" (optional)", "")}: ${extraDetails[f.name]}`);
+      const fullDescription = extraLines.length
+        ? `${extraLines.join(" | ")}\n\n${form.description}`
+        : form.description;
+
       await apiRequest("/api/listings", {
         method: "POST",
-        body: JSON.stringify({ ...form, price: Number(form.price), media }),
+        body: JSON.stringify({ ...form, description: fullDescription, price: Number(form.price), media }),
       });
       navigate("/my-listings", { state: { submitted: true } });
     } catch (err) {
@@ -125,7 +150,7 @@ function Sell() {
             </label>
             <label className={labelClass}>
               Category *
-              <select name="category" value={form.category} onChange={updateField} className="input-field">
+              <select name="category" value={form.category} onChange={handleCategoryChange} className="input-field">
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c.replace("_", " ")}</option>)}
               </select>
             </label>
@@ -145,6 +170,44 @@ function Sell() {
             </label>
           </div>
         </div>
+
+        {/* Category-specific extra fields */}
+        {EXTRA_FIELDS[form.category] && (
+          <div className="glass rounded-2xl p-6 shadow-sm">
+            <p className="mb-5 text-xs font-bold uppercase tracking-widest text-slate-400">
+              {form.category} details
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {EXTRA_FIELDS[form.category].map((field) => (
+                <label key={field.name} className={labelClass}>
+                  {field.label}
+                  {field.type === "select" ? (
+                    <select
+                      name={field.name}
+                      value={extraDetails[field.name] || ""}
+                      onChange={updateExtra}
+                      className="input-field"
+                      required={field.required}
+                    >
+                      {field.options.map((opt) => (
+                        <option key={opt} value={opt}>{opt || "-- Select --"}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      name={field.name}
+                      value={extraDetails[field.name] || ""}
+                      onChange={updateExtra}
+                      placeholder={field.placeholder}
+                      className="input-field"
+                      required={field.required}
+                    />
+                  )}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Condition details */}
         <div className="glass rounded-2xl p-6 shadow-sm">
