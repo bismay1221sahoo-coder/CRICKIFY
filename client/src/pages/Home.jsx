@@ -26,10 +26,12 @@ const ALL_SECTIONS = ["ALL", ...CATEGORIES];
 
 function CategorySection({ catKey, cityFilter }) {
   const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
   const meta = CATEGORY_META[catKey];
 
   useEffect(() => {
+    if (!open) return;
     const load = async () => {
       setLoading(true);
       try {
@@ -45,13 +47,20 @@ function CategorySection({ catKey, cityFilter }) {
       }
     };
     load();
-  }, [catKey, cityFilter]);
+  }, [open, catKey, cityFilter]);
+
+  const handleBannerClick = () => {
+    setOpen(true);
+    setTimeout(() => {
+      document.getElementById(`cat-${catKey}-listings`)?.scrollIntoView({ behavior: "smooth" });
+    }, 50);
+  };
 
   return (
     <section id={`cat-${catKey}`} className="relative overflow-hidden">
       {/* Category hero banner — clickable, text centered */}
       <button
-        onClick={() => document.getElementById(`cat-${catKey}-listings`)?.scrollIntoView({ behavior: "smooth" })}
+        onClick={() => handleBannerClick()}
         className="group relative flex min-h-[42vh] w-full items-center justify-center overflow-hidden text-left"
       >
         {/* Background image */}
@@ -87,7 +96,8 @@ function CategorySection({ catKey, cityFilter }) {
         </div>
       </button>
 
-      {/* Listings grid */}
+      {/* Listings — only shown after banner click */}
+      {open && (
       <div id={`cat-${catKey}-listings`} className="px-4 py-8 sm:px-6 lg:px-10">
         {loading && (
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -178,6 +188,7 @@ function CategorySection({ catKey, cityFilter }) {
           </div>
         )}
       </div>
+      )}
 
       {/* Divider */}
       <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mx-4 sm:mx-6 lg:mx-10" />
