@@ -62,7 +62,6 @@ function Sell() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setMessage("");
     if (!media.length) { setError("Upload at least one photo or video before submitting."); return; }
     setLoading(true);
     try {
@@ -98,12 +97,12 @@ function Sell() {
   }
 
   return (
-    <main className="relative mx-auto max-w-3xl px-4 py-10 sm:px-6">
+    <main className="relative mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
       {/* Blob */}
-      <div className="pointer-events-none absolute -right-32 top-0 h-80 w-80 rounded-full opacity-15 blur-3xl"
+      <div className="pointer-events-none fixed -right-32 top-0 h-80 w-80 rounded-full opacity-15 blur-3xl"
         style={{ background: "radial-gradient(circle, #6ee7b7, transparent)" }} />
 
-      <div className="fade-in-up relative mb-8">
+      <div className="fade-in-up relative mb-8 text-center">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-emerald-50/80 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-emerald-700 backdrop-blur-sm">
           Seller submission
         </span>
@@ -111,7 +110,7 @@ function Sell() {
         <p className="mt-2 text-sm text-slate-500">Fill in the details below. Admin will verify your listing before it goes live.</p>
       </div>
 
-<form onSubmit={handleSubmit} className="grid gap-5">
+      <form onSubmit={handleSubmit} className="grid gap-5">
         {/* Equipment details */}
         <div className="glass rounded-2xl p-6 shadow-sm">
           <p className="mb-5 text-xs font-bold uppercase tracking-widest text-slate-400">Equipment details</p>
