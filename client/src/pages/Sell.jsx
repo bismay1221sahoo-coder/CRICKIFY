@@ -28,6 +28,12 @@ const EXTRA_FIELDS = {
       required: true,
     },
   ],
+  SHOES: [
+    { name: "shoesType", label: "Shoes Type", type: "select", options: ["Studds", "Spikes"], required: true },
+  ],
+  KIT: [
+    { name: "kitType", label: "Kit Type", type: "select", options: ["Wheel", "Carry", "Both"], required: true },
+  ],
 };
 
 const initialForm = {
@@ -266,6 +272,24 @@ function Sell() {
                     </select>
                   </label>
                 </>
+              )}
+
+              {/* SHOES - show spikes-only field */}
+              {form.category === "SHOES" && extraDetails.shoesType === "Spikes" && (
+                <label className={labelClass}>
+                  Nails Available
+                  <select
+                    name="nailsAvailable"
+                    value={extraDetails.nailsAvailable || ""}
+                    onChange={updateExtra}
+                    className="input-field"
+                    required
+                  >
+                    <option value="">-- Select --</option>
+                    <option>Yes</option>
+                    <option>No</option>
+                  </select>
+                </label>
               )}
             </div>
           </div>
