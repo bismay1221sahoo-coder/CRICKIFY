@@ -18,6 +18,16 @@ const EXTRA_FIELDS = {
   PADS: [
     { name: "padsType", label: "Pads Type", type: "select", options: ["Wicket Keeping Pads", "Batting Pads"], required: true },
   ],
+  HELMET: [
+    { name: "helmetSize", label: "Helmet Size", type: "select", options: ["Boys", "Adult", "Mens"], required: true },
+    {
+      name: "grillType",
+      label: "Grill Type",
+      type: "select",
+      options: ["Titanium", "Stainless Steel", "Mild Steel", "Carbon Steel"],
+      required: true,
+    },
+  ],
 };
 
 const initialForm = {
