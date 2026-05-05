@@ -50,6 +50,10 @@ function Sell() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [media, setMedia] = useState([]);
+  const [proofMedia, setProofMedia] = useState([]);
+  const [proofReason, setProofReason] = useState("");
+  const [proofUploading, setProofUploading] = useState(false);
+  const [proofDragOver, setProofDragOver] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [extraDetails, setExtraDetails] = useState({});
 
@@ -97,20 +101,68 @@ function Sell() {
   };
 
   const removeMedia = (localId) => setMedia((c) => c.filter((m) => m.localId !== localId));
+  const removeProofMedia = (localId) => setProofMedia((c) => c.filter((m) => m.localId !== localId));
+
+  const uploadProofFiles = async (files) => {
+    if (!files.length) return;
+    setError("");
+    const maxProofSize = 1 * 1024 * 1024;
+    const oversized = files.find((file) => file.size > maxProofSize);
+    if (oversized) {
+      setError("Invoice/proof file size must be 1MB or less.");
+      return;
+    }
+    setProofUploading(true);
+    try {
+      const uploaded = [];
+      for (const file of files) {
+        const result = await uploadListingMedia(file);
+        uploaded.push({
+          ...result,
+          localId: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          previewUrl: result.type === "IMAGE" ? result.url : null,
+        });
+      }
+      setProofMedia((c) => [...c, ...uploaded]);
+      setProofReason("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setProofUploading(false);
+    }
+  };
+
+  const handleProofFileInput = async (e) => {
+    await uploadProofFiles(Array.from(e.target.files || []));
+    e.target.value = "";
+  };
+
+  const handleProofDrop = async (e) => {
+    e.preventDefault();
+    setProofDragOver(false);
+    await uploadProofFiles(Array.from(e.dataTransfer.files || []));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (!media.length) { setError("Upload at least one photo or video before submitting."); return; }
+    if (!proofMedia.length && !proofReason.trim()) {
+      setError("Upload invoice/bill/purchase proof, or give a valid reason for not having proof.");
+      return;
+    }
     setLoading(true);
     try {
       const extraFields = EXTRA_FIELDS[form.category] || [];
       const extraLines = extraFields
         .filter((f) => extraDetails[f.name])
         .map((f) => `${f.label.replace(" (optional)", "")}: ${extraDetails[f.name]}`);
+      const proofLines = proofMedia.length
+        ? [`Purchase Proof: ${proofMedia.map((item) => item.url).join(", ")}`]
+        : [`Purchase Proof Reason: ${proofReason.trim()}`];
       const fullDescription = extraLines.length
-        ? `${extraLines.join(" | ")}\n\n${form.description}`
-        : form.description;
+        ? `${extraLines.join(" | ")}\n${proofLines.join(" | ")}\n\n${form.description}`
+        : `${proofLines.join(" | ")}\n\n${form.description}`;
 
       await apiRequest("/api/listings", {
         method: "POST",
@@ -316,6 +368,74 @@ function Sell() {
           </div>
         </div>
 
+        {/* Purchase proof */}
+        <div className="glass rounded-2xl p-6 shadow-sm">
+          <p className="mb-1 text-xs font-bold uppercase tracking-widest text-slate-400">Invoice/Bill/Purchase proof *</p>
+          <p className="mb-4 text-xs text-slate-500">
+            Upload invoice, bill, or any proof of purchase. If you don't have proof, give a valid reason below.
+          </p>
+
+          <label
+            onDragOver={(e) => { e.preventDefault(); setProofDragOver(true); }}
+            onDragLeave={() => setProofDragOver(false)}
+            onDrop={handleProofDrop}
+            className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-8 text-center transition-all duration-200 ${
+              proofDragOver
+                ? "border-emerald-400 bg-emerald-50/60 scale-[1.01]"
+                : "border-slate-200/80 bg-white/30 hover:border-emerald-300 hover:bg-emerald-50/30"
+            }`}
+          >
+            <p className="text-sm font-bold text-slate-700">
+              {proofDragOver ? "Drop proof files here!" : "Click or drag & drop purchase proof"}
+            </p>
+            <p className="text-xs text-slate-400">JPG, PNG, WEBP, MP4, MOV, WEBM</p>
+            <input
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+              onChange={handleProofFileInput}
+              className="hidden"
+            />
+          </label>
+
+          {proofUploading && (
+            <div className="mt-3 text-sm font-semibold text-slate-500">Uploading proof...</div>
+          )}
+
+          {proofMedia.length > 0 && (
+            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
+              {proofMedia.map((item) => (
+                <div key={item.localId} className="group relative aspect-square overflow-hidden rounded-xl border border-white/60 shadow-sm">
+                  {item.previewUrl ? (
+                    <img src={item.previewUrl} alt="proof upload" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                  ) : (
+                    <div className="glass-dark flex h-full items-center justify-center text-xs font-bold text-white">PROOF</div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeProofMedia(item.localId)}
+                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white opacity-0 shadow-md transition-all duration-200 group-hover:opacity-100 text-xs font-bold hover:bg-red-600 hover:scale-110"
+                  >
+                    X
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <label className={`${labelClass} mt-4`}>
+            Give a valid reason if proof is not available
+            <textarea
+              value={proofReason}
+              onChange={(e) => setProofReason(e.target.value)}
+              rows="3"
+              className="input-field resize-none"
+              placeholder="Example: Gift item, old purchase and bill misplaced, etc."
+              disabled={proofMedia.length > 0}
+            />
+          </label>
+        </div>
+
         {/* Media upload */}
         <div className="glass rounded-2xl p-6 shadow-sm">
           <p className="mb-1 text-xs font-bold uppercase tracking-widest text-slate-400">Photos & videos *</p>
@@ -388,7 +508,7 @@ function Sell() {
           </div>
         )}
 
-        <button disabled={loading || uploading} className="btn-primary w-full py-4 text-sm">
+        <button disabled={loading || uploading || proofUploading} className="btn-primary w-full py-4 text-sm">
           {loading ? (
             <span className="flex items-center gap-2">
               <svg className="animate-spin" width="14" height="14" viewBox="0 0 14 14" fill="none">
