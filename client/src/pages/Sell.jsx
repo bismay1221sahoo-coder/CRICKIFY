@@ -12,6 +12,9 @@ const EXTRA_FIELDS = {
     { name: "batSize",     label: "Bat Size",              type: "select", options: ["Boys", "Mens"],                 required: true },
     { name: "handleType",  label: "Handle Type (optional)",type: "select", options: ["", "Round", "Oval"],            required: false },
   ],
+  GLOVES: [
+    { name: "glovesType",  label: "Gloves Type",           type: "select", options: ["Wicket Keeping Gloves", "Batting Gloves"], required: true },
+  ],
 };
 
 const initialForm = {
@@ -205,6 +208,29 @@ function Sell() {
                   )}
                 </label>
               ))}
+
+              {/* GLOVES — show batting sub-fields only if Batting Gloves selected */}
+              {form.category === "GLOVES" && extraDetails.glovesType === "Batting Gloves" && (
+                <>
+                  <label className={labelClass}>
+                    Batting Hand
+                    <select name="battingHand" value={extraDetails.battingHand || ""} onChange={updateExtra} className="input-field" required>
+                      <option value="">-- Select --</option>
+                      <option>RHB (Right Hand Bat)</option>
+                      <option>LHB (Left Hand Bat)</option>
+                    </select>
+                  </label>
+                  <label className={labelClass}>
+                    Gloves Size
+                    <select name="glovesSize" value={extraDetails.glovesSize || ""} onChange={updateExtra} className="input-field" required>
+                      <option value="">-- Select --</option>
+                      <option>Boys</option>
+                      <option>Adult</option>
+                      <option>Mens</option>
+                    </select>
+                  </label>
+                </>
+              )}
             </div>
           </div>
         )}
