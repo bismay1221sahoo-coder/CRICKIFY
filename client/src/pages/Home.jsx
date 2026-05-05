@@ -49,42 +49,46 @@ function CategorySection({ catKey, cityFilter }) {
 
   return (
     <section id={`cat-${catKey}`} className="relative overflow-hidden">
-      {/* Category hero banner */}
-      <div className="group relative flex min-h-[38vh] items-end overflow-hidden"
-        style={{ background: `linear-gradient(135deg, var(--tw-gradient-stops))` }}>
-        {/* Background image with dark overlay */}
+      {/* Category hero banner — clickable, text centered */}
+      <button
+        onClick={() => document.getElementById(`cat-${catKey}-listings`)?.scrollIntoView({ behavior: "smooth" })}
+        className="group relative flex min-h-[42vh] w-full items-center justify-center overflow-hidden text-left"
+      >
+        {/* Background image */}
         {meta.bgImage ? (
           <>
             <div
               className="absolute inset-0 scale-100 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
               style={{ backgroundImage: `url(${meta.bgImage})` }}
             />
-            <div className="absolute inset-0 bg-black/55" />
+            <div className="absolute inset-0 bg-black/50" />
           </>
         ) : (
           <div className={`absolute inset-0 bg-gradient-to-br ${meta.bg}`} />
         )}
-        {/* Decorative big emoji */}
-        <div className="pointer-events-none absolute right-8 top-1/2 -translate-y-1/2 select-none text-[10rem] opacity-10 sm:text-[14rem]">
-          {meta.icon}
-        </div>
-        {/* Blob */}
-        <div className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full blur-3xl opacity-20"
-          style={{ background: "radial-gradient(circle, white, transparent)" }} />
 
-        <div className="relative w-full px-4 pb-8 pt-12 sm:px-6 lg:px-10">
-          <span className="text-5xl">{meta.icon}</span>
-          <h2 className={`mt-3 text-5xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl bg-gradient-to-r ${meta.gradient} bg-clip-text text-transparent`}>
+        {/* Centered content */}
+        <div className="relative z-10 flex flex-col items-center gap-3 px-4 text-center">
+          <span className="text-6xl drop-shadow-lg">{meta.icon}</span>
+          <h2 className={`text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl bg-gradient-to-r ${meta.gradient} bg-clip-text text-transparent drop-shadow-lg`}>
             {meta.label}
           </h2>
-          <p className="mt-2 text-sm font-semibold text-white/60">
-            {loading ? "Loading..." : `${listings.length} verified listing${listings.length !== 1 ? "s" : ""}`}
+          <p className="text-sm font-semibold text-white/70">
+            {loading ? "Loading..." : listings.length > 0
+              ? `${listings.length} verified listing${listings.length !== 1 ? "s" : ""} — tap to browse`
+              : "No listings yet — tap to see"}
           </p>
+          {/* Arrow indicator */}
+          <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm transition-transform duration-300 group-hover:translate-y-1">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M2 4l5 6 5-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
         </div>
-      </div>
+      </button>
 
       {/* Listings grid */}
-      <div className="px-4 py-8 sm:px-6 lg:px-10">
+      <div id={`cat-${catKey}-listings`} className="px-4 py-8 sm:px-6 lg:px-10">
         {loading && (
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[...Array(4)].map((_, i) => (
@@ -100,11 +104,10 @@ function CategorySection({ catKey, cityFilter }) {
         )}
 
         {!loading && listings.length === 0 && (
-          <div className="glass rounded-2xl px-6 py-10 text-center">
-            <p className="text-2xl mb-2">{meta.icon}</p>
-            <p className="text-sm font-bold text-slate-600">No {meta.label.toLowerCase()} listed yet</p>
-            <Link to="/sell" className="btn-primary mt-4 inline-flex px-5 py-2 text-xs">
-              Be first to list →
+          <div className="flex items-center justify-center gap-4 rounded-2xl border border-dashed border-slate-200 py-8 text-center">
+            <p className="text-sm font-bold text-slate-400">No {meta.label.toLowerCase()} listed yet</p>
+            <Link to="/sell" className="btn-primary px-4 py-2 text-xs">
+              List first →
             </Link>
           </div>
         )}
