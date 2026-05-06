@@ -198,7 +198,7 @@ function Sell() {
   }
 
   return (
-    <main className="relative mx-auto max-w-8xl px-4 py-10 sm:px-6 lg:px-8">
+    <main className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       {/* Blob */}
       <div className="pointer-events-none fixed -right-32 top-0 h-80 w-80 rounded-full opacity-15 blur-3xl"
         style={{ background: "radial-gradient(circle, #6ee7b7, transparent)" }} />
@@ -207,13 +207,13 @@ function Sell() {
         <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-emerald-50/80 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-emerald-700 backdrop-blur-sm">
           Seller submission
         </span>
-        <h1 className="mt-3 text-3xl font-black text-slate-900">Sell your cricket gear</h1>
+        <h1 className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl">Sell your cricket gear</h1>
         <p className="mt-2 text-sm text-slate-500">Fill in the details below. Admin will verify your listing before it goes live.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="grid gap-5">
         {/* Equipment details */}
-        <div className="glass rounded-2xl p-6 shadow-sm">
+        <div className="glass rounded-2xl p-4 shadow-sm sm:p-6">
           <p className="mb-5 text-xs font-bold uppercase tracking-widest text-slate-400">Equipment details</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className={labelClass}>
@@ -249,7 +249,7 @@ function Sell() {
 
         {/* Category-specific extra fields */}
         {EXTRA_FIELDS[form.category] && (
-          <div className="glass rounded-2xl p-6 shadow-sm">
+          <div className="glass rounded-2xl p-4 shadow-sm sm:p-6">
             <p className="mb-5 text-xs font-bold uppercase tracking-widest text-slate-400">
               {form.category} details
             </p>
@@ -350,7 +350,7 @@ function Sell() {
         )}
 
         {/* Condition details */}
-        <div className="glass rounded-2xl p-6 shadow-sm">
+        <div className="glass rounded-2xl p-4 shadow-sm sm:p-6">
           <p className="mb-5 text-xs font-bold uppercase tracking-widest text-slate-400">Condition details</p>
           <div className="grid gap-4">
             <label className={labelClass}>
@@ -371,7 +371,7 @@ function Sell() {
         </div>
 
         {/* Purchase proof */}
-        <div className="glass rounded-2xl p-6 shadow-sm">
+        <div className="glass rounded-2xl p-4 shadow-sm sm:p-6">
           <p className="mb-1 text-xs font-bold uppercase tracking-widest text-slate-400">Invoice/Bill/Purchase proof *</p>
           <p className="mb-4 text-xs text-slate-500">
             Upload invoice, bill, or any proof of purchase. If you don't have proof, give a valid reason below.
@@ -381,7 +381,7 @@ function Sell() {
             onDragOver={(e) => { e.preventDefault(); setProofDragOver(true); }}
             onDragLeave={() => setProofDragOver(false)}
             onDrop={handleProofDrop}
-            className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-8 text-center transition-all duration-200 ${
+            className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-4 py-7 text-center transition-all duration-200 sm:px-6 sm:py-8 ${
               proofDragOver
                 ? "border-emerald-400 bg-emerald-50/60 scale-[1.01]"
                 : "border-slate-200/80 bg-white/30 hover:border-emerald-300 hover:bg-emerald-50/30"
@@ -405,7 +405,7 @@ function Sell() {
           )}
 
           {proofMedia.length > 0 && (
-            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {proofMedia.map((item) => (
                 <div key={item.localId} className="group relative aspect-square overflow-hidden rounded-xl border border-white/60 shadow-sm">
                   {item.previewUrl ? (
@@ -439,7 +439,7 @@ function Sell() {
         </div>
 
         {/* Media upload */}
-        <div className="glass rounded-2xl p-6 shadow-sm">
+        <div className="glass rounded-2xl p-4 shadow-sm sm:p-6">
           <p className="mb-1 text-xs font-bold uppercase tracking-widest text-slate-400">Photos & videos *</p>
           <p className="mb-4 text-xs text-slate-500">Upload clear photos from multiple angles. Max 25MB per file.</p>
 
@@ -447,7 +447,7 @@ function Sell() {
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
-            className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-all duration-200 ${
+            className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-4 py-8 text-center transition-all duration-200 sm:px-6 sm:py-10 ${
               dragOver
                 ? "border-emerald-400 bg-emerald-50/60 scale-[1.01]"
                 : "border-slate-200/80 bg-white/30 hover:border-emerald-300 hover:bg-emerald-50/30"
@@ -477,7 +477,7 @@ function Sell() {
           )}
 
           {media.length > 0 && (
-            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {media.map((item) => (
                 <div key={item.localId} className="group relative aspect-square overflow-hidden rounded-xl border border-white/60 shadow-sm">
                   {item.previewUrl ? (

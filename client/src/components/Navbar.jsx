@@ -36,7 +36,7 @@ function Navbar() {
   };
 
   const linkClass = ({ isActive }) =>
-    `relative px-4 py-2 text-sm font-semibold rounded-xl transition-all duration-200 ${
+    `relative px-3 py-2 text-sm font-semibold rounded-xl transition-all duration-200 whitespace-nowrap ${
       isActive
         ? "text-emerald-700 bg-emerald-50/80 shadow-sm"
         : "text-slate-500 hover:text-slate-900 hover:bg-white/60"
@@ -86,7 +86,7 @@ function Navbar() {
         <nav
           className={`${
             menuOpen ? "flex" : "hidden"
-          } absolute left-0 right-0 top-[57px] z-30 flex-col gap-1 border-b border-white/50 bg-white/90 backdrop-blur-xl px-4 pb-4 pt-2 shadow-xl md:static md:flex md:flex-row md:items-center md:gap-2 md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none`}
+          } absolute left-0 right-0 top-[57px] z-30 flex-col gap-1 border-b border-white/50 bg-white/90 backdrop-blur-xl px-4 pb-4 pt-2 shadow-xl md:static md:flex md:flex-row md:items-center md:gap-3 md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none`}
         >
           <NavLink to="/" end className={linkClass} onClick={() => setMenuOpen(false)}>
             Marketplace
@@ -105,7 +105,7 @@ function Navbar() {
             </NavLink>
           )}
 
-          <div className="md:ml-3 md:pl-3 md:border-l md:border-slate-200/70">
+          <div className="md:ml-2 md:pl-2 md:border-l md:border-slate-200/70">
             {user ? (
               <div className="flex items-center gap-3">
                 <div className="hidden md:flex items-center gap-2">

@@ -63,7 +63,7 @@ function MyListings() {
   };
 
   return (
-    <main className="relative mx-auto max-w-8xl px-4 py-10 sm:px-6 lg:px-10">
+    <main className="relative mx-auto max-w-8xl px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
       <div
         className="pointer-events-none absolute -right-32 top-0 h-80 w-80 rounded-full opacity-15 blur-3xl"
         style={{ background: "radial-gradient(circle, #6ee7b7, transparent)" }}
@@ -77,12 +77,12 @@ function MyListings() {
         </div>
       )}
 
-      <div className="fade-in-up mb-8 flex items-start justify-between gap-4">
+      <div className="fade-in-up mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-sky-50/80 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-sky-700 backdrop-blur-sm">
             My listings
           </span>
-          <h1 className="mt-3 text-3xl font-black text-slate-900">Your submissions</h1>
+          <h1 className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl">Your submissions</h1>
           <p className="mt-1 text-sm text-slate-500">Track the status of all your listed equipment.</p>
         </div>
         <Link to="/sell" className="btn-primary shrink-0 px-5 py-2.5 text-sm">
@@ -135,8 +135,8 @@ function MyListings() {
 
           return (
             <article key={listing?.id || safeTitle} className="glass card-hover overflow-hidden rounded-2xl shadow-sm">
-              <div className="flex">
-                <div className="relative h-auto w-36 shrink-0 overflow-hidden bg-slate-100 sm:w-44">
+              <div className="flex flex-col sm:flex-row">
+                <div className="relative h-44 w-full shrink-0 overflow-hidden bg-slate-100 sm:h-auto sm:w-44">
                   {cover ? (
                     <img src={cover.url} alt={safeTitle} className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" />
                   ) : (
@@ -144,9 +144,9 @@ function MyListings() {
                   )}
                 </div>
 
-                <div className="flex flex-1 flex-col justify-between gap-2 p-5">
+                <div className="flex flex-1 flex-col justify-between gap-2 p-4 sm:p-5">
                   <div>
-                    <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
                       <div className="min-w-0">
                         <h2 className="truncate text-lg font-black text-slate-900">{safeTitle}</h2>
                         <p className="mt-0.5 text-xs text-slate-500">
@@ -174,7 +174,7 @@ function MyListings() {
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between border-t border-slate-100/60 pt-3">
+                  <div className="flex flex-col gap-2 border-t border-slate-100/60 pt-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-xs text-slate-400">
                       {hasValidCreatedAt
                         ? safeCreatedAt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
