@@ -34,6 +34,7 @@ function ListingDetails() {
   const [activeMedia, setActiveMedia] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -53,6 +54,7 @@ function ListingDetails() {
   }, [id]);
 
   const media = useMemo(() => listing?.media || [], [listing]);
+  const isImageActive = activeMedia?.type !== "VIDEO" && Boolean(activeMedia?.url);
 
   if (loading) {
     return (
@@ -104,7 +106,14 @@ function ListingDetails() {
               activeMedia.type === "VIDEO" ? (
                 <video src={activeMedia.url} controls className="h-full w-full object-cover" />
               ) : (
-                <img src={activeMedia.url} alt={listing.title} className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" />
+                <button
+                  type="button"
+                  onClick={() => setLightboxOpen(true)}
+                  className="h-full w-full cursor-zoom-in"
+                  aria-label="Open full image"
+                >
+                  <img src={activeMedia.url} alt={listing.title} className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" />
+                </button>
               )
             ) : (
               <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-500">No media</div>
@@ -200,6 +209,32 @@ function ListingDetails() {
           </div>
         </div>
       </div>
+
+      {lightboxOpen && isImageActive && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
+          onClick={() => setLightboxOpen(false)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" || e.key === "Enter" || e.key === " ") setLightboxOpen(false);
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(false)}
+            className="absolute right-4 top-4 rounded-full bg-white/20 px-3 py-1 text-sm font-bold text-white hover:bg-white/30"
+          >
+            Close
+          </button>
+          <img
+            src={activeMedia.url}
+            alt={listing.title}
+            className="max-h-[90vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </main>
   );
 }
