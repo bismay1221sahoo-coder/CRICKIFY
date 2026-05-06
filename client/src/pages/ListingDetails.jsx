@@ -117,7 +117,13 @@ function ListingDetails() {
                   className="h-full w-full cursor-zoom-in"
                   aria-label="Open full image"
                 >
-                  <img src={activeMedia.url} alt={listing.title} className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" />
+                  <img
+                    src={activeMedia.url}
+                    alt={listing.title}
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                    className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                  />
                 </button>
               )
             ) : (
@@ -144,7 +150,14 @@ function ListingDetails() {
                   {item.type === "VIDEO" ? (
                     <div className="glass-dark flex h-full items-center justify-center text-[10px] font-bold text-white">VIDEO</div>
                   ) : (
-                    <img src={item.url} alt="" className="h-full w-full object-cover" />
+                    <img
+                      src={item.url}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                      className="h-full w-full object-cover"
+                    />
                   )}
                 </button>
               ))}
@@ -258,6 +271,8 @@ function ListingDetails() {
           <img
             src={activeMedia.url}
             alt={listing.title}
+            decoding="async"
+            referrerPolicy="no-referrer"
             className="max-h-[90vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />

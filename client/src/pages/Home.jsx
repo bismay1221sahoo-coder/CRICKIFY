@@ -124,7 +124,14 @@ function CategorySection({ catKey, cityFilter }) {
                   <article key={listing?.id || listing?.title} className="glass card-hover group overflow-hidden rounded-2xl">
                     <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
                       {cover ? (
-                        <img src={cover.url} alt={listing?.title || "Listing"} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <img
+                          src={cover.url}
+                          alt={listing?.title || "Listing"}
+                          loading="lazy"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
                       ) : (
                         <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-50 to-sky-50">
                           <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">No photo</span>

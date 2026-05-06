@@ -409,7 +409,14 @@ function Sell() {
               {proofMedia.map((item) => (
                 <div key={item.localId} className="group relative aspect-square overflow-hidden rounded-xl border border-white/60 shadow-sm">
                   {item.previewUrl ? (
-                    <img src={item.previewUrl} alt="proof upload" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                    <img
+                      src={item.previewUrl}
+                      alt="proof upload"
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
                   ) : (
                     <div className="glass-dark flex h-full items-center justify-center text-xs font-bold text-white">PROOF</div>
                   )}
@@ -481,7 +488,14 @@ function Sell() {
               {media.map((item) => (
                 <div key={item.localId} className="group relative aspect-square overflow-hidden rounded-xl border border-white/60 shadow-sm">
                   {item.previewUrl ? (
-                    <img src={item.previewUrl} alt="upload" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                    <img
+                      src={item.previewUrl}
+                      alt="upload"
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
                   ) : (
                     <div className="glass-dark flex h-full items-center justify-center text-xs font-bold text-white">▶ VIDEO</div>
                   )}

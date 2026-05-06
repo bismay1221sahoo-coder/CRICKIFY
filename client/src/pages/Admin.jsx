@@ -128,7 +128,14 @@ function Admin() {
               <div className="flex flex-col sm:flex-row">
                 <div className="relative w-full shrink-0 overflow-hidden bg-slate-100 sm:h-auto sm:w-44">
                   {cover ? (
-                    <img src={cover.url} alt={listing?.title || "Listing"} className="h-44 w-full object-cover transition-transform duration-500 hover:scale-110 sm:h-full" />
+                    <img
+                      src={cover.url}
+                      alt={listing?.title || "Listing"}
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                      className="h-44 w-full object-cover transition-transform duration-500 hover:scale-110 sm:h-full"
+                    />
                   ) : (
                     <div className="flex h-44 items-center justify-center text-sm font-semibold text-slate-500 sm:h-full">No image</div>
                   )}

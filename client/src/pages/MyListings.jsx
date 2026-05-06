@@ -138,7 +138,14 @@ function MyListings() {
               <div className="flex flex-col sm:flex-row">
                 <div className="relative h-44 w-full shrink-0 overflow-hidden bg-slate-100 sm:h-auto sm:w-44">
                   {cover ? (
-                    <img src={cover.url} alt={safeTitle} className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" />
+                    <img
+                      src={cover.url}
+                      alt={safeTitle}
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                      className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
+                    />
                   ) : (
                     <div className="flex h-full min-h-[130px] items-center justify-center text-xs font-semibold text-slate-500">No image</div>
                   )}
