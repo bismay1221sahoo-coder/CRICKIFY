@@ -3,6 +3,23 @@ import { Link, useParams } from "react-router-dom";
 import { apiRequest } from "../lib/api";
 
 const formatLabel = (v) => (v ? v.replaceAll("_", " ") : "-");
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+
+const renderTextWithLinks = (text = "") =>
+  text.split(URL_REGEX).map((part, index) => {
+    if (!part.match(URL_REGEX)) return <span key={`txt-${index}`}>{part}</span>;
+    return (
+      <a
+        key={`url-${index}`}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-semibold text-sky-700 underline break-all"
+      >
+        {part}
+      </a>
+    );
+  });
 
 const CONDITION_META = {
   LIKE_NEW:     { label: "Like New",    cls: "bg-emerald-100/80 text-emerald-700 border border-emerald-200/60" },
@@ -177,7 +194,9 @@ function ListingDetails() {
 
             <div className="mt-5">
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Description</p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">{listing.description}</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600 whitespace-pre-wrap">
+                {renderTextWithLinks(listing.description)}
+              </p>
             </div>
           </div>
 
