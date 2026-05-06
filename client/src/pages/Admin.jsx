@@ -5,6 +5,9 @@ function Admin() {
   const [listings, setListings] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [rejectModal, setRejectModal] = useState({ open: false, listingId: null });
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
 
   const loadPendingListings = async () => {
     setLoading(true);
@@ -33,17 +36,32 @@ function Admin() {
     }
   };
 
-  const rejectListing = async (id) => {
-    const reason = window.prompt("Reason for rejection:");
-    if (!reason) return;
+  const openRejectModal = (id) => {
+    setRejectModal({ open: true, listingId: id });
+    setRejectReason("");
+  };
+
+  const closeRejectModal = () => {
+    if (rejectSubmitting) return;
+    setRejectModal({ open: false, listingId: null });
+    setRejectReason("");
+  };
+
+  const rejectListing = async () => {
+    const reason = rejectReason.trim();
+    if (!reason || !rejectModal.listingId) return;
+    setRejectSubmitting(true);
     try {
-      await apiRequest(`/api/admin/listings/${id}/reject`, {
+      await apiRequest(`/api/admin/listings/${rejectModal.listingId}/reject`, {
         method: "PATCH",
         body: JSON.stringify({ reason }),
       });
+      closeRejectModal();
       loadPendingListings();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setRejectSubmitting(false);
     }
   };
 
@@ -136,7 +154,7 @@ function Admin() {
 
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <button onClick={() => approveListing(listing.id)} className="btn-primary px-5 py-2 text-sm">Approve</button>
-                    <button onClick={() => rejectListing(listing.id)} className="glass rounded-xl border border-red-200/60 px-5 py-2 text-sm font-bold text-red-600 transition-all duration-200 hover:border-red-300 hover:bg-red-50/80">Reject</button>
+                    <button onClick={() => openRejectModal(listing.id)} className="glass rounded-xl border border-red-200/60 px-5 py-2 text-sm font-bold text-red-600 transition-all duration-200 hover:border-red-300 hover:bg-red-50/80">Reject</button>
                   </div>
                 </div>
               </div>
@@ -144,6 +162,41 @@ function Admin() {
           );
         })}
       </div>
+
+      {rejectModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="glass w-full max-w-md rounded-2xl p-5 shadow-2xl sm:p-6">
+            <h3 className="text-lg font-black text-slate-900">Reject listing</h3>
+            <p className="mt-1 text-sm text-slate-500">Give a clear reason. This will be shown to the seller.</p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={4}
+              className="input-field mt-4 resize-none"
+              placeholder="Example: Images are unclear, missing product condition details, etc."
+              disabled={rejectSubmitting}
+            />
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeRejectModal}
+                className="glass rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-white/80"
+                disabled={rejectSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={rejectListing}
+                className="rounded-xl bg-red-500 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={rejectSubmitting || !rejectReason.trim()}
+              >
+                {rejectSubmitting ? "Rejecting..." : "Reject listing"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
