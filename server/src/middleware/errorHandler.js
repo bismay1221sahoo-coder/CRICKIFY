@@ -1,5 +1,11 @@
+import { captureException } from "../config/sentry.js";
+
 export const errorHandler = (error, req, res, next) => {
   console.error(error);
+  captureException(error, {
+    method: req.method,
+    path: req.originalUrl,
+  });
 
   if (error?.name === "MulterError") {
     return res.status(400).json({ message: "Upload failed: file is too large or invalid." });

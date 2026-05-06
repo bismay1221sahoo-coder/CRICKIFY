@@ -4,6 +4,7 @@ Run this checklist before deploy or major release.
 
 ## 1. Setup Checks
 - [ ] `client/.env` and `server/.env` values are correct.
+- [ ] Optional error tracking envs set if enabled: `VITE_SENTRY_DSN`, `SENTRY_DSN`.
 - [ ] Backend server starts without error.
 - [ ] Frontend starts without console errors.
 - [ ] Image/video upload works (Cloudinary credentials valid).
