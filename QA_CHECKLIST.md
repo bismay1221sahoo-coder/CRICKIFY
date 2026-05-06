@@ -85,3 +85,7 @@ Use this format while testing:
 - `Severity:` Low / Medium / High / Critical
 - `Screenshot/Video:`
 - `Status:` Open / Fixed / Retest
+
+## Optional Automated Smoke Run
+- From `client` folder run: `npm run test:e2e`
+- If first-time on a machine, install browser binaries: `npx playwright install`
