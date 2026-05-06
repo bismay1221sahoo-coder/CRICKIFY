@@ -158,15 +158,17 @@ function Sell() {
         .filter((f) => extraDetails[f.name])
         .map((f) => `${f.label.replace(" (optional)", "")}: ${extraDetails[f.name]}`);
       const proofLines = proofMedia.length
-        ? [`Purchase Proof: ${proofMedia.map((item) => item.url).join(", ")}`]
+        ? ["Purchase Proof: Submitted"]
         : [`Purchase Proof Reason: ${proofReason.trim()}`];
+      const proofPublicIds = proofMedia.map((item) => item.publicId).filter(Boolean);
+      const proofMarker = proofPublicIds.length ? `\n\n[[PROOF_PUBLIC_IDS:${proofPublicIds.join(",")}]]` : "";
       const fullDescription = extraLines.length
         ? `${extraLines.join(" | ")}\n${proofLines.join(" | ")}\n\n${form.description}`
         : `${proofLines.join(" | ")}\n\n${form.description}`;
 
       await apiRequest("/api/listings", {
         method: "POST",
-        body: JSON.stringify({ ...form, description: fullDescription, price: Number(form.price), media }),
+        body: JSON.stringify({ ...form, description: `${fullDescription}${proofMarker}`, price: Number(form.price), media }),
       });
       navigate("/my-listings", { state: { submitted: true } });
     } catch (err) {

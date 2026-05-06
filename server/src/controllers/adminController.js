@@ -14,6 +14,14 @@ const includeListingDetails = {
   media: true,
 };
 
+const PROOF_MARKER_REGEX = /\[\[PROOF_PUBLIC_IDS:([^[\]]+)\]\]/;
+const stripProofMarker = (description = "") =>
+  description.replace(PROOF_MARKER_REGEX, "").trim();
+const sanitizeListingForResponse = (listing) => ({
+  ...listing,
+  description: stripProofMarker(listing.description),
+});
+
 export const getPendingListings = async (req, res, next) => {
   try {
     const listings = await prisma.listing.findMany({
@@ -22,7 +30,7 @@ export const getPendingListings = async (req, res, next) => {
       orderBy: { createdAt: "asc" },
     });
 
-    return res.json({ listings });
+    return res.json({ listings: listings.map(sanitizeListingForResponse) });
   } catch (error) {
     next(error);
   }
@@ -49,7 +57,7 @@ export const approveListing = async (req, res, next) => {
 
     return res.json({
       message: "Listing approved successfully.",
-      listing,
+      listing: sanitizeListingForResponse(listing),
     });
   } catch (error) {
     next(error);
@@ -82,7 +90,7 @@ export const rejectListing = async (req, res, next) => {
 
     return res.json({
       message: "Listing rejected.",
-      listing,
+      listing: sanitizeListingForResponse(listing),
     });
   } catch (error) {
     next(error);

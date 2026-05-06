@@ -27,6 +27,22 @@ const normalizeMedia = (media = []) =>
       type: item.type,
     }));
 
+const PROOF_MARKER_REGEX = /\[\[PROOF_PUBLIC_IDS:([^[\]]+)\]\]/;
+
+const stripProofMarker = (description = "") =>
+  description.replace(PROOF_MARKER_REGEX, "").trim();
+
+const extractProofPublicIds = (description = "") => {
+  const match = description.match(PROOF_MARKER_REGEX);
+  if (!match?.[1]) return [];
+  return match[1].split(",").map((id) => id.trim()).filter(Boolean);
+};
+
+const sanitizeListingForResponse = (listing) => ({
+  ...listing,
+  description: stripProofMarker(listing.description),
+});
+
 export const createListing = async (req, res, next) => {
   try {
     const parsed = createListingSchema.safeParse(req.body);
@@ -54,7 +70,7 @@ export const createListing = async (req, res, next) => {
 
     return res.status(201).json({
       message: "Listing submitted for admin verification.",
-      listing,
+      listing: sanitizeListingForResponse(listing),
     });
   } catch (error) {
     next(error);
@@ -89,7 +105,7 @@ export const getApprovedListings = async (req, res, next) => {
       orderBy: { createdAt: "desc" },
     });
 
-    return res.json({ listings });
+    return res.json({ listings: listings.map(sanitizeListingForResponse) });
   } catch (error) {
     next(error);
   }
@@ -109,7 +125,7 @@ export const getListingById = async (req, res, next) => {
       return res.status(404).json({ message: "Listing not found." });
     }
 
-    return res.json({ listing });
+    return res.json({ listing: sanitizeListingForResponse(listing) });
   } catch (error) {
     next(error);
   }
@@ -129,8 +145,10 @@ export const deleteListing = async (req, res, next) => {
     await prisma.listing.delete({ where: { id: req.params.id } });
 
     const mediaWithPublicId = listing.media.filter((m) => m.publicId);
+    const proofPublicIds = extractProofPublicIds(listing.description);
+    const allPublicIds = [...mediaWithPublicId.map((m) => m.publicId), ...proofPublicIds];
     await Promise.allSettled(
-      mediaWithPublicId.map((m) => cloudinary.uploader.destroy(m.publicId, { resource_type: m.type === "VIDEO" ? "video" : "image" }))
+      allPublicIds.map((publicId) => cloudinary.uploader.destroy(publicId, { resource_type: "auto" }))
     );
 
     return res.json({ message: "Listing deleted." });
@@ -147,7 +165,7 @@ export const getMyListings = async (req, res, next) => {
       orderBy: { createdAt: "desc" },
     });
 
-    return res.json({ listings });
+    return res.json({ listings: listings.map(sanitizeListingForResponse) });
   } catch (error) {
     next(error);
   }
