@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { apiRequest } from "../lib/api";
+import { parseListingDescription } from "../lib/listingDescription";
 
 const formatLabel = (v) => (v ? v.replaceAll("_", " ") : "-");
 const URL_REGEX = /(https?:\/\/[^\s]+)/g;
@@ -54,6 +55,10 @@ function ListingDetails() {
   }, [id]);
 
   const media = useMemo(() => listing?.media || [], [listing]);
+  const { cleanDescription, proofUrls, proofReason } = useMemo(
+    () => parseListingDescription(listing?.description),
+    [listing?.description]
+  );
   const isImageActive = activeMedia?.type !== "VIDEO" && Boolean(activeMedia?.url);
 
   if (loading) {
@@ -181,8 +186,31 @@ function ListingDetails() {
 
             <div className="mt-5">
               <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Description</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{renderTextWithLinks(listing.description)}</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{renderTextWithLinks(cleanDescription)}</p>
             </div>
+
+            {(proofUrls.length > 0 || proofReason) && (
+              <div className="mt-5 rounded-xl border border-sky-100 bg-sky-50/50 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-sky-700">Purchase Proof</p>
+                {proofUrls.length > 0 ? (
+                  <div className="mt-2 grid gap-1">
+                    {proofUrls.map((url) => (
+                      <a
+                        key={url}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="break-all text-sm font-semibold text-sky-700 underline"
+                      >
+                        {url}
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-slate-600">{proofReason}</p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="glass-emerald glow-emerald rounded-2xl p-5 shadow-md">
