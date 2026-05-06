@@ -1,4 +1,6 @@
 import prisma from "../lib/prisma.js";
+import cloudinary from "../config/cloudinary.js";
+import { createListingSchema, listingsQuerySchema } from "../validation/listingValidation.js";
 
 const listingInclude = {
   seller: {
@@ -27,54 +29,23 @@ const normalizeMedia = (media = []) =>
 
 export const createListing = async (req, res, next) => {
   try {
-    const {
-      title,
-      brand,
-      category,
-      condition,
-      price,
-      city,
-      usedDuration,
-      defects,
-      description,
-      media,
-    } = req.body;
-
-    if (!title || !category || !condition || !price || !city || !usedDuration || !defects || !description) {
-      return res.status(400).json({
-        message: "Title, category, condition, price, city, used duration, defects, and description are required.",
-      });
+    const parsed = createListingSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid listing payload." });
     }
-
-    if (!validCategories.includes(category)) {
-      return res.status(400).json({ message: "Invalid equipment category." });
-    }
-
-    if (!validConditions.includes(condition)) {
-      return res.status(400).json({ message: "Invalid equipment condition." });
-    }
-
-    if (!Array.isArray(media) || normalizeMedia(media).length === 0) {
-      return res.status(400).json({ message: "At least one photo or video is required." });
-    }
-
-    const parsedPrice = Number(price);
-
-    if (!Number.isInteger(parsedPrice) || parsedPrice <= 0) {
-      return res.status(400).json({ message: "Price must be a positive whole number." });
-    }
+    const { title, brand, category, condition, price, city, usedDuration, defects, description, media } = parsed.data;
 
     const listing = await prisma.listing.create({
       data: {
-        title: title.trim(),
-        brand: brand?.trim() || null,
+        title,
+        brand: brand || null,
         category,
         condition,
-        price: parsedPrice,
-        city: city.trim(),
-        usedDuration: usedDuration.trim(),
-        defects: defects.trim(),
-        description: description.trim(),
+        price,
+        city,
+        usedDuration,
+        defects,
+        description,
         sellerId: req.user.id,
         media: { create: normalizeMedia(media) },
       },
@@ -92,11 +63,11 @@ export const createListing = async (req, res, next) => {
 
 export const getApprovedListings = async (req, res, next) => {
   try {
-    const { category, city, minPrice, maxPrice } = req.query;
-
-    if (category && !validCategories.includes(category)) {
-      return res.status(400).json({ message: "Invalid equipment category." });
+    const parsed = listingsQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid listing filters." });
     }
+    const { category, city, minPrice, maxPrice } = parsed.data;
 
     const filters = {
       status: "APPROVED",
@@ -148,6 +119,7 @@ export const deleteListing = async (req, res, next) => {
   try {
     const listing = await prisma.listing.findFirst({
       where: { id: req.params.id, sellerId: req.user.id },
+      include: { media: true },
     });
 
     if (!listing) {
@@ -155,6 +127,12 @@ export const deleteListing = async (req, res, next) => {
     }
 
     await prisma.listing.delete({ where: { id: req.params.id } });
+
+    const mediaWithPublicId = listing.media.filter((m) => m.publicId);
+    await Promise.allSettled(
+      mediaWithPublicId.map((m) => cloudinary.uploader.destroy(m.publicId, { resource_type: m.type === "VIDEO" ? "video" : "image" }))
+    );
+
     return res.json({ message: "Listing deleted." });
   } catch (error) {
     next(error);

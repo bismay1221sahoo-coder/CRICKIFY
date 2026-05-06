@@ -1,4 +1,14 @@
 import cloudinary from "../config/cloudinary.js";
+import { fileTypeFromBuffer } from "file-type";
+
+const ALLOWED_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+]);
 
 const uploadToCloudinary = (file) =>
   new Promise((resolve, reject) => {
@@ -30,6 +40,11 @@ export const uploadListingMedia = async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "Media file is required." });
+    }
+
+    const detectedType = await fileTypeFromBuffer(req.file.buffer);
+    if (!detectedType || !ALLOWED_MIME_TYPES.has(detectedType.mime)) {
+      return res.status(400).json({ message: "Uploaded file content is not a supported media type." });
     }
 
     const media = await uploadToCloudinary(req.file);
