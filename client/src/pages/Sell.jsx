@@ -158,7 +158,7 @@ function Sell() {
         .filter((f) => extraDetails[f.name])
         .map((f) => `${f.label.replace(" (optional)", "")}: ${extraDetails[f.name]}`);
       const proofLines = proofMedia.length
-        ? ["Purchase Proof: Submitted"]
+        ? [`Purchase Proof: ${proofMedia.map((item) => item.url).join(", ")}`]
         : [`Purchase Proof Reason: ${proofReason.trim()}`];
       const proofPublicIds = proofMedia.map((item) => item.publicId).filter(Boolean);
       const proofMarker = proofPublicIds.length ? `\n\n[[PROOF_PUBLIC_IDS:${proofPublicIds.join(",")}]]` : "";
