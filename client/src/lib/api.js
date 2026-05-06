@@ -10,7 +10,14 @@ export const saveSession = ({ token, user }) => {
 
 export const getUser = () => {
   const user = localStorage.getItem("crickify_user");
-  return user ? JSON.parse(user) : null;
+  if (!user) return null;
+  try {
+    return JSON.parse(user);
+  } catch {
+    // Corrupted storage should not crash the app; reset it.
+    localStorage.removeItem("crickify_user");
+    return null;
+  }
 };
 
 export const clearSession = () => {
