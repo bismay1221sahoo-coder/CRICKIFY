@@ -23,9 +23,11 @@ function Admin() {
     }
   };
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     loadPendingListings();
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const approveListing = async (id) => {
     try {

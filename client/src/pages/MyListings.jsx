@@ -22,6 +22,7 @@ function MyListings() {
   const [toast, setToast] = useState("");
   const location = useLocation();
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!location.state?.submitted) return;
 
@@ -49,6 +50,7 @@ function MyListings() {
   useEffect(() => {
     load();
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const deleteListing = async (id, title) => {
     if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;

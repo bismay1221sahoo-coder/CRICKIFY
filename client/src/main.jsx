@@ -4,7 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 import { Sentry } from "./lib/sentry";
-function ErrorFallback() {
+export function ErrorFallback() {
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-2xl items-center justify-center px-4">
       <div className="glass rounded-2xl p-8 text-center shadow-md">
