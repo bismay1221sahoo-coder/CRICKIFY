@@ -4,7 +4,6 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 import { Sentry } from "./lib/sentry";
-
 function ErrorFallback() {
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-2xl items-center justify-center px-4">
@@ -15,7 +14,6 @@ function ErrorFallback() {
     </main>
   );
 }
-
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
