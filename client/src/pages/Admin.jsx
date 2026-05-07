@@ -34,6 +34,20 @@ function Admin() {
     }
   }, [debouncedSearch]);
 
+  const loadReports = useCallback(async () => {
+    setReportsLoading(true);
+    setError("");
+    try {
+      const data = await apiRequest("/api/admin/reports");
+      setReports(Array.isArray(data.reports) ? data.reports : []);
+    } catch (err) {
+      setError(err.message);
+      setReports([]);
+    } finally {
+      setReportsLoading(false);
+    }
+  }, []);
+
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (view === "pending") {
