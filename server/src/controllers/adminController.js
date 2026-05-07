@@ -136,3 +136,21 @@ export const rejectListing = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getListingReports = async (req, res, next) => {
+  try {
+    const reports = await prisma.listingReport.findMany({
+      include: {
+        listing: {
+          include: { media: true, seller: { select: { name: true, phone: true, city: true } } },
+        },
+        reporter: { select: { id: true, name: true, email: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return res.json({ reports });
+  } catch (error) {
+    next(error);
+  }
+};
