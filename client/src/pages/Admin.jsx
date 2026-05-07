@@ -12,6 +12,8 @@ function Admin() {
   const [rejectModal, setRejectModal] = useState({ open: false, listingId: null });
   const [rejectReason, setRejectReason] = useState("");
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState("");
 
   const loadPendingListings = useCallback(async () => {
     setLoading(true);
@@ -209,6 +211,11 @@ function Admin() {
           const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
           const safeCondition = (listing?.condition || "UNKNOWN").replace(/_/g, " ");
           const isSelected = selectedIds.includes(listing?.id);
+          const openLightbox = (url) => {
+            if (!url) return;
+            setLightboxUrl(url);
+            setLightboxOpen(true);
+          };
 
           return (
             <article key={listing?.id || listing?.title} className="glass card-hover overflow-hidden rounded-2xl shadow-sm">
@@ -223,14 +230,21 @@ function Admin() {
                     />
                   </div>
                   {cover ? (
-                    <img
-                      src={cover.url}
-                      alt={listing?.title || "Listing"}
-                      loading="lazy"
-                      decoding="async"
-                      referrerPolicy="no-referrer"
-                      className="h-44 w-full object-cover transition-transform duration-500 hover:scale-110 sm:h-full"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => openLightbox(cover.url)}
+                      className="h-44 w-full cursor-zoom-in sm:h-full"
+                      aria-label="Open listing image"
+                    >
+                      <img
+                        src={cover.url}
+                        alt={listing?.title || "Listing"}
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                        className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
+                      />
+                    </button>
                   ) : (
                     <div className="flex h-44 items-center justify-center text-sm font-semibold text-slate-500 sm:h-full">No image</div>
                   )}
@@ -297,6 +311,34 @@ function Admin() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {lightboxOpen && lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
+          onClick={() => setLightboxOpen(false)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Escape" || e.key === "Enter" || e.key === " ") setLightboxOpen(false);
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(false)}
+            className="absolute right-4 top-4 rounded-full bg-white/20 px-3 py-1 text-sm font-bold text-white hover:bg-white/30"
+          >
+            Close
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Listing preview"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            className="max-h-[90vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </main>
