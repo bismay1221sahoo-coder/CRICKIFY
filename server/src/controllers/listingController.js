@@ -1,6 +1,10 @@
 import prisma from "../lib/prisma.js";
 import cloudinary from "../config/cloudinary.js";
-import { createListingSchema, listingsQuerySchema } from "../validation/listingValidation.js";
+import {
+  createListingSchema,
+  listingsQuerySchema,
+  reportListingSchema,
+} from "../validation/listingValidation.js";
 
 const listingInclude = {
   seller: {
@@ -83,12 +87,13 @@ export const getApprovedListings = async (req, res, next) => {
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid listing filters." });
     }
-    const { category, city, minPrice, maxPrice } = parsed.data;
+    const { category, city, condition, minPrice, maxPrice, sort } = parsed.data;
 
     const filters = {
       status: "APPROVED",
       ...(category ? { category } : {}),
       ...(city ? { city: { contains: city, mode: "insensitive" } } : {}),
+      ...(condition ? { condition } : {}),
       ...(minPrice || maxPrice
         ? {
             price: {
@@ -99,10 +104,17 @@ export const getApprovedListings = async (req, res, next) => {
         : {}),
     };
 
+    const orderBy =
+      sort === "price_low"
+        ? { price: "asc" }
+        : sort === "price_high"
+          ? { price: "desc" }
+          : { createdAt: "desc" };
+
     const listings = await prisma.listing.findMany({
       where: filters,
       include: listingInclude,
-      orderBy: { createdAt: "desc" },
+      orderBy,
     });
 
     return res.json({ listings: listings.map(sanitizeListingForResponse) });
@@ -166,6 +178,36 @@ export const getMyListings = async (req, res, next) => {
     });
 
     return res.json({ listings: listings.map(sanitizeListingForResponse) });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reportListing = async (req, res, next) => {
+  try {
+    const parsed = reportListingSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Report reason must be at least 10 characters." });
+    }
+
+    const listing = await prisma.listing.findFirst({
+      where: { id: req.params.id, status: "APPROVED" },
+      select: { id: true },
+    });
+
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found." });
+    }
+
+    await prisma.listingReport.create({
+      data: {
+        listingId: listing.id,
+        reporterId: req.user.id,
+        reason: parsed.data.reason,
+      },
+    });
+
+    return res.status(201).json({ message: "Report submitted. Thank you." });
   } catch (error) {
     next(error);
   }

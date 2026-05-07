@@ -24,7 +24,7 @@ const CONDITION_META = {
 
 const ALL_SECTIONS = ["ALL", ...CATEGORIES];
 
-function CategorySection({ catKey, cityFilter }) {
+function CategorySection({ catKey, cityFilter, conditionFilter, minPrice, maxPrice, sort }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(() => catKey === "ALL");
@@ -38,6 +38,10 @@ function CategorySection({ catKey, cityFilter }) {
         const params = new URLSearchParams();
         if (catKey !== "ALL") params.set("category", catKey);
         if (cityFilter) params.set("city", cityFilter);
+        if (conditionFilter) params.set("condition", conditionFilter);
+        if (minPrice) params.set("minPrice", minPrice);
+        if (maxPrice) params.set("maxPrice", maxPrice);
+        if (sort) params.set("sort", sort);
         const data = await apiRequest(`/api/listings?${params.toString()}`);
         setListings(Array.isArray(data.listings) ? data.listings : []);
       } catch {
@@ -47,7 +51,7 @@ function CategorySection({ catKey, cityFilter }) {
       }
     };
     load();
-  }, [open, catKey, cityFilter]);
+  }, [open, catKey, cityFilter, conditionFilter, minPrice, maxPrice, sort]);
 
   const handleBannerClick = () => {
     setOpen(true);
@@ -180,12 +184,28 @@ function Home() {
   const [activeSection, setActiveSection] = useState("ALL");
   const [cityFilter, setCityFilter] = useState("");
   const [debouncedCityFilter, setDebouncedCityFilter] = useState("");
+  const [conditionFilter, setConditionFilter] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [sort, setSort] = useState("newest");
+  const [debouncedMinPrice, setDebouncedMinPrice] = useState("");
+  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState("");
   const pillsRef = useRef(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedCityFilter(cityFilter.trim()), 350);
     return () => clearTimeout(timer);
   }, [cityFilter]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedMinPrice(minPrice.trim()), 350);
+    return () => clearTimeout(timer);
+  }, [minPrice]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedMaxPrice(maxPrice.trim()), 350);
+    return () => clearTimeout(timer);
+  }, [maxPrice]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -296,10 +316,56 @@ function Home() {
             />
           </div>
         </div>
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-2 px-4 pb-3 sm:grid-cols-2 sm:gap-3 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.9fr] lg:px-10">
+          <select
+            value={conditionFilter}
+            onChange={(e) => setConditionFilter(e.target.value)}
+            className="input-field py-2 text-xs"
+          >
+            <option value="">All conditions</option>
+            <option value="LIKE_NEW">Like New</option>
+            <option value="GOOD">Good</option>
+            <option value="FAIR">Fair</option>
+            <option value="NEEDS_REPAIR">Needs Repair</option>
+          </select>
+          <input
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+            placeholder="Min price"
+            type="number"
+            min="0"
+            className="input-field py-2 text-xs"
+          />
+          <input
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            placeholder="Max price"
+            type="number"
+            min="0"
+            className="input-field py-2 text-xs"
+          />
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className="input-field py-2 text-xs"
+          >
+            <option value="newest">Newest</option>
+            <option value="price_low">Price: Low to High</option>
+            <option value="price_high">Price: High to Low</option>
+          </select>
+        </div>
       </div>
 
       {ALL_SECTIONS.map((cat) => (
-        <CategorySection key={cat} catKey={cat} cityFilter={debouncedCityFilter} />
+        <CategorySection
+          key={cat}
+          catKey={cat}
+          cityFilter={debouncedCityFilter}
+          conditionFilter={conditionFilter}
+          minPrice={debouncedMinPrice}
+          maxPrice={debouncedMaxPrice}
+          sort={sort}
+        />
       ))}
     </main>
   );

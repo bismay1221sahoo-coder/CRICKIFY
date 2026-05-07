@@ -36,6 +36,10 @@ function ListingDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportToast, setReportToast] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -92,6 +96,29 @@ function ListingDetails() {
 
   const cond = CONDITION_META[listing.condition] || { label: formatLabel(listing.condition), cls: "bg-slate-100 text-slate-600" };
   const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
+
+  const submitReport = async () => {
+    const reason = reportReason.trim();
+    if (reason.length < 10) {
+      setReportToast("Please enter at least 10 characters.");
+      return;
+    }
+    setReportSubmitting(true);
+    try {
+      await apiRequest(`/api/listings/${id}/report`, {
+        method: "POST",
+        body: JSON.stringify({ reason }),
+      });
+      setReportToast("Report submitted. Thank you.");
+      setReportOpen(false);
+      setReportReason("");
+    } catch (err) {
+      setReportToast(err.message);
+    } finally {
+      setReportSubmitting(false);
+      setTimeout(() => setReportToast(""), 3500);
+    }
+  };
 
   return (
     <main className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
@@ -247,9 +274,24 @@ function ListingDetails() {
                 Contact details will be shared by seller
               </p>
             )}
+            <button
+              type="button"
+              onClick={() => setReportOpen(true)}
+              className="mt-3 w-full rounded-xl border border-red-200/70 bg-white/70 px-4 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-50"
+            >
+              Report listing
+            </button>
           </div>
         </div>
       </div>
+
+      {reportToast && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
+          <div className="glass-emerald rounded-2xl px-5 py-3 text-sm font-bold text-emerald-800 shadow-xl">
+            {reportToast}
+          </div>
+        </div>
+      )}
 
       {lightboxOpen && isImageActive && (
         <div
@@ -276,6 +318,43 @@ function ListingDetails() {
             className="max-h-[90vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />
+        </div>
+      )}
+
+      {reportOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="glass w-full max-w-md rounded-2xl p-5 shadow-2xl sm:p-6">
+            <h3 className="text-lg font-black text-slate-900">Report listing</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Tell us what is wrong with this listing. We review all reports.
+            </p>
+            <textarea
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              rows={4}
+              className="input-field mt-4 resize-none"
+              placeholder="Example: Scam attempt, misleading photos, suspicious price, etc."
+              disabled={reportSubmitting}
+            />
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setReportOpen(false)}
+                className="glass rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-white/80"
+                disabled={reportSubmitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitReport}
+                className="rounded-xl bg-red-500 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={reportSubmitting || reportReason.trim().length < 10}
+              >
+                {reportSubmitting ? "Submitting..." : "Submit report"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </main>

@@ -1,5 +1,9 @@
 import prisma from "../lib/prisma.js";
-import { rejectListingSchema } from "../validation/listingValidation.js";
+import {
+  bulkApproveSchema,
+  pendingListingsQuerySchema,
+  rejectListingSchema,
+} from "../validation/listingValidation.js";
 
 const includeListingDetails = {
   seller: {
@@ -24,13 +28,49 @@ const sanitizeListingForResponse = (listing) => ({
 
 export const getPendingListings = async (req, res, next) => {
   try {
+    const parsed = pendingListingsQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid search query." });
+    }
+    const search = parsed.data.search;
+
+    const searchFilter = search
+      ? {
+          OR: [
+            { title: { contains: search, mode: "insensitive" } },
+            { brand: { contains: search, mode: "insensitive" } },
+            { city: { contains: search, mode: "insensitive" } },
+            { seller: { name: { contains: search, mode: "insensitive" } } },
+          ],
+        }
+      : {};
+
     const listings = await prisma.listing.findMany({
-      where: { status: "PENDING" },
+      where: { status: "PENDING", ...searchFilter },
       include: includeListingDetails,
       orderBy: { createdAt: "asc" },
     });
 
     return res.json({ listings: listings.map(sanitizeListingForResponse) });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const bulkApproveListings = async (req, res, next) => {
+  try {
+    const parsed = bulkApproveSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid listing selection." });
+    }
+
+    const { ids } = parsed.data;
+    const result = await prisma.listing.updateMany({
+      where: { id: { in: ids }, status: "PENDING" },
+      data: { status: "APPROVED", rejectReason: null },
+    });
+
+    return res.json({ message: "Listings approved.", approvedCount: result.count });
   } catch (error) {
     next(error);
   }

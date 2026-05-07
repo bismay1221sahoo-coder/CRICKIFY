@@ -1,19 +1,25 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
 
 function Admin() {
   const [listings, setListings] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkApproving, setBulkApproving] = useState(false);
   const [rejectModal, setRejectModal] = useState({ open: false, listingId: null });
   const [rejectReason, setRejectReason] = useState("");
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
 
-  const loadPendingListings = async () => {
+  const loadPendingListings = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const data = await apiRequest("/api/admin/listings/pending");
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      const data = await apiRequest(`/api/admin/listings/pending?${params.toString()}`);
       setListings(Array.isArray(data.listings) ? data.listings : []);
     } catch (err) {
       setError(err.message);
@@ -21,12 +27,21 @@ function Admin() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearch]);
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     loadPendingListings();
-  }, []);
+  }, [loadPendingListings]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 350);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [listings]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const approveListing = async (id) => {
@@ -36,6 +51,37 @@ function Admin() {
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const approveSelected = async () => {
+    if (!selectedIds.length) return;
+    setBulkApproving(true);
+    setError("");
+    try {
+      await apiRequest("/api/admin/listings/approve", {
+        method: "PATCH",
+        body: JSON.stringify({ ids: selectedIds }),
+      });
+      loadPendingListings();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBulkApproving(false);
+    }
+  };
+
+  const toggleSelected = (id) => {
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === listings.length) {
+      setSelectedIds([]);
+      return;
+    }
+    setSelectedIds(listings.map((item) => item.id));
   };
 
   const openRejectModal = (id) => {
@@ -79,14 +125,37 @@ function Admin() {
           <h1 className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl">Pending listings</h1>
           <p className="mt-1 text-sm text-slate-500">Review and verify submitted equipment listings.</p>
         </div>
-        {!loading && (
-          <div className="glass w-fit rounded-2xl px-6 py-4 text-center shadow-md">
-            <p className="text-3xl font-black" style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              {listings.length}
-            </p>
-            <p className="text-xs font-semibold text-slate-500">Pending</p>
+        <div className="flex flex-col gap-3 sm:items-end">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="12" height="12" viewBox="0 0 13 13" fill="none">
+                <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by title, brand, city, seller"
+                className="input-field w-full py-2 pl-8 text-xs sm:w-64"
+              />
+            </div>
+            <button
+              onClick={approveSelected}
+              disabled={!selectedIds.length || bulkApproving}
+              className="btn-primary px-4 py-2 text-xs disabled:opacity-60"
+            >
+              {bulkApproving ? "Approving..." : `Approve selected (${selectedIds.length})`}
+            </button>
           </div>
-        )}
+          {!loading && (
+            <div className="glass w-fit rounded-2xl px-6 py-3 text-center shadow-md">
+              <p className="text-2xl font-black" style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                {listings.length}
+              </p>
+              <p className="text-[10px] font-semibold text-slate-500">Pending</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -119,16 +188,40 @@ function Admin() {
         </div>
       )}
 
+      {listings.length > 0 && (
+        <div className="flex items-center justify-between rounded-2xl border border-slate-200/60 bg-white/60 px-4 py-2 text-xs font-semibold text-slate-600">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={selectedIds.length === listings.length}
+              onChange={toggleSelectAll}
+              className="h-4 w-4"
+            />
+            Select all
+          </label>
+          <span>{selectedIds.length} selected</span>
+        </div>
+      )}
+
       <div className="grid gap-4">
         {listings.map((listing) => {
           const cover = listing?.media?.find((m) => m?.type === "IMAGE" && m?.url);
           const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
           const safeCondition = (listing?.condition || "UNKNOWN").replace(/_/g, " ");
+          const isSelected = selectedIds.includes(listing?.id);
 
           return (
             <article key={listing?.id || listing?.title} className="glass card-hover overflow-hidden rounded-2xl shadow-sm">
               <div className="flex flex-col sm:flex-row">
                 <div className="relative w-full shrink-0 overflow-hidden bg-slate-100 sm:h-auto sm:w-44">
+                  <div className="absolute left-2 top-2 z-10">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelected(listing.id)}
+                      className="h-4 w-4"
+                    />
+                  </div>
                   {cover ? (
                     <img
                       src={cover.url}
