@@ -1,5 +1,6 @@
 const PROOF_LINE_REGEX = /^Purchase Proof:\s*(.+)$/im;
 const PROOF_REASON_LINE_REGEX = /^Purchase Proof Reason:\s*(.+)$/im;
+const PROOF_PUBLIC_IDS_REGEX = /\[\[PROOF_PUBLIC_IDS:[^\]]+\]\]/g;
 
 export const parseListingDescription = (raw = "") => {
   const text = String(raw || "");
@@ -18,6 +19,7 @@ export const parseListingDescription = (raw = "") => {
   const cleaned = text
     .replace(PROOF_LINE_REGEX, "")
     .replace(PROOF_REASON_LINE_REGEX, "")
+    .replace(PROOF_PUBLIC_IDS_REGEX, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 

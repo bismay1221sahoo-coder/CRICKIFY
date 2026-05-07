@@ -27,7 +27,7 @@ const ALL_SECTIONS = ["ALL", ...CATEGORIES];
 function CategorySection({ catKey, cityFilter }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(() => catKey === "ALL");
   const meta = CATEGORY_META[catKey];
 
   useEffect(() => {
@@ -179,7 +179,13 @@ function CategorySection({ catKey, cityFilter }) {
 function Home() {
   const [activeSection, setActiveSection] = useState("ALL");
   const [cityFilter, setCityFilter] = useState("");
+  const [debouncedCityFilter, setDebouncedCityFilter] = useState("");
   const pillsRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedCityFilter(cityFilter.trim()), 350);
+    return () => clearTimeout(timer);
+  }, [cityFilter]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -293,7 +299,7 @@ function Home() {
       </div>
 
       {ALL_SECTIONS.map((cat) => (
-        <CategorySection key={cat} catKey={cat} cityFilter={cityFilter} />
+        <CategorySection key={cat} catKey={cat} cityFilter={debouncedCityFilter} />
       ))}
     </main>
   );

@@ -72,16 +72,27 @@ function Sell() {
     setError("");
     setUploading(true);
     try {
-      const uploaded = [];
-      for (const file of files) {
-        const result = await uploadListingMedia(file);
-        uploaded.push({
-          ...result,
+      const results = await Promise.allSettled(
+        files.map((file) => uploadListingMedia(file))
+      );
+
+      const uploaded = results
+        .filter((result) => result.status === "fulfilled")
+        .map((result) => ({
+          ...result.value,
           localId: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-          previewUrl: result.type === "IMAGE" ? result.url : null,
-        });
+          previewUrl: result.value.type === "IMAGE" ? result.value.url : null,
+        }));
+
+      if (uploaded.length) {
+        setMedia((c) => [...c, ...uploaded]);
       }
-      setMedia((c) => [...c, ...uploaded]);
+
+      const failures = results.filter((result) => result.status === "rejected");
+      if (failures.length) {
+        const message = failures[0]?.reason?.message || "Some files failed to upload.";
+        setError(message);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -114,17 +125,28 @@ function Sell() {
     }
     setProofUploading(true);
     try {
-      const uploaded = [];
-      for (const file of files) {
-        const result = await uploadListingMedia(file);
-        uploaded.push({
-          ...result,
+      const results = await Promise.allSettled(
+        files.map((file) => uploadListingMedia(file))
+      );
+
+      const uploaded = results
+        .filter((result) => result.status === "fulfilled")
+        .map((result) => ({
+          ...result.value,
           localId: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-          previewUrl: result.type === "IMAGE" ? result.url : null,
-        });
+          previewUrl: result.value.type === "IMAGE" ? result.value.url : null,
+        }));
+
+      if (uploaded.length) {
+        setProofMedia((c) => [...c, ...uploaded]);
+        setProofReason("");
       }
-      setProofMedia((c) => [...c, ...uploaded]);
-      setProofReason("");
+
+      const failures = results.filter((result) => result.status === "rejected");
+      if (failures.length) {
+        const message = failures[0]?.reason?.message || "Some proof files failed to upload.";
+        setError(message);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
