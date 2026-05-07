@@ -4,6 +4,7 @@ import {
   createListingSchema,
   listingsQuerySchema,
   reportListingSchema,
+  updateListingSchema,
 } from "../validation/listingValidation.js";
 
 const listingInclude = {
@@ -164,6 +165,46 @@ export const deleteListing = async (req, res, next) => {
     );
 
     return res.json({ message: "Listing deleted." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateListing = async (req, res, next) => {
+  try {
+    const parsed = updateListingSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid listing payload." });
+    }
+
+    const listing = await prisma.listing.findFirst({
+      where: { id: req.params.id, sellerId: req.user.id, status: "PENDING" },
+    });
+
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found or already approved." });
+    }
+
+    const updated = await prisma.listing.update({
+      where: { id: listing.id },
+      data: {
+        title: parsed.data.title,
+        brand: parsed.data.brand || null,
+        category: parsed.data.category,
+        condition: parsed.data.condition,
+        price: parsed.data.price,
+        city: parsed.data.city,
+        usedDuration: parsed.data.usedDuration,
+        defects: parsed.data.defects,
+        description: parsed.data.description,
+      },
+      include: listingInclude,
+    });
+
+    return res.json({
+      message: "Listing updated.",
+      listing: sanitizeListingForResponse(updated),
+    });
   } catch (error) {
     next(error);
   }
