@@ -41,7 +41,11 @@ const getListingMeta = (raw = "") => {
             !part.toLowerCase().startsWith("purchase proof reason:")
         )
     : [];
-  return { metaParts, proofUrls, proofReason };
+  const batWeightMatch = text.match(/Bat Weight[^\n|]*/i);
+  const batWeight = batWeightMatch?.[0]
+    ? batWeightMatch[0].split("Purchase Proof")[0].trim()
+    : "";
+  return { metaParts, proofUrls, proofReason, batWeight };
 };
 
 function MyListings() {
@@ -110,8 +114,7 @@ function MyListings() {
 
   const openEdit = (listing) => {
     const userDescription = getUserDescription(listing.description);
-    const { metaParts } = getListingMeta(listing.description);
-    const batWeight = metaParts.find((part) => part.toLowerCase().startsWith("bat weight")) || "";
+    const { batWeight } = getListingMeta(listing.description);
     setEditTargetId(listing.id);
     setEditForm({
       title: listing.title || "",
