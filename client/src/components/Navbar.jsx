@@ -131,29 +131,29 @@ function Navbar() {
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute right-0 mt-3 w-72 overflow-hidden rounded-2xl border border-emerald-100/80 bg-white/95 shadow-2xl md:top-full">
-                    <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 p-4 text-white">
-                      <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-white/15 blur-2xl" />
-                      <div className="relative z-10 flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-sm font-black text-white shadow-lg">
-                          {user.name?.[0]?.toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-black">{user.name}</p>
-                          <p className="text-xs font-semibold text-emerald-50/90">Account menu</p>
-                        </div>
+                  <div className="absolute right-0 mt-3 w-60 overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 shadow-2xl md:top-full">
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <div
+                        className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-black text-white"
+                        style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
+                      >
+                        {user.name?.[0]?.toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black text-slate-900">{user.name}</p>
+                        <p className="text-[11px] font-semibold text-slate-400">Quick actions</p>
                       </div>
                     </div>
-                    <div className="grid gap-1 p-2">
+                    <div className="h-px bg-slate-200/70" />
+                    <div className="grid p-2">
                       <Link
                         to="/my-listings"
                         onClick={() => {
                           setProfileOpen(false);
                           setMenuOpen(false);
                         }}
-                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition-all hover:bg-emerald-50"
+                        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100"
                       >
-                        <span className="text-base">📦</span>
                         My Listings
                       </Link>
                       <Link
@@ -162,18 +162,15 @@ function Navbar() {
                           setProfileOpen(false);
                           setMenuOpen(false);
                         }}
-                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition-all hover:bg-emerald-50"
+                        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100"
                       >
-                        <span className="text-base">➕</span>
                         Sell Gear
                       </Link>
-                      <div className="my-1 h-px bg-slate-200/80" />
                       <button
                         type="button"
                         onClick={handleLogout}
-                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-red-600 transition-all hover:bg-red-50/80"
+                        className="rounded-lg px-3 py-2 text-left text-sm font-semibold text-red-600 transition-all hover:bg-red-50"
                       >
-                        <span className="text-base">↗</span>
                         Logout
                       </button>
                     </div>
