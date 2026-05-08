@@ -52,6 +52,7 @@ function MyListings() {
   const [editOpen, setEditOpen] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editTargetId, setEditTargetId] = useState(null);
+  const [editBatWeight, setEditBatWeight] = useState("");
   const [editForm, setEditForm] = useState({
     title: "",
     brand: "",
@@ -109,6 +110,8 @@ function MyListings() {
 
   const openEdit = (listing) => {
     const userDescription = getUserDescription(listing.description);
+    const { metaParts } = getListingMeta(listing.description);
+    const batWeight = metaParts.find((part) => part.toLowerCase().startsWith("bat weight")) || "";
     setEditTargetId(listing.id);
     setEditForm({
       title: listing.title || "",
@@ -121,6 +124,7 @@ function MyListings() {
       defects: listing.defects || "",
       description: userDescription,
     });
+    setEditBatWeight(batWeight);
     setEditOpen(true);
   };
 
@@ -128,6 +132,7 @@ function MyListings() {
     if (editSubmitting) return;
     setEditOpen(false);
     setEditTargetId(null);
+    setEditBatWeight("");
   };
 
   const updateEditField = (e) => {
@@ -443,6 +448,11 @@ function MyListings() {
             </div>
 
             <div className="mt-4 grid gap-4">
+              {editBatWeight && (
+                <div className="rounded-xl border border-emerald-100/70 bg-emerald-50/40 px-4 py-3 text-xs font-semibold text-emerald-700">
+                  {editBatWeight}
+                </div>
+              )}
               <label className="grid gap-1 text-sm font-semibold text-slate-700">
                 Used duration
                 <input
