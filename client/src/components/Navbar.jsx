@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { clearSession, getUser } from "../lib/api";
 
@@ -7,6 +7,8 @@ function Navbar() {
   const [user, setUser] = useState(getUser);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
 
   useEffect(() => {
     const syncUser = () => setUser(getUser());
@@ -20,12 +22,23 @@ function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
     if (!window.confirm("Are you sure you want to logout from CRICKIFY?")) return;
     clearSession();
     setUser(null);
     navigate("/login");
     setMenuOpen(false);
+    setProfileOpen(false);
   };
 
   const linkClass = ({ isActive }) =>
@@ -100,20 +113,54 @@ function Navbar() {
 
           <div className="md:ml-2 md:pl-2 md:border-l md:border-slate-200/70">
             {user ? (
-              <div className="flex items-center gap-3">
-                <div className="hidden md:flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-black text-white"
-                    style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}>
-                    {user.name?.[0]?.toUpperCase()}
-                  </div>
-                  <span className="text-sm font-semibold text-slate-700">{user.name}</span>
-                </div>
+              <div className="relative" ref={profileRef}>
                 <button
-                  onClick={handleLogout}
-                  className="glass rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:border-red-200 hover:bg-red-50/80 hover:text-red-600 transition-all duration-200"
+                  type="button"
+                  onClick={() => setProfileOpen((current) => !current)}
+                  className="glass flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-white/80"
+                  aria-haspopup="menu"
+                  aria-expanded={profileOpen}
                 >
-                  Logout
+                  <span
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-black text-white"
+                    style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
+                  >
+                    {user.name?.[0]?.toUpperCase()}
+                  </span>
+                  <span className="hidden sm:inline">{user.name}</span>
                 </button>
+
+                {profileOpen && (
+                  <div className="glass absolute right-0 mt-2 w-56 rounded-2xl border border-white/60 p-2 text-sm shadow-xl md:top-full">
+                    <Link
+                      to="/my-listings"
+                      onClick={() => {
+                        setProfileOpen(false);
+                        setMenuOpen(false);
+                      }}
+                      className="block rounded-xl px-3 py-2 font-semibold text-slate-600 hover:bg-white/70 hover:text-slate-900"
+                    >
+                      My Listings
+                    </Link>
+                    <Link
+                      to="/sell"
+                      onClick={() => {
+                        setProfileOpen(false);
+                        setMenuOpen(false);
+                      }}
+                      className="block rounded-xl px-3 py-2 font-semibold text-slate-600 hover:bg-white/70 hover:text-slate-900"
+                    >
+                      Sell Gear
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="block w-full rounded-xl px-3 py-2 text-left font-semibold text-red-600 hover:bg-red-50/80"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <Link
