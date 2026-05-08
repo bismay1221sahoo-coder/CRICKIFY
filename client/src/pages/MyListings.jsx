@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { apiRequest } from "../lib/api";
+import { parseListingDescription } from "../lib/listingDescription";
 
 const STATUS_META = {
   PENDING: { label: "Pending", cls: "bg-amber-100/80 text-amber-700 border border-amber-200/60" },
@@ -17,6 +18,13 @@ const CONDITION_META = {
 
 const CATEGORY_OPTIONS = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
 const CONDITION_OPTIONS = ["LIKE_NEW", "GOOD", "FAIR", "NEEDS_REPAIR"];
+
+const getUserDescription = (raw = "") => {
+  const text = String(raw || "");
+  const parts = text.split("\n\n");
+  if (parts.length > 1) return parts.slice(1).join("\n\n").trim();
+  return parseListingDescription(text).cleanDescription;
+};
 
 function MyListings() {
   const [listings, setListings] = useState([]);
@@ -82,6 +90,7 @@ function MyListings() {
   };
 
   const openEdit = (listing) => {
+    const userDescription = getUserDescription(listing.description);
     setEditTargetId(listing.id);
     setEditForm({
       title: listing.title || "",
@@ -92,7 +101,7 @@ function MyListings() {
       city: listing.city || "",
       usedDuration: listing.usedDuration || "",
       defects: listing.defects || "",
-      description: listing.description || "",
+      description: userDescription,
     });
     setEditOpen(true);
   };
@@ -205,6 +214,7 @@ function MyListings() {
           const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
           const safeCreatedAt = listing?.createdAt ? new Date(listing.createdAt) : null;
           const hasValidCreatedAt = safeCreatedAt && !Number.isNaN(safeCreatedAt.getTime());
+          const descriptionText = getUserDescription(listing?.description);
 
           return (
             <article key={listing?.id || safeTitle} className="glass card-hover overflow-hidden rounded-2xl shadow-sm">
@@ -241,7 +251,9 @@ function MyListings() {
                       </div>
                     </div>
 
-                    <p className="mt-2 line-clamp-2 text-sm text-slate-500">{listing?.description || "No description provided."}</p>
+                    <p className="mt-2 line-clamp-2 text-sm text-slate-500">
+                      {descriptionText || "No description provided."}
+                    </p>
 
                     {safeStatus === "REJECTED" && listing?.rejectReason && (
                       <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-200/60 bg-red-50/60 px-3 py-2.5">
