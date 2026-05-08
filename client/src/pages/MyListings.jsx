@@ -52,7 +52,6 @@ function MyListings() {
   const [editOpen, setEditOpen] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editTargetId, setEditTargetId] = useState(null);
-  const [editMeta, setEditMeta] = useState({ metaParts: [], proofUrls: [], proofReason: "" });
   const [editForm, setEditForm] = useState({
     title: "",
     brand: "",
@@ -110,7 +109,6 @@ function MyListings() {
 
   const openEdit = (listing) => {
     const userDescription = getUserDescription(listing.description);
-    const { metaParts, proofUrls, proofReason } = getListingMeta(listing.description);
     setEditTargetId(listing.id);
     setEditForm({
       title: listing.title || "",
@@ -123,7 +121,6 @@ function MyListings() {
       defects: listing.defects || "",
       description: userDescription,
     });
-    setEditMeta({ metaParts, proofUrls, proofReason });
     setEditOpen(true);
   };
 
@@ -131,7 +128,6 @@ function MyListings() {
     if (editSubmitting) return;
     setEditOpen(false);
     setEditTargetId(null);
-    setEditMeta({ metaParts: [], proofUrls: [], proofReason: "" });
   };
 
   const updateEditField = (e) => {
@@ -237,6 +233,7 @@ function MyListings() {
           const safeCreatedAt = listing?.createdAt ? new Date(listing.createdAt) : null;
           const hasValidCreatedAt = safeCreatedAt && !Number.isNaN(safeCreatedAt.getTime());
           const descriptionText = getUserDescription(listing?.description);
+          const listingMeta = getListingMeta(listing?.description);
 
           return (
             <article key={listing?.id || safeTitle} className="glass card-hover overflow-hidden rounded-2xl shadow-sm">
@@ -276,6 +273,35 @@ function MyListings() {
                     <p className="mt-2 line-clamp-2 text-sm text-slate-500">
                       {descriptionText || "No description provided."}
                     </p>
+                    {(listingMeta.metaParts.length > 0 || listingMeta.proofUrls.length > 0 || listingMeta.proofReason) && (
+                      <div className="mt-2 rounded-xl border border-emerald-100/70 bg-emerald-50/40 px-3 py-2 text-xs text-slate-600">
+                        {listingMeta.metaParts.length > 0 && (
+                          <div className="mb-2 flex flex-wrap gap-2 text-[11px] font-semibold text-emerald-700">
+                            {listingMeta.metaParts.map((part) => (
+                              <span key={part} className="rounded-full bg-white/70 px-2.5 py-1">
+                                {part}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {listingMeta.proofUrls.length > 0 ? (
+                          <div className="grid gap-1">
+                            <span className="font-bold text-slate-700">Purchase proof:</span>
+                            {listingMeta.proofUrls.map((url) => (
+                              <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="break-all text-emerald-700 underline">
+                                {url}
+                              </a>
+                            ))}
+                          </div>
+                        ) : (
+                          listingMeta.proofReason && (
+                            <p>
+                              <span className="font-bold text-slate-700">Purchase proof:</span> {listingMeta.proofReason}
+                            </p>
+                          )
+                        )}
+                      </div>
+                    )}
 
                     {safeStatus === "REJECTED" && listing?.rejectReason && (
                       <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-200/60 bg-red-50/60 px-3 py-2.5">
@@ -437,37 +463,6 @@ function MyListings() {
                   required
                 />
               </label>
-              {(editMeta.metaParts.length > 0 || editMeta.proofUrls.length > 0 || editMeta.proofReason) && (
-                <div className="rounded-xl border border-emerald-100/70 bg-emerald-50/40 px-4 py-3 text-sm text-slate-700">
-                  {editMeta.metaParts.length > 0 && (
-                    <div className="mb-2 flex flex-wrap gap-2 text-xs font-semibold text-emerald-700">
-                      {editMeta.metaParts.map((part) => (
-                        <span key={part} className="rounded-full bg-white/70 px-3 py-1">
-                          {part}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {editMeta.proofUrls.length > 0 ? (
-                    <div className="text-xs">
-                      <span className="font-bold text-slate-700">Purchase proof:</span>
-                      <div className="mt-1 grid gap-1">
-                        {editMeta.proofUrls.map((url) => (
-                          <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="break-all text-emerald-700 underline">
-                            {url}
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    editMeta.proofReason && (
-                      <p className="text-xs">
-                        <span className="font-bold text-slate-700">Purchase proof:</span> {editMeta.proofReason}
-                      </p>
-                    )
-                  )}
-                </div>
-              )}
               <label className="grid gap-1 text-sm font-semibold text-slate-700">
                 Description
                 <textarea
