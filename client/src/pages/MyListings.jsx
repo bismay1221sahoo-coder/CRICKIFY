@@ -45,7 +45,10 @@ const getListingMeta = (raw = "") => {
   const batWeight = batWeightMatch?.[0]
     ? batWeightMatch[0].split("Purchase Proof")[0].trim()
     : "";
-  return { metaParts, proofUrls, proofReason, batWeight };
+  const cleanedMetaParts = metaParts.filter(
+    (part) => !part.toLowerCase().startsWith("bat weight")
+  );
+  return { metaParts: cleanedMetaParts, proofUrls, proofReason, batWeight };
 };
 
 function MyListings() {
@@ -281,8 +284,13 @@ function MyListings() {
                     <p className="mt-2 line-clamp-2 text-sm text-slate-500">
                       {descriptionText || "No description provided."}
                     </p>
-                    {(listingMeta.metaParts.length > 0 || listingMeta.proofUrls.length > 0 || listingMeta.proofReason) && (
+                    {(listingMeta.batWeight || listingMeta.metaParts.length > 0 || listingMeta.proofUrls.length > 0 || listingMeta.proofReason) && (
                       <div className="mt-2 rounded-xl border border-emerald-100/70 bg-emerald-50/40 px-3 py-2 text-xs text-slate-600">
+                        {listingMeta.batWeight && (
+                          <p className="mb-2 text-[11px] font-semibold text-emerald-700">
+                            {listingMeta.batWeight}
+                          </p>
+                        )}
                         {listingMeta.metaParts.length > 0 && (
                           <div className="mb-2 flex flex-wrap gap-2 text-[11px] font-semibold text-emerald-700">
                             {listingMeta.metaParts.map((part) => (
