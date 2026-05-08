@@ -131,34 +131,57 @@ function Navbar() {
                 </button>
 
                 {profileOpen && (
-                  <div className="glass absolute right-0 mt-2 w-56 rounded-2xl border border-white/60 p-2 text-sm shadow-xl md:top-full">
-                    <Link
-                      to="/my-listings"
-                      onClick={() => {
-                        setProfileOpen(false);
-                        setMenuOpen(false);
-                      }}
-                      className="block rounded-xl px-3 py-2 font-semibold text-slate-600 hover:bg-white/70 hover:text-slate-900"
-                    >
-                      My Listings
-                    </Link>
-                    <Link
-                      to="/sell"
-                      onClick={() => {
-                        setProfileOpen(false);
-                        setMenuOpen(false);
-                      }}
-                      className="block rounded-xl px-3 py-2 font-semibold text-slate-600 hover:bg-white/70 hover:text-slate-900"
-                    >
-                      Sell Gear
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="block w-full rounded-xl px-3 py-2 text-left font-semibold text-red-600 hover:bg-red-50/80"
-                    >
-                      Logout
-                    </button>
+                  <div className="glass absolute right-0 mt-3 w-72 overflow-hidden rounded-2xl border border-white/60 shadow-xl md:top-full">
+                    <div className="relative overflow-hidden p-4">
+                      <div
+                        className="absolute inset-0 opacity-20"
+                        style={{ background: "radial-gradient(circle at top right, #6ee7b7, transparent 55%)" }}
+                      />
+                      <div className="relative z-10 flex items-center gap-3">
+                        <div
+                          className="flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-black text-white shadow-lg"
+                          style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
+                        >
+                          {user.name?.[0]?.toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-black text-slate-900">{user.name}</p>
+                          <p className="text-xs font-semibold text-emerald-700">Signed in</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid gap-1 border-t border-white/70 p-2">
+                      <Link
+                        to="/my-listings"
+                        onClick={() => {
+                          setProfileOpen(false);
+                          setMenuOpen(false);
+                        }}
+                        className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-white/70 hover:text-slate-900"
+                      >
+                        My Listings
+                        <span className="text-xs text-slate-400">View</span>
+                      </Link>
+                      <Link
+                        to="/sell"
+                        onClick={() => {
+                          setProfileOpen(false);
+                          setMenuOpen(false);
+                        }}
+                        className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-white/70 hover:text-slate-900"
+                      >
+                        Sell Gear
+                        <span className="text-xs text-slate-400">Create</span>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="flex items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-semibold text-red-600 transition-all hover:bg-red-50/80"
+                      >
+                        Logout
+                        <span className="text-xs text-red-400">Sign out</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
