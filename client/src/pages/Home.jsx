@@ -1,6 +1,5 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { apiRequest } from "../lib/api";
 
 const CATEGORIES = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
 
@@ -15,55 +14,15 @@ const CATEGORY_META = {
   OTHER: { icon: "Oth", label: "Other", gradient: "from-slate-500 to-slate-600", bg: "from-slate-800/80 to-slate-900/80", bgImage: "https://res.cloudinary.com/dzlz0w47q/image/upload/v1777923285/cricket-equipment-sportswear-set-players-tool-vector-icons-field-bat-ball-helmet-wicket-stumps-shoe-uniform-gloves-tools-219002067_bjjcu6.webp" },
 };
 
-const CONDITION_META = {
-  LIKE_NEW: { label: "Like New", cls: "bg-emerald-100/80 text-emerald-700 border border-emerald-200/60" },
-  GOOD: { label: "Good", cls: "bg-sky-100/80 text-sky-700 border border-sky-200/60" },
-  FAIR: { label: "Fair", cls: "bg-amber-100/80 text-amber-700 border border-amber-200/60" },
-  NEEDS_REPAIR: { label: "Needs Repair", cls: "bg-red-100/80 text-red-600 border border-red-200/60" },
-};
-
 const ALL_SECTIONS = ["ALL", ...CATEGORIES];
 
-function CategorySection({ catKey, cityFilter, conditionFilter, minPrice, maxPrice, sort }) {
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(() => catKey === "ALL");
+function CategorySection({ catKey }) {
   const meta = CATEGORY_META[catKey];
-
-  useEffect(() => {
-    if (!open) return;
-    const load = async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams();
-        if (catKey !== "ALL") params.set("category", catKey);
-        if (cityFilter) params.set("city", cityFilter);
-        if (conditionFilter) params.set("condition", conditionFilter);
-        if (minPrice) params.set("minPrice", minPrice);
-        if (maxPrice) params.set("maxPrice", maxPrice);
-        if (sort) params.set("sort", sort);
-        const data = await apiRequest(`/api/listings?${params.toString()}`);
-        setListings(Array.isArray(data.listings) ? data.listings : []);
-      } catch {
-        setListings([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [open, catKey, cityFilter, conditionFilter, minPrice, maxPrice, sort]);
-
-  const handleBannerClick = () => {
-    setOpen(true);
-    setTimeout(() => {
-      document.getElementById(`cat-${catKey}-listings`)?.scrollIntoView({ behavior: "smooth" });
-    }, 50);
-  };
 
   return (
     <section id={`cat-${catKey}`} className="relative overflow-hidden">
-      <button
-        onClick={handleBannerClick}
+      <Link
+        to={`/categories/${catKey}`}
         className="group relative flex min-h-[30vh] w-full items-center justify-center overflow-hidden text-left sm:min-h-[36vh] lg:min-h-[42vh]"
       >
         {meta.bgImage ? (
@@ -84,96 +43,10 @@ function CategorySection({ catKey, cityFilter, conditionFilter, minPrice, maxPri
             {meta.label}
           </h2>
           <p className="text-xs font-semibold text-white/70 sm:text-sm">
-            {loading
-              ? "Loading..."
-              : listings.length > 0
-                ? `${listings.length} verified listing${listings.length !== 1 ? "s" : ""} - tap to browse`
-                : "Tap to browse"}
+            Tap to browse
           </p>
         </div>
-      </button>
-
-      {open && (
-        <div id={`cat-${catKey}-listings`} className="px-4 py-8 sm:px-6 lg:px-10">
-          {loading && (
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="glass overflow-hidden rounded-2xl">
-                  <div className="shimmer aspect-[4/3]" />
-                  <div className="grid gap-2 p-4">
-                    <div className="shimmer h-4 w-3/4 rounded-lg" />
-                    <div className="shimmer h-3 w-1/2 rounded-lg" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {!loading && listings.length === 0 && (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-200 py-8 text-center sm:flex-row sm:gap-4">
-              <p className="text-sm font-bold text-slate-400">No {meta.label.toLowerCase()} listed yet</p>
-              <Link to="/sell" className="btn-primary px-4 py-2 text-xs">
-                List first
-              </Link>
-            </div>
-          )}
-
-          {!loading && listings.length > 0 && (
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {listings.map((listing) => {
-                const cover = listing?.media?.find((m) => m?.type === "IMAGE" && m?.url);
-                const cond = CONDITION_META[listing?.condition] || { label: listing?.condition || "Unknown", cls: "bg-slate-100 text-slate-600" };
-                const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
-                return (
-                  <article key={listing?.id || listing?.title} className="glass card-hover group overflow-hidden rounded-2xl">
-                    <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                      {cover ? (
-                        <img
-                          src={cover.url}
-                          alt={listing?.title || "Listing"}
-                          loading="lazy"
-                          decoding="async"
-                          referrerPolicy="no-referrer"
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                      ) : (
-                        <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-50 to-sky-50">
-                          <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">No photo</span>
-                        </div>
-                      )}
-
-                      <div className="absolute left-2.5 top-2.5">
-                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow backdrop-blur-sm" style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}>
-                          Verified
-                        </span>
-                      </div>
-                      <div className="absolute right-2.5 top-2.5">
-                        <span className="glass rounded-full px-2 py-0.5 text-xs font-black text-sky-700 shadow backdrop-blur-md">
-                          Rs. {safePrice.toLocaleString()}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="truncate text-sm font-black text-slate-900">{listing?.title || "Untitled listing"}</h3>
-                      {listing?.brand && <p className="mt-0.5 text-xs font-semibold text-emerald-700">{listing.brand}</p>}
-                      <p className="mt-0.5 text-xs text-slate-500">{listing?.city || "Unknown city"}</p>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${cond.cls}`}>{cond.label}</span>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between border-t border-slate-100/60 pt-3">
-                        <p className="text-xs text-slate-500">by {listing?.seller?.name || "Seller"}</p>
-                        <Link to={`/listings/${listing.id}`} className="rounded-lg px-2.5 py-1 text-xs font-bold text-white" style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}>
-                          View
-                        </Link>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+      </Link>
 
       <div className="mx-4 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent sm:mx-6 lg:mx-10" />
     </section>
@@ -182,30 +55,7 @@ function CategorySection({ catKey, cityFilter, conditionFilter, minPrice, maxPri
 
 function Home() {
   const [activeSection, setActiveSection] = useState("ALL");
-  const [cityFilter, setCityFilter] = useState("");
-  const [debouncedCityFilter, setDebouncedCityFilter] = useState("");
-  const [conditionFilter, setConditionFilter] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [sort, setSort] = useState("newest");
-  const [debouncedMinPrice, setDebouncedMinPrice] = useState("");
-  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState("");
   const pillsRef = useRef(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedCityFilter(cityFilter.trim()), 350);
-    return () => clearTimeout(timer);
-  }, [cityFilter]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedMinPrice(minPrice.trim()), 350);
-    return () => clearTimeout(timer);
-  }, [minPrice]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedMaxPrice(maxPrice.trim()), 350);
-    return () => clearTimeout(timer);
-  }, [maxPrice]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -259,9 +109,9 @@ function Home() {
                 <Link to="/sell" className="btn-primary">
                   List your gear
                 </Link>
-                <button onClick={() => scrollTo("ALL")} className="glass inline-flex items-center rounded-xl px-5 py-3 text-sm font-bold text-slate-700 transition-all duration-200 hover:bg-white/80">
+                <Link to="/categories/ALL" className="glass inline-flex items-center rounded-xl px-5 py-3 text-sm font-bold text-slate-700 transition-all duration-200 hover:bg-white/80">
                   Browse listings
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -303,69 +153,11 @@ function Home() {
               );
             })}
           </div>
-          <div className="relative w-full shrink-0 lg:w-auto">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="12" height="12" viewBox="0 0 13 13" fill="none">
-              <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <input
-              value={cityFilter}
-              onChange={(e) => setCityFilter(e.target.value)}
-              placeholder="Filter by city..."
-              className="input-field w-full py-2 pl-8 text-xs sm:w-44 lg:w-44"
-            />
-          </div>
-        </div>
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-2 px-4 pb-3 sm:grid-cols-2 sm:gap-3 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.9fr] lg:px-10">
-          <select
-            value={conditionFilter}
-            onChange={(e) => setConditionFilter(e.target.value)}
-            className="input-field py-2 text-xs"
-          >
-            <option value="">All conditions</option>
-            <option value="LIKE_NEW">Like New</option>
-            <option value="GOOD">Good</option>
-            <option value="FAIR">Fair</option>
-            <option value="NEEDS_REPAIR">Needs Repair</option>
-          </select>
-          <input
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-            placeholder="Min price"
-            type="number"
-            min="0"
-            className="input-field py-2 text-xs"
-          />
-          <input
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-            placeholder="Max price"
-            type="number"
-            min="0"
-            className="input-field py-2 text-xs"
-          />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="input-field py-2 text-xs"
-          >
-            <option value="newest">Newest</option>
-            <option value="price_low">Price: Low to High</option>
-            <option value="price_high">Price: High to Low</option>
-          </select>
         </div>
       </div>
 
       {ALL_SECTIONS.map((cat) => (
-        <CategorySection
-          key={cat}
-          catKey={cat}
-          cityFilter={debouncedCityFilter}
-          conditionFilter={conditionFilter}
-          minPrice={debouncedMinPrice}
-          maxPrice={debouncedMaxPrice}
-          sort={sort}
-        />
+        <CategorySection key={cat} catKey={cat} />
       ))}
     </main>
   );

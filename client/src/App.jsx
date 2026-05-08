@@ -8,6 +8,7 @@ import Admin from "./pages/Admin";
 import Sell from "./pages/Sell";
 import MyListings from "./pages/MyListings";
 import ListingDetails from "./pages/ListingDetails";
+import CategoryListings from "./pages/CategoryListings";
 import { getUser } from "./lib/api";
 
 const PAGE_TITLES = {
@@ -47,6 +48,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/categories/:category" element={<CategoryListings />} />
         <Route path="/login" element={<Login />} />
         <Route path="/listings/:id" element={<ListingDetails />} />
         <Route path="/sell" element={<AuthRoute><Sell /></AuthRoute>} />
