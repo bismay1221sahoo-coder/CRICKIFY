@@ -185,6 +185,15 @@ export const updateListing = async (req, res, next) => {
       return res.status(404).json({ message: "Listing not found or already approved." });
     }
 
+    const existingDescription = listing.description || "";
+    const proofMarkerMatch = existingDescription.match(PROOF_MARKER_REGEX);
+    const proofMarker = proofMarkerMatch ? `\n\n${proofMarkerMatch[0]}` : "";
+    const descriptionWithoutMarker = existingDescription.replace(PROOF_MARKER_REGEX, "").trim();
+    const metaBlock = descriptionWithoutMarker.split("\n\n")[0] || "";
+    const nextDescription = metaBlock
+      ? `${metaBlock}\n\n${parsed.data.description}${proofMarker}`
+      : `${parsed.data.description}${proofMarker}`;
+
     const updated = await prisma.listing.update({
       where: { id: listing.id },
       data: {
@@ -196,7 +205,7 @@ export const updateListing = async (req, res, next) => {
         city: parsed.data.city,
         usedDuration: parsed.data.usedDuration,
         defects: parsed.data.defects,
-        description: parsed.data.description,
+        description: nextDescription,
       },
       include: listingInclude,
     });
