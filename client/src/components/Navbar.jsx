@@ -131,36 +131,30 @@ function Navbar() {
                 </button>
 
                 {profileOpen && (
-                  <div className="glass absolute right-0 mt-3 w-72 overflow-hidden rounded-2xl border border-white/60 shadow-xl md:top-full">
-                    <div className="relative overflow-hidden p-4">
-                      <div
-                        className="absolute inset-0 opacity-20"
-                        style={{ background: "radial-gradient(circle at top right, #6ee7b7, transparent 55%)" }}
-                      />
+                  <div className="absolute right-0 mt-3 w-72 overflow-hidden rounded-2xl border border-emerald-100/80 bg-white/95 shadow-2xl md:top-full">
+                    <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-500 p-4 text-white">
+                      <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-white/15 blur-2xl" />
                       <div className="relative z-10 flex items-center gap-3">
-                        <div
-                          className="flex h-12 w-12 items-center justify-center rounded-2xl text-sm font-black text-white shadow-lg"
-                          style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
-                        >
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 text-sm font-black text-white shadow-lg">
                           {user.name?.[0]?.toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-black text-slate-900">{user.name}</p>
-                          <p className="text-xs font-semibold text-emerald-700">Signed in</p>
+                          <p className="truncate text-sm font-black">{user.name}</p>
+                          <p className="text-xs font-semibold text-emerald-50/90">Account menu</p>
                         </div>
                       </div>
                     </div>
-                    <div className="grid gap-1 border-t border-white/70 p-2">
+                    <div className="grid gap-1 p-2">
                       <Link
                         to="/my-listings"
                         onClick={() => {
                           setProfileOpen(false);
                           setMenuOpen(false);
                         }}
-                        className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-white/70 hover:text-slate-900"
+                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition-all hover:bg-emerald-50"
                       >
+                        <span className="text-base">📦</span>
                         My Listings
-                        <span className="text-xs text-slate-400">View</span>
                       </Link>
                       <Link
                         to="/sell"
@@ -168,18 +162,19 @@ function Navbar() {
                           setProfileOpen(false);
                           setMenuOpen(false);
                         }}
-                        className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-white/70 hover:text-slate-900"
+                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition-all hover:bg-emerald-50"
                       >
+                        <span className="text-base">➕</span>
                         Sell Gear
-                        <span className="text-xs text-slate-400">Create</span>
                       </Link>
+                      <div className="my-1 h-px bg-slate-200/80" />
                       <button
                         type="button"
                         onClick={handleLogout}
-                        className="flex items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-semibold text-red-600 transition-all hover:bg-red-50/80"
+                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-red-600 transition-all hover:bg-red-50/80"
                       >
+                        <span className="text-base">↗</span>
                         Logout
-                        <span className="text-xs text-red-400">Sign out</span>
                       </button>
                     </div>
                   </div>
