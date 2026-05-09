@@ -1,5 +1,38 @@
 ﻿import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../lib/api";
+import { parseListingDescription } from "../lib/listingDescription";
+
+const getUserDescription = (raw = "") => {
+  const text = String(raw || "");
+  const parts = text.split("\n\n");
+  if (parts.length > 1) return parts.slice(1).join("\n\n").trim();
+  return parseListingDescription(text).cleanDescription;
+};
+
+const getListingMeta = (raw = "") => {
+  const text = String(raw || "");
+  const [metaBlock] = text.split("\n\n");
+  const { proofUrls, proofReason } = parseListingDescription(text);
+  const metaParts = metaBlock
+    ? metaBlock
+        .split(/\s*\|\s*|\n/)
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .filter(
+          (part) =>
+            !part.toLowerCase().startsWith("purchase proof:") &&
+            !part.toLowerCase().startsWith("purchase proof reason:")
+        )
+    : [];
+  const batWeight = metaParts.find((part) => part.toLowerCase().startsWith("bat weight")) || "";
+  const handleType = metaParts.find((part) => part.toLowerCase().startsWith("handle type")) || "";
+  const cleanedMetaParts = metaParts.filter(
+    (part) =>
+      !part.toLowerCase().startsWith("bat weight") &&
+      !part.toLowerCase().startsWith("handle type")
+  );
+  return { metaParts: cleanedMetaParts, proofUrls, proofReason, batWeight, handleType };
+};
 
 function Admin() {
   const [listings, setListings] = useState([]);
@@ -279,6 +312,8 @@ function Admin() {
             const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
             const safeCondition = (listing?.condition || "UNKNOWN").replace(/_/g, " ");
             const isSelected = selectedIds.includes(listing?.id);
+            const descriptionText = getUserDescription(listing?.description);
+            const listingMeta = getListingMeta(listing?.description);
             const openLightbox = (url) => {
               if (!url) return;
               setLightboxUrl(url);
@@ -329,7 +364,46 @@ function Admin() {
                         </div>
                         <p className="text-lg font-black gradient-text">Rs. {safePrice.toLocaleString()}</p>
                       </div>
-                      <p className="mt-2 line-clamp-2 text-sm text-slate-600">{listing?.description || "No description provided."}</p>
+                      <p className="mt-2 line-clamp-2 text-sm text-slate-600">{descriptionText || "No description provided."}</p>
+                      {(listingMeta.batWeight || listingMeta.handleType || listingMeta.metaParts.length > 0 || listingMeta.proofUrls.length > 0 || listingMeta.proofReason) && (
+                        <div className="mt-2 rounded-xl border border-emerald-100/70 bg-emerald-50/40 px-3 py-2 text-xs text-slate-600">
+                          {listingMeta.batWeight && (
+                            <p className="mb-2 text-[11px] font-semibold text-emerald-700">
+                              {listingMeta.batWeight}
+                            </p>
+                          )}
+                          {listingMeta.handleType && (
+                            <p className="mb-2 text-[11px] font-semibold text-emerald-700">
+                              {listingMeta.handleType}
+                            </p>
+                          )}
+                          {listingMeta.metaParts.length > 0 && (
+                            <div className="mb-2 flex flex-wrap gap-2 text-[11px] font-semibold text-emerald-700">
+                              {listingMeta.metaParts.map((part) => (
+                                <span key={part} className="rounded-full bg-white/70 px-2.5 py-1">
+                                  {part}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {listingMeta.proofUrls.length > 0 ? (
+                            <div className="grid gap-1">
+                              <span className="font-bold text-slate-700">Purchase proof:</span>
+                              {listingMeta.proofUrls.map((url) => (
+                                <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="break-all text-emerald-700 underline">
+                                  {url}
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            listingMeta.proofReason && (
+                              <p>
+                                <span className="font-bold text-slate-700">Purchase proof:</span> {listingMeta.proofReason}
+                              </p>
+                            )
+                          )}
+                        </div>
+                      )}
                       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
                         <span><span className="font-semibold text-slate-700">Defects:</span> {listing?.defects || "-"}</span>
                         <span><span className="font-semibold text-slate-700">Seller:</span> {listing?.seller?.name || "Unknown"}{listing?.seller?.phone ? ` · ${listing.seller.phone}` : ""}</span>
@@ -377,6 +451,8 @@ function Admin() {
           {reports.filter((report) => report.listing?.status === "PENDING").map((report) => {
             const listing = report.listing;
             const cover = listing?.media?.find((m) => m?.type === "IMAGE" && m?.url);
+            const descriptionText = getUserDescription(listing?.description);
+            const listingMeta = getListingMeta(listing?.description);
             const openLightbox = (url) => {
               if (!url) return;
               setLightboxUrl(url);
@@ -433,6 +509,46 @@ function Admin() {
                       <div className="mt-2 text-xs text-slate-500">
                         Reporter: {report.reporter?.name || "Unknown"} {report.reporter?.email ? `· ${report.reporter.email}` : ""}
                       </div>
+                      <p className="mt-2 line-clamp-2 text-sm text-slate-600">{descriptionText || "No description provided."}</p>
+                      {(listingMeta.batWeight || listingMeta.handleType || listingMeta.metaParts.length > 0 || listingMeta.proofUrls.length > 0 || listingMeta.proofReason) && (
+                        <div className="mt-2 rounded-xl border border-emerald-100/70 bg-emerald-50/40 px-3 py-2 text-xs text-slate-600">
+                          {listingMeta.batWeight && (
+                            <p className="mb-2 text-[11px] font-semibold text-emerald-700">
+                              {listingMeta.batWeight}
+                            </p>
+                          )}
+                          {listingMeta.handleType && (
+                            <p className="mb-2 text-[11px] font-semibold text-emerald-700">
+                              {listingMeta.handleType}
+                            </p>
+                          )}
+                          {listingMeta.metaParts.length > 0 && (
+                            <div className="mb-2 flex flex-wrap gap-2 text-[11px] font-semibold text-emerald-700">
+                              {listingMeta.metaParts.map((part) => (
+                                <span key={part} className="rounded-full bg-white/70 px-2.5 py-1">
+                                  {part}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {listingMeta.proofUrls.length > 0 ? (
+                            <div className="grid gap-1">
+                              <span className="font-bold text-slate-700">Purchase proof:</span>
+                              {listingMeta.proofUrls.map((url) => (
+                                <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="break-all text-emerald-700 underline">
+                                  {url}
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            listingMeta.proofReason && (
+                              <p>
+                                <span className="font-bold text-slate-700">Purchase proof:</span> {listingMeta.proofReason}
+                              </p>
+                            )
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col gap-2 sm:flex-row">
