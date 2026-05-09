@@ -26,7 +26,10 @@ export const createListingSchema = z.object({
     .min(1),
 });
 
-  export const updateListingSchema = createListingSchema.omit({ media: true });
+  export const updateListingSchema = createListingSchema.omit({ media: true }).extend({
+    batWeight: z.string().trim().min(1).max(50).optional(),
+    handleType: z.string().trim().max(50).optional(),
+  });
 
 export const listingsQuerySchema = z.object({
   category: z.enum(categories).optional(),

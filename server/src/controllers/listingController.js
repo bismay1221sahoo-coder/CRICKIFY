@@ -33,6 +33,8 @@ const normalizeMedia = (media = []) =>
     }));
 
 const PROOF_MARKER_REGEX = /\[\[PROOF_PUBLIC_IDS:([^[\]]+)\]\]/;
+const PROOF_LINE_REGEX = /^Purchase Proof:\s*(.+)$/im;
+const PROOF_REASON_LINE_REGEX = /^Purchase Proof Reason:\s*(.+)$/im;
 
 const stripProofMarker = (description = "") =>
   description.replace(PROOF_MARKER_REGEX, "").trim();
@@ -42,6 +44,18 @@ const extractProofPublicIds = (description = "") => {
   if (!match?.[1]) return [];
   return match[1].split(",").map((id) => id.trim()).filter(Boolean);
 };
+
+const splitMetaBlock = (description = "") => {
+  const withoutMarker = description.replace(PROOF_MARKER_REGEX, "").trim();
+  const [metaBlock = "", ...rest] = withoutMarker.split("\n\n");
+  return { metaBlock, userDescription: rest.join("\n\n").trim(), proofMarker: description.match(PROOF_MARKER_REGEX)?.[0] || "" };
+};
+
+const parseMetaParts = (metaBlock = "") =>
+  metaBlock
+    .split(/\s*\|\s*|\n/)
+    .map((part) => part.trim())
+    .filter(Boolean);
 
 const sanitizeListingForResponse = (listing) => ({
   ...listing,
@@ -186,13 +200,36 @@ export const updateListing = async (req, res, next) => {
     }
 
     const existingDescription = listing.description || "";
-    const proofMarkerMatch = existingDescription.match(PROOF_MARKER_REGEX);
-    const proofMarker = proofMarkerMatch ? `\n\n${proofMarkerMatch[0]}` : "";
-    const descriptionWithoutMarker = existingDescription.replace(PROOF_MARKER_REGEX, "").trim();
-    const metaBlock = descriptionWithoutMarker.split("\n\n")[0] || "";
-    const nextDescription = metaBlock
-      ? `${metaBlock}\n\n${parsed.data.description}${proofMarker}`
-      : `${parsed.data.description}${proofMarker}`;
+    const { metaBlock, proofMarker } = splitMetaBlock(existingDescription);
+    const metaParts = parseMetaParts(metaBlock);
+    const proofParts = metaParts.filter(
+      (part) => part.toLowerCase().startsWith("purchase proof")
+    );
+    const otherParts = metaParts.filter(
+      (part) => !part.toLowerCase().startsWith("purchase proof")
+    );
+
+    const filteredParts = otherParts.filter(
+      (part) => !part.toLowerCase().startsWith("bat weight") && !part.toLowerCase().startsWith("handle type")
+    );
+
+    if (parsed.data.batWeight) {
+      filteredParts.push(`Bat Weight (approx): ${parsed.data.batWeight}`);
+    }
+    if (parsed.data.handleType) {
+      filteredParts.push(`Handle Type: ${parsed.data.handleType}`);
+    }
+
+    const rebuiltMeta = [
+      filteredParts.join(" | "),
+      proofParts.length ? proofParts.join(" | ") : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const nextDescription = rebuiltMeta
+      ? `${rebuiltMeta}\n\n${parsed.data.description}${proofMarker ? `\n\n${proofMarker}` : ""}`
+      : `${parsed.data.description}${proofMarker ? `\n\n${proofMarker}` : ""}`;
 
     const updated = await prisma.listing.update({
       where: { id: listing.id },

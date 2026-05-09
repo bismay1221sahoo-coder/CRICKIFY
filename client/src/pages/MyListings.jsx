@@ -18,6 +18,7 @@ const CONDITION_META = {
 
 const CATEGORY_OPTIONS = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
 const CONDITION_OPTIONS = ["LIKE_NEW", "GOOD", "FAIR", "NEEDS_REPAIR"];
+const HANDLE_OPTIONS = ["", "Round", "Oval"];
 
 const getUserDescription = (raw = "") => {
   const text = String(raw || "");
@@ -32,7 +33,7 @@ const getListingMeta = (raw = "") => {
   const { proofUrls, proofReason } = parseListingDescription(text);
   const metaParts = metaBlock
     ? metaBlock
-        .split(" | ")
+        .split(/\s*\|\s*|\n/)
         .map((part) => part.trim())
         .filter(Boolean)
         .filter(
@@ -41,14 +42,14 @@ const getListingMeta = (raw = "") => {
             !part.toLowerCase().startsWith("purchase proof reason:")
         )
     : [];
-  const batWeightMatch = text.match(/Bat Weight[^\n|]*/i);
-  const batWeight = batWeightMatch?.[0]
-    ? batWeightMatch[0].split("Purchase Proof")[0].trim()
-    : "";
+  const batWeight = metaParts.find((part) => part.toLowerCase().startsWith("bat weight")) || "";
+  const handleType = metaParts.find((part) => part.toLowerCase().startsWith("handle type")) || "";
   const cleanedMetaParts = metaParts.filter(
-    (part) => !part.toLowerCase().startsWith("bat weight")
+    (part) =>
+      !part.toLowerCase().startsWith("bat weight") &&
+      !part.toLowerCase().startsWith("handle type")
   );
-  return { metaParts: cleanedMetaParts, proofUrls, proofReason, batWeight };
+  return { metaParts: cleanedMetaParts, proofUrls, proofReason, batWeight, handleType };
 };
 
 function MyListings() {
@@ -60,6 +61,7 @@ function MyListings() {
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editTargetId, setEditTargetId] = useState(null);
   const [editBatWeight, setEditBatWeight] = useState("");
+  const [editHandleType, setEditHandleType] = useState("");
   const [editForm, setEditForm] = useState({
     title: "",
     brand: "",
@@ -117,7 +119,7 @@ function MyListings() {
 
   const openEdit = (listing) => {
     const userDescription = getUserDescription(listing.description);
-    const { batWeight } = getListingMeta(listing.description);
+    const { batWeight, handleType } = getListingMeta(listing.description);
     setEditTargetId(listing.id);
     setEditForm({
       title: listing.title || "",
@@ -131,6 +133,7 @@ function MyListings() {
       description: userDescription,
     });
     setEditBatWeight(batWeight);
+    setEditHandleType(handleType.replace(/^Handle Type:\s*/i, ""));
     setEditOpen(true);
   };
 
@@ -139,6 +142,7 @@ function MyListings() {
     setEditOpen(false);
     setEditTargetId(null);
     setEditBatWeight("");
+    setEditHandleType("");
   };
 
   const updateEditField = (e) => {
@@ -156,6 +160,10 @@ function MyListings() {
         ...editForm,
         price: Number(editForm.price),
       };
+      if (editForm.category === "BAT") {
+        if (editBatWeight) payload.batWeight = editBatWeight.replace(/^Bat Weight \(approx\):\s*/i, "");
+        if (editHandleType) payload.handleType = editHandleType;
+      }
       const data = await apiRequest(`/api/listings/${editTargetId}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
@@ -459,10 +467,31 @@ function MyListings() {
             </div>
 
             <div className="mt-4 grid gap-4">
-              {editBatWeight && (
-                <div className="rounded-xl border border-emerald-100/70 bg-emerald-50/40 px-4 py-3 text-xs font-semibold text-emerald-700">
-                  {editBatWeight}
-                </div>
+              {editForm.category === "BAT" && (
+                <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                  Bat Weight (approx)
+                  <input
+                    value={editBatWeight.replace(/^Bat Weight \(approx\):\s*/i, "")}
+                    onChange={(e) => setEditBatWeight(`Bat Weight (approx): ${e.target.value}`)}
+                    className="input-field"
+                  />
+                </label>
+              )}
+              {editForm.category === "BAT" && (
+                <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                  Handle Type (optional)
+                  <select
+                    value={editHandleType}
+                    onChange={(e) => setEditHandleType(e.target.value)}
+                    className="input-field"
+                  >
+                    {HANDLE_OPTIONS.map((opt) => (
+                      <option key={opt || "none"} value={opt}>
+                        {opt || "-- Select --"}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               )}
               <label className="grid gap-1 text-sm font-semibold text-slate-700">
                 Used duration
