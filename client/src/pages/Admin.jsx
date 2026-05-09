@@ -365,16 +365,16 @@ function Admin() {
         </div>
       )}
 
-      {view === "reports" && !reportsLoading && reports.filter((report) => report.listing?.status === "PENDING").length === 0 && (
+      {view === "reports" && !reportsLoading && reports.length === 0 && (
         <div className="glass rounded-2xl p-12 text-center shadow-md">
           <h2 className="text-xl font-black text-slate-900">No reports</h2>
           <p className="mt-2 text-sm text-slate-500">Reported listings will appear here.</p>
         </div>
       )}
 
-      {view === "reports" && reports.filter((report) => report.listing?.status === "PENDING").length > 0 && (
+      {view === "reports" && reports.length > 0 && (
         <div className="grid gap-4">
-          {reports.filter((report) => report.listing?.status === "PENDING").map((report) => {
+          {reports.map((report) => {
             const listing = report.listing;
             const cover = listing?.media?.find((m) => m?.type === "IMAGE" && m?.url);
             const openLightbox = (url) => {
@@ -416,6 +416,11 @@ function Admin() {
                           <p className="mt-0.5 text-xs text-slate-500">
                             {listing?.category || "Unknown"} · {(listing?.condition || "").replace(/_/g, " ")} · {listing?.city || "Unknown city"}
                           </p>
+                          {listing?.status && (
+                            <span className="mt-1 inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600">
+                              {listing.status}
+                            </span>
+                          )}
                           <p className="mt-2 text-xs font-semibold text-red-600">Report: {report.reason}</p>
                         </div>
                         <div className="text-right">
