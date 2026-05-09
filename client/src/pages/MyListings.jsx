@@ -383,150 +383,154 @@ function MyListings() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <form
             onSubmit={submitEdit}
-            className="glass w-full max-w-2xl rounded-2xl p-5 shadow-2xl sm:p-6"
+            className="glass flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl shadow-2xl"
           >
+            <div className="p-5 sm:p-6">
             <div className="flex flex-col gap-1">
               <h3 className="text-lg font-black text-slate-900">Edit listing</h3>
               <p className="text-sm text-slate-500">Only pending listings can be edited.</p>
             </div>
-
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                Title
-                <input
-                  name="title"
-                  value={editForm.title}
-                  onChange={updateEditField}
-                  className="input-field"
-                  required
-                />
-              </label>
-              <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                Brand
-                <input
-                  name="brand"
-                  value={editForm.brand}
-                  onChange={updateEditField}
-                  className="input-field"
-                />
-              </label>
-              <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                Category
-                <select
-                  name="category"
-                  value={editForm.category}
-                  onChange={updateEditField}
-                  className="input-field"
-                  required
-                >
-                  {CATEGORY_OPTIONS.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat.replace("_", " ")}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                Condition
-                <select
-                  name="condition"
-                  value={editForm.condition}
-                  onChange={updateEditField}
-                  className="input-field"
-                  required
-                >
-                  {CONDITION_OPTIONS.map((cond) => (
-                    <option key={cond} value={cond}>
-                      {cond.replace(/_/g, " ")}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                Price (Rs.)
-                <input
-                  name="price"
-                  type="number"
-                  min="1"
-                  value={editForm.price}
-                  onChange={updateEditField}
-                  className="input-field"
-                  required
-                />
-              </label>
-              <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                City
-                <input
-                  name="city"
-                  value={editForm.city}
-                  onChange={updateEditField}
-                  className="input-field"
-                  required
-                />
-              </label>
             </div>
 
-            <div className="mt-4 grid gap-4">
-              {editForm.category === "BAT" && (
+            <div className="flex-1 overflow-y-auto px-5 sm:px-6">
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                  Bat Weight (approx)
+                  Title
                   <input
-                    value={editBatWeight.replace(/^Bat Weight \(approx\):\s*/i, "")}
-                    onChange={(e) => setEditBatWeight(`Bat Weight (approx): ${e.target.value}`)}
+                    name="title"
+                    value={editForm.title}
+                    onChange={updateEditField}
+                    className="input-field"
+                    required
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                  Brand
+                  <input
+                    name="brand"
+                    value={editForm.brand}
+                    onChange={updateEditField}
                     className="input-field"
                   />
                 </label>
-              )}
-              {editForm.category === "BAT" && (
                 <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                  Handle Type (optional)
+                  Category
                   <select
-                    value={editHandleType}
-                    onChange={(e) => setEditHandleType(e.target.value)}
+                    name="category"
+                    value={editForm.category}
+                    onChange={updateEditField}
                     className="input-field"
+                    required
                   >
-                    {HANDLE_OPTIONS.map((opt) => (
-                      <option key={opt || "none"} value={opt}>
-                        {opt || "-- Select --"}
+                    {CATEGORY_OPTIONS.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat.replace("_", " ")}
                       </option>
                     ))}
                   </select>
                 </label>
-              )}
-              <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                Used duration
-                <input
-                  name="usedDuration"
-                  value={editForm.usedDuration}
-                  onChange={updateEditField}
-                  className="input-field"
-                  required
-                />
-              </label>
-              <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                Defects
-                <input
-                  name="defects"
-                  value={editForm.defects}
-                  onChange={updateEditField}
-                  className="input-field"
-                  required
-                />
-              </label>
-              <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                Description
-                <textarea
-                  name="description"
-                  rows={4}
-                  value={editForm.description}
-                  onChange={updateEditField}
-                  className="input-field resize-none"
-                  required
-                />
-              </label>
+                <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                  Condition
+                  <select
+                    name="condition"
+                    value={editForm.condition}
+                    onChange={updateEditField}
+                    className="input-field"
+                    required
+                  >
+                    {CONDITION_OPTIONS.map((cond) => (
+                      <option key={cond} value={cond}>
+                        {cond.replace(/_/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                  Price (Rs.)
+                  <input
+                    name="price"
+                    type="number"
+                    min="1"
+                    value={editForm.price}
+                    onChange={updateEditField}
+                    className="input-field"
+                    required
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                  City
+                  <input
+                    name="city"
+                    value={editForm.city}
+                    onChange={updateEditField}
+                    className="input-field"
+                    required
+                  />
+                </label>
+              </div>
+
+              <div className="mt-4 grid gap-4">
+                {editForm.category === "BAT" && (
+                  <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                    Bat Weight (approx)
+                    <input
+                      value={editBatWeight.replace(/^Bat Weight \(approx\):\s*/i, "")}
+                      onChange={(e) => setEditBatWeight(`Bat Weight (approx): ${e.target.value}`)}
+                      className="input-field"
+                    />
+                  </label>
+                )}
+                {editForm.category === "BAT" && (
+                  <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                    Handle Type (optional)
+                    <select
+                      value={editHandleType}
+                      onChange={(e) => setEditHandleType(e.target.value)}
+                      className="input-field"
+                    >
+                      {HANDLE_OPTIONS.map((opt) => (
+                        <option key={opt || "none"} value={opt}>
+                          {opt || "-- Select --"}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                  Used duration
+                  <input
+                    name="usedDuration"
+                    value={editForm.usedDuration}
+                    onChange={updateEditField}
+                    className="input-field"
+                    required
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                  Defects
+                  <input
+                    name="defects"
+                    value={editForm.defects}
+                    onChange={updateEditField}
+                    className="input-field"
+                    required
+                  />
+                </label>
+                <label className="grid gap-1 text-sm font-semibold text-slate-700">
+                  Description
+                  <textarea
+                    name="description"
+                    rows={4}
+                    value={editForm.description}
+                    onChange={updateEditField}
+                    className="input-field resize-none"
+                    required
+                  />
+                </label>
+              </div>
             </div>
 
-            <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <div className="flex flex-col gap-2 border-t border-white/70 p-5 sm:flex-row sm:justify-end sm:p-6">
               <button
                 type="button"
                 onClick={closeEdit}
