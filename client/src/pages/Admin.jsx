@@ -365,16 +365,16 @@ function Admin() {
         </div>
       )}
 
-      {view === "reports" && !reportsLoading && reports.length === 0 && (
+      {view === "reports" && !reportsLoading && reports.filter((report) => report.listing?.status === "PENDING").length === 0 && (
         <div className="glass rounded-2xl p-12 text-center shadow-md">
           <h2 className="text-xl font-black text-slate-900">No reports</h2>
           <p className="mt-2 text-sm text-slate-500">Reported listings will appear here.</p>
         </div>
       )}
 
-      {view === "reports" && reports.length > 0 && (
+      {view === "reports" && reports.filter((report) => report.listing?.status === "PENDING").length > 0 && (
         <div className="grid gap-4">
-          {reports.map((report) => {
+          {reports.filter((report) => report.listing?.status === "PENDING").map((report) => {
             const listing = report.listing;
             const cover = listing?.media?.find((m) => m?.type === "IMAGE" && m?.url);
             const openLightbox = (url) => {
