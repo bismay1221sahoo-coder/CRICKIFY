@@ -4,9 +4,10 @@ import { parseListingDescription } from "../lib/listingDescription";
 
 const getUserDescription = (raw = "") => {
   const text = String(raw || "");
-  const parts = text.split("\n\n");
+  const cleaned = parseListingDescription(text).cleanDescription;
+  const parts = cleaned.split("\n\n");
   if (parts.length > 1) return parts.slice(1).join("\n\n").trim();
-  return parseListingDescription(text).cleanDescription;
+  return cleaned;
 };
 
 const getListingMeta = (raw = "") => {
