@@ -51,6 +51,8 @@ function Admin() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState("");
 
+  const visibleReports = reports.filter((report) => report.listing?.status !== "REJECTED");
+
   const loadPendingListings = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -252,7 +254,7 @@ function Admin() {
           {view === "reports" && !reportsLoading && (
             <div className="glass w-fit rounded-2xl px-6 py-3 text-center shadow-md">
               <p className="text-2xl font-black" style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                {reports.length}
+                {visibleReports.length}
               </p>
               <p className="text-[10px] font-semibold text-slate-500">Reports</p>
             </div>
@@ -439,16 +441,16 @@ function Admin() {
         </div>
       )}
 
-      {view === "reports" && !reportsLoading && reports.filter((report) => report.listing?.status === "PENDING").length === 0 && (
+      {view === "reports" && !reportsLoading && visibleReports.length === 0 && (
         <div className="glass rounded-2xl p-12 text-center shadow-md">
           <h2 className="text-xl font-black text-slate-900">No reports</h2>
           <p className="mt-2 text-sm text-slate-500">Reported listings will appear here.</p>
         </div>
       )}
 
-      {view === "reports" && reports.filter((report) => report.listing?.status === "PENDING").length > 0 && (
+      {view === "reports" && visibleReports.length > 0 && (
         <div className="grid gap-4">
-          {reports.filter((report) => report.listing?.status === "PENDING").map((report) => {
+          {visibleReports.map((report) => {
             const listing = report.listing;
             const cover = listing?.media?.find((m) => m?.type === "IMAGE" && m?.url);
             const descriptionText = getUserDescription(listing?.description);
