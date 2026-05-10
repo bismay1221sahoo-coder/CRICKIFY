@@ -335,7 +335,6 @@ function MyListings() {
                     <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
                       <span><span className="font-semibold text-slate-700">Used for:</span> {listing?.usedDuration || "-"}</span>
                       <span><span className="font-semibold text-slate-700">Defects:</span> {listing?.defects || "-"}</span>
-                      <span><span className="font-semibold text-slate-700">Seller:</span> {listing?.seller?.name || "Unknown"}{listing?.seller?.phone ? ` · ${listing.seller.phone}` : ""}</span>
                     </div>
 
                     {safeStatus === "REJECTED" && listing?.rejectReason && (
