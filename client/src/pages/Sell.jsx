@@ -36,6 +36,33 @@ const EXTRA_FIELDS = {
   ],
 };
 
+const EXTRA_FIELD_LABELS = {
+  batWeight: "Bat Weight (approx)",
+  willowType: "Willow Type",
+  batSize: "Bat Size",
+  handleType: "Handle Type",
+  glovesType: "Gloves Type",
+  battingHand: "Batting Hand",
+  glovesSize: "Gloves Size",
+  padsType: "Pads Type",
+  padsSize: "Pads Size",
+  padsBattingHand: "Batting Hand",
+  helmetSize: "Helmet Size",
+  grillType: "Grill Type",
+  shoesType: "Shoes Type",
+  nailsAvailable: "Nails Available",
+  kitType: "Kit Type",
+};
+
+const CATEGORY_EXTRA_LINE_ORDER = {
+  BAT: ["batWeight", "willowType", "batSize", "handleType"],
+  GLOVES: ["glovesType", "battingHand", "glovesSize"],
+  PADS: ["padsType", "padsSize", "padsBattingHand"],
+  HELMET: ["helmetSize", "grillType"],
+  SHOES: ["shoesType", "nailsAvailable"],
+  KIT: ["kitType"],
+};
+
 const initialForm = {
   title: "", brand: "", category: "BAT", condition: "GOOD",
   price: "", city: "", usedDuration: "", defects: "", description: "",
@@ -56,6 +83,9 @@ function Sell() {
   const [proofDragOver, setProofDragOver] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [extraDetails, setExtraDetails] = useState({});
+  const selectedGlovesType = (extraDetails.glovesType || "").trim().toLowerCase();
+  const selectedPadsType = (extraDetails.padsType || "").trim().toLowerCase();
+  const selectedShoesType = (extraDetails.shoesType || "").trim().toLowerCase();
 
   const isLoggedIn = Boolean(getToken());
   const updateField = (e) => setForm((c) => ({ ...c, [e.target.name]: e.target.value }));
@@ -175,10 +205,10 @@ function Sell() {
     }
     setLoading(true);
     try {
-      const extraFields = EXTRA_FIELDS[form.category] || [];
-      const extraLines = extraFields
-        .filter((f) => extraDetails[f.name])
-        .map((f) => `${f.label.replace(" (optional)", "")}: ${extraDetails[f.name]}`);
+      const extraFieldOrder = CATEGORY_EXTRA_LINE_ORDER[form.category] || Object.keys(extraDetails);
+      const extraLines = extraFieldOrder
+        .filter((fieldName) => extraDetails[fieldName])
+        .map((fieldName) => `${EXTRA_FIELD_LABELS[fieldName] || fieldName}: ${extraDetails[fieldName]}`);
       const proofLines = proofMedia.length
         ? [`Purchase Proof: ${proofMedia.map((item) => item.url).join(", ")}`]
         : [`Purchase Proof Reason: ${proofReason.trim()}`];
@@ -305,7 +335,7 @@ function Sell() {
               ))}
 
               {/* GLOVES — show batting sub-fields only if Batting Gloves selected */}
-              {form.category === "GLOVES" && extraDetails.glovesType === "Batting Gloves" && (
+              {form.category === "GLOVES" && selectedGlovesType === "batting gloves" && (
                 <>
                   <label className={labelClass}>
                     Batting Hand
@@ -328,7 +358,7 @@ function Sell() {
               )}
 
               {/* PADS — show batting sub-fields only if Batting Pads selected */}
-              {form.category === "PADS" && extraDetails.padsType === "Batting Pads" && (
+              {form.category === "PADS" && selectedPadsType === "batting pads" && (
                 <>
                   <label className={labelClass}>
                     Pads Size
@@ -351,7 +381,7 @@ function Sell() {
               )}
 
               {/* SHOES - show spikes-only field */}
-              {form.category === "SHOES" && extraDetails.shoesType === "Spikes" && (
+              {form.category === "SHOES" && selectedShoesType === "spikes" && (
                 <label className={labelClass}>
                   Nails Available
                   <select
