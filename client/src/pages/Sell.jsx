@@ -63,6 +63,51 @@ const CATEGORY_EXTRA_LINE_ORDER = {
   KIT: ["kitType"],
 };
 
+const buildDefaultExtraDetails = (category) => {
+  const fields = EXTRA_FIELDS[category] || [];
+  return fields.reduce((acc, field) => {
+    if (field.type === "select" && field.required && field.options?.length) {
+      acc[field.name] = field.options[0];
+    }
+    return acc;
+  }, {});
+};
+
+const getActiveExtraFieldOrder = (category, details) => {
+  const baseOrder = CATEGORY_EXTRA_LINE_ORDER[category] || Object.keys(details || {});
+  const normalizedGlovesType = String(details?.glovesType || "").trim().toLowerCase();
+  const normalizedPadsType = String(details?.padsType || "").trim().toLowerCase();
+  const normalizedShoesType = String(details?.shoesType || "").trim().toLowerCase();
+
+  if (category === "GLOVES") {
+    return baseOrder.filter(
+      (fieldName) =>
+        fieldName === "glovesType" ||
+        (normalizedGlovesType === "batting gloves" &&
+          (fieldName === "battingHand" || fieldName === "glovesSize"))
+    );
+  }
+
+  if (category === "PADS") {
+    return baseOrder.filter(
+      (fieldName) =>
+        fieldName === "padsType" ||
+        (normalizedPadsType === "batting pads" &&
+          (fieldName === "padsSize" || fieldName === "padsBattingHand"))
+    );
+  }
+
+  if (category === "SHOES") {
+    return baseOrder.filter(
+      (fieldName) =>
+        fieldName === "shoesType" ||
+        (normalizedShoesType === "spikes" && fieldName === "nailsAvailable")
+    );
+  }
+
+  return baseOrder;
+};
+
 const initialForm = {
   title: "", brand: "", category: "BAT", condition: "GOOD",
   price: "", city: "", usedDuration: "", defects: "", description: "",
@@ -82,7 +127,9 @@ function Sell() {
   const [proofUploading, setProofUploading] = useState(false);
   const [proofDragOver, setProofDragOver] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [extraDetails, setExtraDetails] = useState({});
+  const [extraDetails, setExtraDetails] = useState(() =>
+    buildDefaultExtraDetails(initialForm.category)
+  );
   const selectedGlovesType = (extraDetails.glovesType || "").trim().toLowerCase();
   const selectedPadsType = (extraDetails.padsType || "").trim().toLowerCase();
   const selectedShoesType = (extraDetails.shoesType || "").trim().toLowerCase();
@@ -93,8 +140,9 @@ function Sell() {
 
   // Reset extra details when category changes
   const handleCategoryChange = (e) => {
-    setForm((c) => ({ ...c, category: e.target.value }));
-    setExtraDetails({});
+    const nextCategory = e.target.value;
+    setForm((c) => ({ ...c, category: nextCategory }));
+    setExtraDetails(buildDefaultExtraDetails(nextCategory));
   };
 
   const uploadFiles = async (files) => {
@@ -205,7 +253,7 @@ function Sell() {
     }
     setLoading(true);
     try {
-      const extraFieldOrder = CATEGORY_EXTRA_LINE_ORDER[form.category] || Object.keys(extraDetails);
+      const extraFieldOrder = getActiveExtraFieldOrder(form.category, extraDetails);
       const extraLines = extraFieldOrder
         .filter((fieldName) => extraDetails[fieldName])
         .map((fieldName) => `${EXTRA_FIELD_LABELS[fieldName] || fieldName}: ${extraDetails[fieldName]}`);
