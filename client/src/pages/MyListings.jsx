@@ -182,6 +182,9 @@ function MyListings() {
     }
   };
 
+  const getListingPhotos = (listing) =>
+    (listing?.media || []).filter((item) => item?.type === "IMAGE" && item?.url);
+
   return (
     <main className="relative mx-auto max-w-8xl px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
       <div
@@ -245,7 +248,9 @@ function MyListings() {
 
       <div className="grid gap-4">
         {listings.map((listing) => {
-          const cover = listing?.media?.find((m) => m?.type === "IMAGE" && m?.url);
+          const photos = getListingPhotos(listing);
+          const visiblePhotos = photos.slice(0, 4);
+          const extraPhotoCount = photos.length - visiblePhotos.length;
           const safeStatus = listing?.status || "PENDING";
           const status = STATUS_META[safeStatus] || { label: safeStatus, cls: "bg-slate-100 text-slate-600" };
           const safeTitle = listing?.title || "Untitled listing";
@@ -259,15 +264,26 @@ function MyListings() {
             <article key={listing?.id || safeTitle} className="glass card-hover overflow-hidden rounded-2xl shadow-sm">
               <div className="flex flex-col sm:flex-row">
                 <div className="relative h-44 w-full shrink-0 overflow-hidden bg-slate-100 sm:h-auto sm:w-44">
-                  {cover ? (
-                    <img
-                      src={cover.url}
-                      alt={safeTitle}
-                      loading="lazy"
-                      decoding="async"
-                      referrerPolicy="no-referrer"
-                      className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
-                    />
+                  {visiblePhotos.length > 0 ? (
+                    <div className="grid h-full w-full grid-cols-2 gap-0.5">
+                      {visiblePhotos.map((photo, index) => (
+                        <div key={photo.id || photo.url || `${listing?.id}-${index}`} className="relative overflow-hidden bg-slate-100">
+                          <img
+                            src={photo.url}
+                            alt={safeTitle}
+                            loading="lazy"
+                            decoding="async"
+                            referrerPolicy="no-referrer"
+                            className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
+                          />
+                          {extraPhotoCount > 0 && index === visiblePhotos.length - 1 && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-black text-white">
+                              +{extraPhotoCount}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   ) : (
                     <div className="flex h-full min-h-[130px] items-center justify-center text-xs font-semibold text-slate-500">No image</div>
                   )}

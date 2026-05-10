@@ -164,30 +164,33 @@ function ListingDetails() {
           </div>
 
           {media.length > 1 && (
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {media.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setActiveMedia(item)}
-                  className={`h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-200 sm:h-16 sm:w-16 ${
-                    activeMedia?.id === item.id ? "glow-emerald scale-105 border-emerald-500 shadow-md" : "border-transparent hover:scale-105 hover:border-slate-300"
-                  }`}
-                >
-                  {item.type === "VIDEO" ? (
-                    <div className="glass-dark flex h-full items-center justify-center text-[10px] font-bold text-white">VIDEO</div>
-                  ) : (
-                    <img
-                      src={item.url}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      referrerPolicy="no-referrer"
-                      className="h-full w-full object-cover"
-                    />
-                  )}
-                </button>
-              ))}
+            <div className="mt-3">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">More photos</p>
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 lg:grid-cols-6">
+                {media.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveMedia(item)}
+                    className={`aspect-square overflow-hidden rounded-xl border-2 transition-all duration-200 ${
+                      activeMedia?.id === item.id ? "glow-emerald scale-105 border-emerald-500 shadow-md" : "border-transparent hover:scale-105 hover:border-slate-300"
+                    }`}
+                  >
+                    {item.type === "VIDEO" ? (
+                      <div className="glass-dark flex h-full items-center justify-center text-[10px] font-bold text-white">VIDEO</div>
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>

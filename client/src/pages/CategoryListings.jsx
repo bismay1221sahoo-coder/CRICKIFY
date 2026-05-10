@@ -97,6 +97,9 @@ function CategoryListings() {
     return `Browse verified ${meta.label.toLowerCase()} listings in your city.`;
   }, [categoryKey, meta.label]);
 
+  const getListingPhotos = (listing) =>
+    (listing?.media || []).filter((item) => item?.type === "IMAGE" && item?.url);
+
   if (!isValidCategory) {
     return (
       <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-10">
@@ -218,21 +221,34 @@ function CategoryListings() {
         {!loading && listings.length > 0 && (
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {listings.map((listing) => {
-              const cover = listing?.media?.find((m) => m?.type === "IMAGE" && m?.url);
+              const photos = getListingPhotos(listing);
+              const visiblePhotos = photos.slice(0, 4);
+              const extraPhotoCount = photos.length - visiblePhotos.length;
               const cond = CONDITION_META[listing?.condition] || { label: listing?.condition || "Unknown", cls: "bg-slate-100 text-slate-600" };
               const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
               return (
                 <article key={listing?.id || listing?.title} className="glass card-hover group overflow-hidden rounded-2xl">
                   <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                    {cover ? (
-                      <img
-                        src={cover.url}
-                        alt={listing?.title || "Listing"}
-                        loading="lazy"
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
+                    {visiblePhotos.length > 0 ? (
+                      <div className="grid h-full w-full grid-cols-2 gap-0.5">
+                        {visiblePhotos.map((photo, index) => (
+                          <div key={photo.id || photo.url || `${listing?.id}-${index}`} className="relative overflow-hidden bg-slate-100">
+                            <img
+                              src={photo.url}
+                              alt={listing?.title || "Listing"}
+                              loading="lazy"
+                              decoding="async"
+                              referrerPolicy="no-referrer"
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            />
+                            {extraPhotoCount > 0 && index === visiblePhotos.length - 1 && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-black text-white">
+                                +{extraPhotoCount}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     ) : (
                       <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-50 to-sky-50">
                         <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">No photo</span>

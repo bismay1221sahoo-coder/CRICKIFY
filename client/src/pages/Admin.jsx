@@ -180,6 +180,9 @@ function Admin() {
     }
   };
 
+  const getListingPhotos = (listing) =>
+    (listing?.media || []).filter((item) => item?.type === "IMAGE" && item?.url);
+
   return (
     <main className="relative mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-10">
       <div className="pointer-events-none absolute -left-32 top-0 h-80 w-80 rounded-full opacity-15 blur-3xl" style={{ background: "radial-gradient(circle, #fde68a, transparent)" }} />
@@ -311,7 +314,9 @@ function Admin() {
       {view === "pending" && (
         <div className="grid gap-4">
           {listings.map((listing) => {
-            const cover = listing?.media?.find((m) => m?.type === "IMAGE" && m?.url);
+            const photos = getListingPhotos(listing);
+            const visiblePhotos = photos.slice(0, 4);
+            const extraPhotoCount = photos.length - visiblePhotos.length;
             const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
             const safeCondition = (listing?.condition || "UNKNOWN").replace(/_/g, " ");
             const isSelected = selectedIds.includes(listing?.id);
@@ -335,22 +340,32 @@ function Admin() {
                         className="h-4 w-4"
                       />
                     </div>
-                    {cover ? (
-                      <button
-                        type="button"
-                        onClick={() => openLightbox(cover.url)}
-                        className="h-44 w-full cursor-zoom-in sm:h-full"
-                        aria-label="Open listing image"
-                      >
-                        <img
-                          src={cover.url}
-                          alt={listing?.title || "Listing"}
-                          loading="lazy"
-                          decoding="async"
-                          referrerPolicy="no-referrer"
-                          className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
-                        />
-                      </button>
+                    {visiblePhotos.length > 0 ? (
+                      <div className="grid h-44 w-full grid-cols-2 gap-0.5 sm:h-full">
+                        {visiblePhotos.map((photo, index) => (
+                          <button
+                            key={photo.id || photo.url || `${listing?.id}-${index}`}
+                            type="button"
+                            onClick={() => openLightbox(photo.url)}
+                            className="relative cursor-zoom-in overflow-hidden bg-slate-100"
+                            aria-label="Open listing image"
+                          >
+                            <img
+                              src={photo.url}
+                              alt={listing?.title || "Listing"}
+                              loading="lazy"
+                              decoding="async"
+                              referrerPolicy="no-referrer"
+                              className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
+                            />
+                            {extraPhotoCount > 0 && index === visiblePhotos.length - 1 && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-black text-white">
+                                +{extraPhotoCount}
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     ) : (
                       <div className="flex h-44 items-center justify-center text-sm font-semibold text-slate-500 sm:h-full">No image</div>
                     )}
