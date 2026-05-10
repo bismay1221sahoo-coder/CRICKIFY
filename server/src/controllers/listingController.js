@@ -23,6 +23,33 @@ const validCategories = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTH
 const validConditions = ["LIKE_NEW", "GOOD", "FAIR", "NEEDS_REPAIR"];
 const validMediaTypes = ["IMAGE", "VIDEO"];
 
+const EXTRA_FIELD_LABELS = {
+  batWeight: "Bat Weight (approx)",
+  willowType: "Willow Type",
+  batSize: "Bat Size",
+  handleType: "Handle Type",
+  glovesType: "Gloves Type",
+  battingHand: "Batting Hand",
+  glovesSize: "Gloves Size",
+  padsType: "Pads Type",
+  padsSize: "Pads Size",
+  padsBattingHand: "Batting Hand",
+  helmetSize: "Helmet Size",
+  grillType: "Grill Type",
+  shoesType: "Shoes Type",
+  nailsAvailable: "Nails Available",
+  kitType: "Kit Type",
+};
+
+const CATEGORY_EXTRA_LINE_ORDER = {
+  BAT: ["batWeight", "willowType", "batSize", "handleType"],
+  GLOVES: ["glovesType", "battingHand", "glovesSize"],
+  PADS: ["padsType", "padsSize", "padsBattingHand"],
+  HELMET: ["helmetSize", "grillType"],
+  SHOES: ["shoesType", "nailsAvailable"],
+  KIT: ["kitType"],
+};
+
 const normalizeMedia = (media = []) =>
   media
     .filter((item) => item?.url && validMediaTypes.includes(item?.type))
@@ -55,6 +82,51 @@ const parseMetaParts = (metaBlock = "") =>
   metaBlock
     .split(/\s*\|\s*|\n/)
     .map((part) => part.trim())
+    .filter(Boolean);
+
+const getActiveExtraFieldOrder = (category, details = {}) => {
+  const baseOrder = CATEGORY_EXTRA_LINE_ORDER[category] || Object.keys(details || {});
+  const normalizedGlovesType = String(details?.glovesType || "").trim().toLowerCase();
+  const normalizedPadsType = String(details?.padsType || "").trim().toLowerCase();
+  const normalizedShoesType = String(details?.shoesType || "").trim().toLowerCase();
+
+  if (category === "GLOVES") {
+    return baseOrder.filter(
+      (fieldName) =>
+        fieldName === "glovesType" ||
+        (normalizedGlovesType === "batting gloves" && (fieldName === "battingHand" || fieldName === "glovesSize"))
+    );
+  }
+
+  if (category === "PADS") {
+    return baseOrder.filter(
+      (fieldName) =>
+        fieldName === "padsType" ||
+        (normalizedPadsType === "batting pads" && (fieldName === "padsSize" || fieldName === "padsBattingHand"))
+    );
+  }
+
+  if (category === "SHOES") {
+    return baseOrder.filter(
+      (fieldName) =>
+        fieldName === "shoesType" ||
+        (normalizedShoesType === "spikes" && fieldName === "nailsAvailable")
+    );
+  }
+
+  return baseOrder;
+};
+
+const buildExtraMetaParts = (category, data = {}) =>
+  getActiveExtraFieldOrder(category, data)
+    .map((fieldName) => {
+      const value = data[fieldName];
+      if (value === undefined || value === null || String(value).trim() === "") {
+        return null;
+      }
+      const label = EXTRA_FIELD_LABELS[fieldName] || fieldName;
+      return `${label}: ${value}`;
+    })
     .filter(Boolean);
 
 const sanitizeListingForResponse = (listing) => ({
@@ -205,20 +277,7 @@ export const updateListing = async (req, res, next) => {
     const proofParts = metaParts.filter(
       (part) => part.toLowerCase().startsWith("purchase proof")
     );
-    const otherParts = metaParts.filter(
-      (part) => !part.toLowerCase().startsWith("purchase proof")
-    );
-
-    const filteredParts = otherParts.filter(
-      (part) => !part.toLowerCase().startsWith("bat weight") && !part.toLowerCase().startsWith("handle type")
-    );
-
-    if (parsed.data.batWeight) {
-      filteredParts.push(`Bat Weight (approx): ${parsed.data.batWeight}`);
-    }
-    if (parsed.data.handleType) {
-      filteredParts.push(`Handle Type: ${parsed.data.handleType}`);
-    }
+    const filteredParts = buildExtraMetaParts(parsed.data.category, parsed.data);
 
     const rebuiltMeta = [
       filteredParts.join(" | "),

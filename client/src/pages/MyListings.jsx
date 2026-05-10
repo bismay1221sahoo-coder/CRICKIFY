@@ -20,6 +20,113 @@ const CATEGORY_OPTIONS = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OT
 const CONDITION_OPTIONS = ["LIKE_NEW", "GOOD", "FAIR", "NEEDS_REPAIR"];
 const HANDLE_OPTIONS = ["", "Round", "Oval"];
 
+const EXTRA_FIELDS = {
+  BAT: [
+    { name: "batWeight", label: "Bat Weight (approx)", type: "text", placeholder: "e.g. 1.1kg, 1.2kg", required: true },
+    { name: "willowType", label: "Willow Type", type: "select", options: ["English Willow", "Kashmir Willow", "Tennis Ball Bat"], required: true },
+    { name: "batSize", label: "Bat Size", type: "select", options: ["Boys", "Mens"], required: true },
+    { name: "handleType", label: "Handle Type (optional)", type: "select", options: ["", "Round", "Oval"], required: false },
+  ],
+  GLOVES: [
+    { name: "glovesType", label: "Gloves Type", type: "select", options: ["Wicket Keeping Gloves", "Batting Gloves"], required: true },
+    { name: "battingHand", label: "Batting Hand", type: "select", options: ["RHB (Right Hand Bat)", "LHB (Left Hand Bat)"], required: true },
+    { name: "glovesSize", label: "Gloves Size", type: "select", options: ["Boys", "Adult", "Mens"], required: true },
+  ],
+  PADS: [
+    { name: "padsType", label: "Pads Type", type: "select", options: ["Wicket Keeping Pads", "Batting Pads"], required: true },
+    { name: "padsSize", label: "Pads Size", type: "select", options: ["Boys", "Adult", "Mens"], required: true },
+    { name: "padsBattingHand", label: "Batting Hand", type: "select", options: ["RHB (Right Hand Bat)", "LHB (Left Hand Bat)"], required: true },
+  ],
+  HELMET: [
+    { name: "helmetSize", label: "Helmet Size", type: "select", options: ["Boys", "Adult", "Mens"], required: true },
+    { name: "grillType", label: "Grill Type", type: "select", options: ["Titanium", "Stainless Steel", "Mild Steel", "Carbon Steel"], required: true },
+  ],
+  SHOES: [
+    { name: "shoesType", label: "Shoes Type", type: "select", options: ["Studds", "Spikes"], required: true },
+    { name: "nailsAvailable", label: "Nails Available", type: "select", options: ["Yes", "No"], required: true },
+  ],
+  KIT: [
+    { name: "kitType", label: "Kit Type", type: "select", options: ["Wheel", "Carry", "Both"], required: true },
+  ],
+};
+
+const CATEGORY_EXTRA_LINE_ORDER = {
+  BAT: ["batWeight", "willowType", "batSize", "handleType"],
+  GLOVES: ["glovesType", "battingHand", "glovesSize"],
+  PADS: ["padsType", "padsSize", "padsBattingHand"],
+  HELMET: ["helmetSize", "grillType"],
+  SHOES: ["shoesType", "nailsAvailable"],
+  KIT: ["kitType"],
+};
+
+const buildDefaultExtraDetails = (category) => {
+  const fields = EXTRA_FIELDS[category] || [];
+  return fields.reduce((acc, field) => {
+    if (field.type === "select" && field.required && field.options?.length) {
+      acc[field.name] = field.options[0];
+    }
+    return acc;
+  }, {});
+};
+
+const getActiveExtraFieldOrder = (category, details) => {
+  const baseOrder = CATEGORY_EXTRA_LINE_ORDER[category] || Object.keys(details || {});
+  const normalizedGlovesType = String(details?.glovesType || "").trim().toLowerCase();
+  const normalizedPadsType = String(details?.padsType || "").trim().toLowerCase();
+  const normalizedShoesType = String(details?.shoesType || "").trim().toLowerCase();
+
+  if (category === "GLOVES") {
+    return baseOrder.filter(
+      (fieldName) =>
+        fieldName === "glovesType" ||
+        (normalizedGlovesType === "batting gloves" && (fieldName === "battingHand" || fieldName === "glovesSize"))
+    );
+  }
+
+  if (category === "PADS") {
+    return baseOrder.filter(
+      (fieldName) =>
+        fieldName === "padsType" ||
+        (normalizedPadsType === "batting pads" && (fieldName === "padsSize" || fieldName === "padsBattingHand"))
+    );
+  }
+
+  if (category === "SHOES") {
+    return baseOrder.filter(
+      (fieldName) =>
+        fieldName === "shoesType" ||
+        (normalizedShoesType === "spikes" && fieldName === "nailsAvailable")
+    );
+  }
+
+  return baseOrder;
+};
+
+const parseEditExtraDetails = (raw = "", category = "BAT") => {
+  const text = String(raw || "");
+  const [metaBlock = ""] = text.split("\n\n");
+  const fields = EXTRA_FIELDS[category] || [];
+  const labelToField = new Map(fields.map((field) => [field.label.toLowerCase(), field.name]));
+  const details = buildDefaultExtraDetails(category);
+
+  metaBlock
+    .split(/\s*\|\s*|\n/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .forEach((part) => {
+      const separatorIndex = part.indexOf(":");
+      if (separatorIndex === -1) return;
+      const label = part.slice(0, separatorIndex).trim().toLowerCase();
+      const value = part.slice(separatorIndex + 1).trim();
+      const fieldName = labelToField.get(label);
+      if (fieldName && value) {
+        details[fieldName] = value;
+      }
+    });
+
+  return details;
+};
+
 const getUserDescription = (raw = "") => {
   const text = String(raw || "");
   const cleaned = parseListingDescription(text).cleanDescription;
@@ -61,8 +168,7 @@ function MyListings() {
   const [editOpen, setEditOpen] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editTargetId, setEditTargetId] = useState(null);
-  const [editBatWeight, setEditBatWeight] = useState("");
-  const [editHandleType, setEditHandleType] = useState("");
+  const [editExtraDetails, setEditExtraDetails] = useState(() => buildDefaultExtraDetails("BAT"));
   const [editForm, setEditForm] = useState({
     title: "",
     brand: "",
@@ -120,7 +226,7 @@ function MyListings() {
 
   const openEdit = (listing) => {
     const userDescription = getUserDescription(listing.description);
-    const { batWeight, handleType } = getListingMeta(listing.description);
+    const extras = parseEditExtraDetails(listing.description, listing.category || "BAT");
     setEditTargetId(listing.id);
     setEditForm({
       title: listing.title || "",
@@ -133,8 +239,7 @@ function MyListings() {
       defects: listing.defects || "",
       description: userDescription,
     });
-    setEditBatWeight(batWeight);
-    setEditHandleType(handleType.replace(/^Handle Type:\s*/i, ""));
+    setEditExtraDetails(extras);
     setEditOpen(true);
   };
 
@@ -142,13 +247,23 @@ function MyListings() {
     if (editSubmitting) return;
     setEditOpen(false);
     setEditTargetId(null);
-    setEditBatWeight("");
-    setEditHandleType("");
+    setEditExtraDetails(buildDefaultExtraDetails("BAT"));
   };
 
   const updateEditField = (e) => {
     const { name, value } = e.target;
-    setEditForm((current) => ({ ...current, [name]: value }));
+    setEditForm((current) => {
+      const nextForm = { ...current, [name]: value };
+      if (name === "category") {
+        setEditExtraDetails(buildDefaultExtraDetails(value));
+      }
+      return nextForm;
+    });
+  };
+
+  const updateEditExtra = (e) => {
+    const { name, value } = e.target;
+    setEditExtraDetails((current) => ({ ...current, [name]: value }));
   };
 
   const submitEdit = async (e) => {
@@ -161,10 +276,12 @@ function MyListings() {
         ...editForm,
         price: Number(editForm.price),
       };
-      if (editForm.category === "BAT") {
-        if (editBatWeight) payload.batWeight = editBatWeight.replace(/^Bat Weight \(approx\):\s*/i, "");
-        if (editHandleType) payload.handleType = editHandleType;
-      }
+      getActiveExtraFieldOrder(editForm.category, editExtraDetails).forEach((fieldName) => {
+        const value = editExtraDetails[fieldName];
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+          payload[fieldName] = value;
+        }
+      });
       const data = await apiRequest(`/api/listings/${editTargetId}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
@@ -412,10 +529,10 @@ function MyListings() {
             className="glass flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl shadow-2xl"
           >
             <div className="p-5 sm:p-6">
-            <div className="flex flex-col gap-1">
-              <h3 className="text-lg font-black text-slate-900">Edit listing</h3>
-              <p className="text-sm text-slate-500">Only pending listings can be edited.</p>
-            </div>
+              <div className="flex flex-col gap-1">
+                <h3 className="text-lg font-black text-slate-900">Edit listing</h3>
+                <p className="text-sm text-slate-500">Only pending listings can be edited.</p>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 sm:px-6">
@@ -455,6 +572,40 @@ function MyListings() {
                     ))}
                   </select>
                 </label>
+                {EXTRA_FIELDS[editForm.category] && getActiveExtraFieldOrder(editForm.category, editExtraDetails).map((fieldName) => {
+                  const field = EXTRA_FIELDS[editForm.category].find((item) => item.name === fieldName);
+                  if (!field) return null;
+
+                  return (
+                    <label key={field.name} className="grid gap-1 text-sm font-semibold text-slate-700">
+                      {field.label}
+                      {field.type === "select" ? (
+                        <select
+                          name={field.name}
+                          value={editExtraDetails[field.name] || ""}
+                          onChange={updateEditExtra}
+                          className="input-field"
+                          required={field.required}
+                        >
+                          {field.options.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt || "-- Select --"}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          name={field.name}
+                          value={editExtraDetails[field.name] || ""}
+                          onChange={updateEditExtra}
+                          placeholder={field.placeholder}
+                          className="input-field"
+                          required={field.required}
+                        />
+                      )}
+                    </label>
+                  );
+                })}
                 <label className="grid gap-1 text-sm font-semibold text-slate-700">
                   Condition
                   <select
@@ -496,32 +647,6 @@ function MyListings() {
               </div>
 
               <div className="mt-4 grid gap-4">
-                {editForm.category === "BAT" && (
-                  <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                    Bat Weight (approx)
-                    <input
-                      value={editBatWeight.replace(/^Bat Weight \(approx\):\s*/i, "")}
-                      onChange={(e) => setEditBatWeight(`Bat Weight (approx): ${e.target.value}`)}
-                      className="input-field"
-                    />
-                  </label>
-                )}
-                {editForm.category === "BAT" && (
-                  <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                    Handle Type (optional)
-                    <select
-                      value={editHandleType}
-                      onChange={(e) => setEditHandleType(e.target.value)}
-                      className="input-field"
-                    >
-                      {HANDLE_OPTIONS.map((opt) => (
-                        <option key={opt || "none"} value={opt}>
-                          {opt || "-- Select --"}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
                 <label className="grid gap-1 text-sm font-semibold text-slate-700">
                   Used duration
                   <input

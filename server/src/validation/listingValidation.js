@@ -28,7 +28,20 @@ export const createListingSchema = z.object({
 
   export const updateListingSchema = createListingSchema.omit({ media: true }).extend({
     batWeight: z.string().trim().min(1).max(50).optional(),
+    willowType: z.string().trim().min(1).max(50).optional(),
+    batSize: z.string().trim().min(1).max(50).optional(),
     handleType: z.string().trim().max(50).optional(),
+    glovesType: z.string().trim().min(1).max(50).optional(),
+    battingHand: z.string().trim().min(1).max(50).optional(),
+    glovesSize: z.string().trim().min(1).max(50).optional(),
+    padsType: z.string().trim().min(1).max(50).optional(),
+    padsSize: z.string().trim().min(1).max(50).optional(),
+    padsBattingHand: z.string().trim().min(1).max(50).optional(),
+    helmetSize: z.string().trim().min(1).max(50).optional(),
+    grillType: z.string().trim().min(1).max(50).optional(),
+    shoesType: z.string().trim().min(1).max(50).optional(),
+    nailsAvailable: z.string().trim().min(1).max(50).optional(),
+    kitType: z.string().trim().min(1).max(50).optional(),
   });
 
 export const listingsQuerySchema = z.object({
