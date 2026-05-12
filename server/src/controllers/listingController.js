@@ -2,6 +2,7 @@ import prisma from "../lib/prisma.js";
 import cloudinary from "../config/cloudinary.js";
 import {
   createListingSchema,
+  listingIdParamSchema,
   listingsQuerySchema,
   reportListingSchema,
   updateListingSchema,
@@ -212,9 +213,14 @@ export const getApprovedListings = async (req, res, next) => {
 
 export const getListingById = async (req, res, next) => {
   try {
+    const paramsParsed = listingIdParamSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).json({ message: "Invalid listing id." });
+    }
+
     const listing = await prisma.listing.findFirst({
       where: {
-        id: req.params.id,
+        id: paramsParsed.data.id,
         status: "APPROVED",
       },
       include: listingInclude,
@@ -232,8 +238,14 @@ export const getListingById = async (req, res, next) => {
 
 export const deleteListing = async (req, res, next) => {
   try {
+    const paramsParsed = listingIdParamSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).json({ message: "Invalid listing id." });
+    }
+    const { id } = paramsParsed.data;
+
     const listing = await prisma.listing.findFirst({
-      where: { id: req.params.id, sellerId: req.user.id },
+      where: { id, sellerId: req.user.id },
       include: { media: true },
     });
 
@@ -241,7 +253,7 @@ export const deleteListing = async (req, res, next) => {
       return res.status(404).json({ message: "Listing not found." });
     }
 
-    await prisma.listing.delete({ where: { id: req.params.id } });
+    await prisma.listing.delete({ where: { id } });
 
     const mediaWithPublicId = listing.media.filter((m) => m.publicId);
     const proofPublicIds = extractProofPublicIds(listing.description);
@@ -258,13 +270,18 @@ export const deleteListing = async (req, res, next) => {
 
 export const updateListing = async (req, res, next) => {
   try {
+    const paramsParsed = listingIdParamSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).json({ message: "Invalid listing id." });
+    }
+
     const parsed = updateListingSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid listing payload." });
     }
 
     const listing = await prisma.listing.findFirst({
-      where: { id: req.params.id, sellerId: req.user.id, status: "PENDING" },
+      where: { id: paramsParsed.data.id, sellerId: req.user.id, status: "PENDING" },
     });
 
     if (!listing) {
@@ -331,18 +348,31 @@ export const getMyListings = async (req, res, next) => {
 
 export const reportListing = async (req, res, next) => {
   try {
+    const paramsParsed = listingIdParamSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).json({ message: "Invalid listing id." });
+    }
+
     const parsed = reportListingSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ message: "Report reason must be at least 10 characters." });
     }
 
     const listing = await prisma.listing.findFirst({
-      where: { id: req.params.id, status: "APPROVED" },
+      where: { id: paramsParsed.data.id, status: "APPROVED" },
       select: { id: true },
     });
 
     if (!listing) {
       return res.status(404).json({ message: "Listing not found." });
+    }
+
+    const alreadyReported = await prisma.listingReport.findFirst({
+      where: { listingId: listing.id, reporterId: req.user.id },
+      select: { id: true },
+    });
+    if (alreadyReported) {
+      return res.status(409).json({ message: "You already reported this listing." });
     }
 
     await prisma.listingReport.create({

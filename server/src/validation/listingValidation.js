@@ -6,15 +6,15 @@ const mediaTypes = ["IMAGE", "VIDEO"];
 const sortOptions = ["newest", "price_low", "price_high"];
 
 export const createListingSchema = z.object({
-  title: z.string().trim().min(1),
+  title: z.string().trim().min(1).max(140),
   brand: z.string().trim().max(100).optional().nullable(),
   category: z.enum(categories),
   condition: z.enum(conditions),
   price: z.coerce.number().int().positive(),
-  city: z.string().trim().min(1),
-  usedDuration: z.string().trim().min(1),
-  defects: z.string().trim().min(1),
-  description: z.string().trim().min(1),
+  city: z.string().trim().min(1).max(80),
+  usedDuration: z.string().trim().min(1).max(100),
+  defects: z.string().trim().min(1).max(500),
+  description: z.string().trim().min(1).max(5000),
   media: z
     .array(
       z.object({
@@ -67,4 +67,8 @@ export const reportListingSchema = z.object({
 
 export const bulkApproveSchema = z.object({
   ids: z.array(z.string().trim().min(1)).min(1).max(50),
+});
+
+export const listingIdParamSchema = z.object({
+  id: z.string().trim().regex(/^c[a-z0-9]{8,}$/i),
 });

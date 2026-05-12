@@ -26,3 +26,15 @@ export const listingWriteRateLimiter = createLimiter(
   120,
   "Too many listing requests. Please try again later."
 );
+
+export const reportRateLimiter = createLimiter(
+  10 * 60 * 1000,
+  20,
+  "Too many report submissions. Please try again later."
+);
+
+export const adminActionRateLimiter = createLimiter(
+  10 * 60 * 1000,
+  180,
+  "Too many admin actions. Please try again later."
+);

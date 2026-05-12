@@ -1,6 +1,7 @@
 import prisma from "../lib/prisma.js";
 import {
   bulkApproveSchema,
+  listingIdParamSchema,
   pendingListingsQuerySchema,
   rejectListingSchema,
 } from "../validation/listingValidation.js";
@@ -78,8 +79,14 @@ export const bulkApproveListings = async (req, res, next) => {
 
 export const approveListing = async (req, res, next) => {
   try {
+    const paramsParsed = listingIdParamSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).json({ message: "Invalid listing id." });
+    }
+    const { id } = paramsParsed.data;
+
     const existing = await prisma.listing.findUnique({
-      where: { id: req.params.id },
+      where: { id },
     });
 
     if (!existing) {
@@ -87,7 +94,7 @@ export const approveListing = async (req, res, next) => {
     }
 
     const listing = await prisma.listing.update({
-      where: { id: req.params.id },
+      where: { id },
       data: {
         status: "APPROVED",
         rejectReason: null,
@@ -106,6 +113,12 @@ export const approveListing = async (req, res, next) => {
 
 export const rejectListing = async (req, res, next) => {
   try {
+    const paramsParsed = listingIdParamSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).json({ message: "Invalid listing id." });
+    }
+    const { id } = paramsParsed.data;
+
     const parsed = rejectListingSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ message: "Reject reason is required." });
@@ -113,14 +126,14 @@ export const rejectListing = async (req, res, next) => {
     const { reason } = parsed.data;
 
     const existing = await prisma.listing.findUnique({
-      where: { id: req.params.id },
+      where: { id },
     });
     if (!existing) {
       return res.status(404).json({ message: "Listing not found." });
     }
 
     const listing = await prisma.listing.update({
-      where: { id: req.params.id },
+      where: { id },
       data: {
         status: "REJECTED",
         rejectReason: reason.trim(),

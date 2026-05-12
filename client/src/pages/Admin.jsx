@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../lib/api";
 import { parseListingDescription } from "../lib/listingDescription";
 
@@ -51,8 +51,13 @@ function Admin() {
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState("");
+  const [actionListingIds, setActionListingIds] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const visibleReports = reports.filter((report) => report.listing?.status !== "REJECTED");
+  const visibleReports = useMemo(
+    () => reports.filter((report) => report.listing?.status !== "REJECTED"),
+    [reports]
+  );
 
   const loadPendingListings = useCallback(async () => {
     setLoading(true);
@@ -104,15 +109,19 @@ function Admin() {
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const approveListing = async (id) => {
+    setActionListingIds((current) => [...new Set([...current, id])]);
     try {
       await apiRequest(`/api/admin/listings/${id}/approve`, { method: "PATCH" });
       if (view === "reports") {
-        loadReports();
+        setReports((current) => current.filter((report) => report.listing?.id !== id));
       } else {
-        loadPendingListings();
+        setListings((current) => current.filter((listing) => listing.id !== id));
+        setSelectedIds((current) => current.filter((selectedId) => selectedId !== id));
       }
     } catch (err) {
       setError(err.message);
+    } finally {
+      setActionListingIds((current) => current.filter((listingId) => listingId !== id));
     }
   };
 
@@ -125,7 +134,8 @@ function Admin() {
         method: "PATCH",
         body: JSON.stringify({ ids: selectedIds }),
       });
-      loadPendingListings();
+      setListings((current) => current.filter((listing) => !selectedIds.includes(listing.id)));
+      setSelectedIds([]);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -161,27 +171,44 @@ function Admin() {
   const rejectListing = async () => {
     const reason = rejectReason.trim();
     if (!reason || !rejectModal.listingId) return;
+    const rejectedId = rejectModal.listingId;
     setRejectSubmitting(true);
+    setActionListingIds((current) => [...new Set([...current, rejectedId])]);
     try {
-      await apiRequest(`/api/admin/listings/${rejectModal.listingId}/reject`, {
+      await apiRequest(`/api/admin/listings/${rejectedId}/reject`, {
         method: "PATCH",
         body: JSON.stringify({ reason }),
       });
       closeRejectModal();
       if (view === "reports") {
-        loadReports();
+        setReports((current) => current.filter((report) => report.listing?.id !== rejectedId));
       } else {
-        loadPendingListings();
+        setListings((current) => current.filter((listing) => listing.id !== rejectedId));
+        setSelectedIds((current) => current.filter((selectedId) => selectedId !== rejectedId));
       }
     } catch (err) {
       setError(err.message);
     } finally {
       setRejectSubmitting(false);
+      setActionListingIds((current) => current.filter((listingId) => listingId !== rejectedId));
     }
   };
 
   const getListingPhotos = (listing) =>
     (listing?.media || []).filter((item) => item?.type === "IMAGE" && item?.url);
+
+  const refreshCurrentView = async () => {
+    setRefreshing(true);
+    try {
+      if (view === "reports") {
+        await loadReports();
+      } else {
+        await loadPendingListings();
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <main className="relative mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-10">
@@ -243,6 +270,14 @@ function Admin() {
                   className="btn-primary px-4 py-2 text-xs disabled:opacity-60"
                 >
                   {bulkApproving ? "Approving..." : `Approve selected (${selectedIds.length})`}
+                </button>
+                <button
+                  type="button"
+                  onClick={refreshCurrentView}
+                  disabled={refreshing}
+                  className="glass rounded-xl px-4 py-2 text-xs font-bold text-slate-700 transition-all hover:bg-white/90 disabled:opacity-60"
+                >
+                  {refreshing ? "Refreshing..." : "Refresh"}
                 </button>
               </div>
             )}
@@ -320,6 +355,7 @@ function Admin() {
             const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
             const safeCondition = (listing?.condition || "UNKNOWN").replace(/_/g, " ");
             const isSelected = selectedIds.includes(listing?.id);
+            const isActionRunning = actionListingIds.includes(listing?.id);
             const descriptionText = getUserDescription(listing?.description);
             const listingMeta = getListingMeta(listing?.description);
             const openLightbox = (url) => {
@@ -430,8 +466,20 @@ function Admin() {
                     </div>
 
                     <div className="flex flex-col gap-2 sm:flex-row">
-                      <button onClick={() => approveListing(listing.id)} className="btn-primary px-5 py-2 text-sm">Approve</button>
-                      <button onClick={() => openRejectModal(listing.id)} className="glass rounded-xl border border-red-200/60 px-5 py-2 text-sm font-bold text-red-600 transition-all duration-200 hover:border-red-300 hover:bg-red-50/80">Reject</button>
+                      <button
+                        onClick={() => approveListing(listing.id)}
+                        className="btn-primary px-5 py-2 text-sm disabled:opacity-60"
+                        disabled={isActionRunning}
+                      >
+                        {isActionRunning ? "Processing..." : "Approve"}
+                      </button>
+                      <button
+                        onClick={() => openRejectModal(listing.id)}
+                        className="glass rounded-xl border border-red-200/60 px-5 py-2 text-sm font-bold text-red-600 transition-all duration-200 hover:border-red-300 hover:bg-red-50/80 disabled:opacity-60"
+                        disabled={isActionRunning}
+                      >
+                        Reject
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -470,6 +518,7 @@ function Admin() {
           {visibleReports.map((report) => {
             const listing = report.listing;
             const cover = listing?.media?.find((m) => m?.type === "IMAGE" && m?.url);
+            const isActionRunning = listing?.id ? actionListingIds.includes(listing.id) : false;
             const descriptionText = getUserDescription(listing?.description);
             const listingMeta = getListingMeta(listing?.description);
             const openLightbox = (url) => {
@@ -578,15 +627,17 @@ function Admin() {
                       {listing?.id && (
                         <button
                           onClick={() => approveListing(listing.id)}
-                          className="btn-primary px-5 py-2 text-sm"
+                          className="btn-primary px-5 py-2 text-sm disabled:opacity-60"
+                          disabled={isActionRunning}
                         >
-                          Approve
+                          {isActionRunning ? "Processing..." : "Approve"}
                         </button>
                       )}
                       {listing?.id && (
                         <button
                           onClick={() => openRejectModal(listing.id)}
-                          className="glass rounded-xl border border-red-200/60 px-5 py-2 text-sm font-bold text-red-600 transition-all duration-200 hover:border-red-300 hover:bg-red-50/80"
+                          className="glass rounded-xl border border-red-200/60 px-5 py-2 text-sm font-bold text-red-600 transition-all duration-200 hover:border-red-300 hover:bg-red-50/80 disabled:opacity-60"
+                          disabled={isActionRunning}
                         >
                           Reject
                         </button>
@@ -667,3 +718,5 @@ function Admin() {
 }
 
 export default Admin;
+
+
