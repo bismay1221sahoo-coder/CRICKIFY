@@ -222,32 +222,28 @@ function CategoryListings() {
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {listings.map((listing) => {
               const photos = getListingPhotos(listing);
-              const visiblePhotos = photos.slice(0, 4);
-              const extraPhotoCount = photos.length - visiblePhotos.length;
+              const firstPhoto = photos[0];
+              const extraPhotoCount = Math.max(photos.length - 1, 0);
               const cond = CONDITION_META[listing?.condition] || { label: listing?.condition || "Unknown", cls: "bg-slate-100 text-slate-600" };
               const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
               return (
                 <article key={listing?.id || listing?.title} className="glass card-hover group overflow-hidden rounded-2xl">
                   <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                    {visiblePhotos.length > 0 ? (
-                      <div className="grid h-full w-full grid-cols-2 gap-0.5">
-                        {visiblePhotos.map((photo, index) => (
-                          <div key={photo.id || photo.url || `${listing?.id}-${index}`} className="relative overflow-hidden bg-slate-100">
-                            <img
-                              src={photo.url}
-                              alt={listing?.title || "Listing"}
-                              loading="lazy"
-                              decoding="async"
-                              referrerPolicy="no-referrer"
-                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            />
-                            {extraPhotoCount > 0 && index === visiblePhotos.length - 1 && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-black text-white">
-                                +{extraPhotoCount}
-                              </div>
-                            )}
+                    {firstPhoto ? (
+                      <div className="relative h-full w-full overflow-hidden bg-slate-100">
+                        <img
+                          src={firstPhoto.url}
+                          alt={listing?.title || "Listing"}
+                          loading="lazy"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        {extraPhotoCount > 0 && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-lg font-black text-white">
+                            +{extraPhotoCount}
                           </div>
-                        ))}
+                        )}
                       </div>
                     ) : (
                       <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-50 to-sky-50">

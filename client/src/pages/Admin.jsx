@@ -50,7 +50,8 @@ function Admin() {
   const [rejectReason, setRejectReason] = useState("");
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxUrl, setLightboxUrl] = useState("");
+  const [lightboxMedia, setLightboxMedia] = useState([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [actionListingIds, setActionListingIds] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -196,6 +197,28 @@ function Admin() {
 
   const getListingPhotos = (listing) =>
     (listing?.media || []).filter((item) => item?.type === "IMAGE" && item?.url);
+
+  const openLightbox = (photos = [], startIndex = 0) => {
+    if (!photos.length) return;
+    const safeIndex = Math.min(Math.max(startIndex, 0), photos.length - 1);
+    setLightboxMedia(photos);
+    setLightboxIndex(safeIndex);
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    setLightboxMedia([]);
+    setLightboxIndex(0);
+  };
+
+  const showPrevLightboxImage = () => {
+    setLightboxIndex((current) => (current - 1 + lightboxMedia.length) % lightboxMedia.length);
+  };
+
+  const showNextLightboxImage = () => {
+    setLightboxIndex((current) => (current + 1) % lightboxMedia.length);
+  };
 
   const refreshCurrentView = async () => {
     setRefreshing(true);
@@ -350,19 +373,14 @@ function Admin() {
         <div className="grid gap-4">
           {listings.map((listing) => {
             const photos = getListingPhotos(listing);
-            const visiblePhotos = photos.slice(0, 4);
-            const extraPhotoCount = photos.length - visiblePhotos.length;
+            const firstPhoto = photos[0];
+            const extraPhotoCount = Math.max(photos.length - 1, 0);
             const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
             const safeCondition = (listing?.condition || "UNKNOWN").replace(/_/g, " ");
             const isSelected = selectedIds.includes(listing?.id);
             const isActionRunning = actionListingIds.includes(listing?.id);
             const descriptionText = getUserDescription(listing?.description);
             const listingMeta = getListingMeta(listing?.description);
-            const openLightbox = (url) => {
-              if (!url) return;
-              setLightboxUrl(url);
-              setLightboxOpen(true);
-            };
 
             return (
               <article key={listing?.id || listing?.title} className="glass card-hover overflow-hidden rounded-2xl shadow-sm">
@@ -376,32 +394,27 @@ function Admin() {
                         className="h-4 w-4"
                       />
                     </div>
-                    {visiblePhotos.length > 0 ? (
-                      <div className="grid h-44 w-full grid-cols-2 gap-0.5 sm:h-full">
-                        {visiblePhotos.map((photo, index) => (
-                          <button
-                            key={photo.id || photo.url || `${listing?.id}-${index}`}
-                            type="button"
-                            onClick={() => openLightbox(photo.url)}
-                            className="relative cursor-zoom-in overflow-hidden bg-slate-100"
-                            aria-label="Open listing image"
-                          >
-                            <img
-                              src={photo.url}
-                              alt={listing?.title || "Listing"}
-                              loading="lazy"
-                              decoding="async"
-                              referrerPolicy="no-referrer"
-                              className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
-                            />
-                            {extraPhotoCount > 0 && index === visiblePhotos.length - 1 && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-sm font-black text-white">
-                                +{extraPhotoCount}
-                              </div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
+                    {firstPhoto ? (
+                      <button
+                        type="button"
+                        onClick={() => openLightbox(photos, 0)}
+                        className="relative h-44 w-full cursor-zoom-in overflow-hidden bg-slate-100 sm:h-full"
+                        aria-label="Open listing image gallery"
+                      >
+                        <img
+                          src={firstPhoto.url}
+                          alt={listing?.title || "Listing"}
+                          loading="lazy"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
+                          className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
+                        />
+                        {extraPhotoCount > 0 && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-lg font-black text-white">
+                            +{extraPhotoCount}
+                          </div>
+                        )}
+                      </button>
                     ) : (
                       <div className="flex h-44 items-center justify-center text-sm font-semibold text-slate-500 sm:h-full">No image</div>
                     )}
@@ -517,15 +530,12 @@ function Admin() {
         <div className="grid gap-4">
           {visibleReports.map((report) => {
             const listing = report.listing;
-            const cover = listing?.media?.find((m) => m?.type === "IMAGE" && m?.url);
+            const photos = getListingPhotos(listing);
+            const cover = photos[0];
+            const extraPhotoCount = Math.max(photos.length - 1, 0);
             const isActionRunning = listing?.id ? actionListingIds.includes(listing.id) : false;
             const descriptionText = getUserDescription(listing?.description);
             const listingMeta = getListingMeta(listing?.description);
-            const openLightbox = (url) => {
-              if (!url) return;
-              setLightboxUrl(url);
-              setLightboxOpen(true);
-            };
 
             return (
               <article key={report.id} className="glass card-hover overflow-hidden rounded-2xl shadow-sm">
@@ -534,9 +544,9 @@ function Admin() {
                     {cover ? (
                       <button
                         type="button"
-                        onClick={() => openLightbox(cover.url)}
+                        onClick={() => openLightbox(photos, 0)}
                         className="h-44 w-full cursor-zoom-in sm:h-full"
-                        aria-label="Open listing image"
+                        aria-label="Open listing image gallery"
                       >
                         <img
                           src={cover.url}
@@ -546,6 +556,11 @@ function Admin() {
                           referrerPolicy="no-referrer"
                           className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
                         />
+                        {extraPhotoCount > 0 && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-lg font-black text-white">
+                            +{extraPhotoCount}
+                          </div>
+                        )}
                       </button>
                     ) : (
                       <div className="flex h-44 items-center justify-center text-sm font-semibold text-slate-500 sm:h-full">No image</div>
@@ -686,31 +701,64 @@ function Admin() {
         </div>
       )}
 
-      {lightboxOpen && lightboxUrl && (
+      {lightboxOpen && lightboxMedia.length > 0 && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
-          onClick={() => setLightboxOpen(false)}
+          onClick={closeLightbox}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
-            if (e.key === "Escape" || e.key === "Enter" || e.key === " ") setLightboxOpen(false);
+            if (e.key === "Escape" || e.key === "Enter" || e.key === " ") closeLightbox();
+            if (e.key === "ArrowLeft") showPrevLightboxImage();
+            if (e.key === "ArrowRight") showNextLightboxImage();
           }}
         >
           <button
             type="button"
-            onClick={() => setLightboxOpen(false)}
+            onClick={closeLightbox}
             className="absolute right-4 top-4 rounded-full bg-white/20 px-3 py-1 text-sm font-bold text-white hover:bg-white/30"
           >
             Close
           </button>
+          {lightboxMedia.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  showPrevLightboxImage();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 px-3 py-2 text-xl font-black text-white hover:bg-white/30"
+                aria-label="Previous image"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  showNextLightboxImage();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/20 px-3 py-2 text-xl font-black text-white hover:bg-white/30"
+                aria-label="Next image"
+              >
+                ›
+              </button>
+            </>
+          )}
           <img
-            src={lightboxUrl}
+            src={lightboxMedia[lightboxIndex]?.url}
             alt="Listing preview"
             decoding="async"
             referrerPolicy="no-referrer"
             className="max-h-[90vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />
+          {lightboxMedia.length > 1 && (
+            <div className="absolute bottom-4 rounded-full bg-black/45 px-3 py-1 text-xs font-bold text-white">
+              {lightboxIndex + 1} / {lightboxMedia.length}
+            </div>
+          )}
         </div>
       )}
     </main>
