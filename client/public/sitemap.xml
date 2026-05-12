@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://crickify-alpha.vercel.app/</loc></url>
+  <url><loc>https://crickify-alpha.vercel.app/login</loc></url>
+  <url><loc>https://crickify-alpha.vercel.app/sell</loc></url>
+  <url><loc>https://crickify-alpha.vercel.app/my-listings</loc></url>
+  <url><loc>https://crickify-alpha.vercel.app/categories/ALL</loc></url>
+  <url><loc>https://crickify-alpha.vercel.app/categories/BAT</loc></url>
+  <url><loc>https://crickify-alpha.vercel.app/categories/GLOVES</loc></url>
+  <url><loc>https://crickify-alpha.vercel.app/categories/PADS</loc></url>
+  <url><loc>https://crickify-alpha.vercel.app/categories/HELMET</loc></url>
+  <url><loc>https://crickify-alpha.vercel.app/categories/SHOES</loc></url>
+  <url><loc>https://crickify-alpha.vercel.app/categories/KIT</loc></url>
+  <url><loc>https://crickify-alpha.vercel.app/categories/OTHER</loc></url>
+</urlset>
