@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { clearSession, getUser } from "../lib/api";
+import { ThemeContext } from "../lib/themeContext";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
+  const { theme, toggleTheme } = useContext(ThemeContext);
 
   useEffect(() => {
     const syncUser = () => setUser(getUser());
@@ -110,6 +112,15 @@ function Navbar() {
               Admin
             </NavLink>
           )}
+
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="glass rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition-all hover:text-slate-900 hover:bg-white/70"
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? "Light" : "Dark"}
+          </button>
 
           <div className="md:ml-2 md:pl-2 md:border-l md:border-slate-200/70">
             {user ? (
