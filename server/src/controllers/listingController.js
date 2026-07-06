@@ -40,15 +40,16 @@ const EXTRA_FIELD_LABELS = {
   shoesType: "Shoes Type",
   nailsAvailable: "Nails Available",
   kitType: "Kit Type",
+  kitSize: "Kit Size",
 };
 
 const CATEGORY_EXTRA_LINE_ORDER = {
   BAT: ["batWeight", "willowType", "batSize", "handleType"],
-  GLOVES: ["glovesType", "battingHand", "glovesSize"],
+  GLOVES: ["glovesType", "glovesSize", "battingHand"],
   PADS: ["padsType", "padsSize", "padsBattingHand"],
   HELMET: ["helmetSize", "grillType"],
   SHOES: ["shoesType", "nailsAvailable"],
-  KIT: ["kitType"],
+  KIT: ["kitType", "kitSize"],
 };
 
 const normalizeMedia = (media = []) =>
@@ -95,7 +96,8 @@ const getActiveExtraFieldOrder = (category, details = {}) => {
     return baseOrder.filter(
       (fieldName) =>
         fieldName === "glovesType" ||
-        (normalizedGlovesType === "batting gloves" && (fieldName === "battingHand" || fieldName === "glovesSize"))
+        fieldName === "glovesSize" ||
+        (normalizedGlovesType === "batting gloves" && fieldName === "battingHand")
     );
   }
 
@@ -103,7 +105,8 @@ const getActiveExtraFieldOrder = (category, details = {}) => {
     return baseOrder.filter(
       (fieldName) =>
         fieldName === "padsType" ||
-        (normalizedPadsType === "batting pads" && (fieldName === "padsSize" || fieldName === "padsBattingHand"))
+        fieldName === "padsSize" ||
+        (normalizedPadsType === "batting pads" && fieldName === "padsBattingHand")
     );
   }
 

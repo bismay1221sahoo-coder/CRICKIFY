@@ -15,9 +15,13 @@ const EXTRA_FIELDS = {
   ],
   GLOVES: [
     { name: "glovesType",  label: "Gloves Type",           type: "select", options: ["Wicket Keeping Gloves", "Batting Gloves"], required: true },
+    { name: "glovesSize",  label: "Gloves Size",           type: "select", options: ["Boys", "Adult", "Mens"], required: true },
+    { name: "battingHand", label: "Batting Hand",          type: "select", options: ["RHB (Right Hand Bat)", "LHB (Left Hand Bat)"], required: true },
   ],
   PADS: [
     { name: "padsType", label: "Pads Type", type: "select", options: ["Wicket Keeping Pads", "Batting Pads"], required: true },
+    { name: "padsSize", label: "Pads Size", type: "select", options: ["Boys", "Adult", "Mens"], required: true },
+    { name: "padsBattingHand", label: "Batting Hand", type: "select", options: ["RHB (Right Hand Bat)", "LHB (Left Hand Bat)"], required: true },
   ],
   HELMET: [
     { name: "helmetSize", label: "Helmet Size", type: "select", options: ["Boys", "Adult", "Mens"], required: true },
@@ -31,9 +35,11 @@ const EXTRA_FIELDS = {
   ],
   SHOES: [
     { name: "shoesType", label: "Shoes Type", type: "select", options: ["Studds", "Spikes"], required: true },
+    { name: "nailsAvailable", label: "Nails Available", type: "select", options: ["Yes", "No"], required: true },
   ],
   KIT: [
     { name: "kitType", label: "Kit Type", type: "select", options: ["Wheel", "Carry", "Both"], required: true },
+    { name: "kitSize", label: "Kit Size", type: "select", options: ["Small", "Medium", "Large"], required: true },
   ],
 };
 
@@ -53,15 +59,16 @@ const EXTRA_FIELD_LABELS = {
   shoesType: "Shoes Type",
   nailsAvailable: "Nails Available",
   kitType: "Kit Type",
+  kitSize: "Kit Size",
 };
 
 const CATEGORY_EXTRA_LINE_ORDER = {
   BAT: ["batWeight", "willowType", "batSize", "handleType"],
-  GLOVES: ["glovesType", "battingHand", "glovesSize"],
+  GLOVES: ["glovesType", "glovesSize", "battingHand"],
   PADS: ["padsType", "padsSize", "padsBattingHand"],
   HELMET: ["helmetSize", "grillType"],
   SHOES: ["shoesType", "nailsAvailable"],
-  KIT: ["kitType"],
+  KIT: ["kitType", "kitSize"],
 };
 
 const buildDefaultExtraDetails = (category) => {
@@ -84,8 +91,8 @@ const getActiveExtraFieldOrder = (category, details) => {
     return baseOrder.filter(
       (fieldName) =>
         fieldName === "glovesType" ||
-        (normalizedGlovesType === "batting gloves" &&
-          (fieldName === "battingHand" || fieldName === "glovesSize"))
+        fieldName === "glovesSize" ||
+        (normalizedGlovesType === "batting gloves" && fieldName === "battingHand")
     );
   }
 
@@ -93,8 +100,8 @@ const getActiveExtraFieldOrder = (category, details) => {
     return baseOrder.filter(
       (fieldName) =>
         fieldName === "padsType" ||
-        (normalizedPadsType === "batting pads" &&
-          (fieldName === "padsSize" || fieldName === "padsBattingHand"))
+        fieldName === "padsSize" ||
+        (normalizedPadsType === "batting pads" && fieldName === "padsBattingHand")
     );
   }
 
@@ -346,7 +353,9 @@ function Sell() {
                 <h2 className="text-lg font-black text-ink">{form.category.replace("_", " ")} Specifications</h2>
               </div>
               <div className="grid gap-6 sm:grid-cols-2">
-                {EXTRA_FIELDS[form.category].map((field) => (
+                {EXTRA_FIELDS[form.category]
+                  .filter((field) => getActiveExtraFieldOrder(form.category, extraDetails).includes(field.name))
+                  .map((field) => (
                   <label key={field.name} className="space-y-2">
                     <span className="text-xs font-black uppercase tracking-widest text-faint">{field.label} {field.required && "*"}</span>
                     {field.type === "select" ? (

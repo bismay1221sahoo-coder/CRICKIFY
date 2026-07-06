@@ -42,6 +42,7 @@ export const createListingSchema = z.object({
     shoesType: z.string().trim().min(1).max(50).optional(),
     nailsAvailable: z.string().trim().min(1).max(50).optional(),
     kitType: z.string().trim().min(1).max(50).optional(),
+    kitSize: z.string().trim().min(1).max(50).optional(),
   });
 
 export const listingsQuerySchema = z.object({

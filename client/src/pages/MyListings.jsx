@@ -47,16 +47,17 @@ const EXTRA_FIELDS = {
   ],
   KIT: [
     { name: "kitType", label: "Kit Type", type: "select", options: ["Wheel", "Carry", "Both"], required: true },
+    { name: "kitSize", label: "Kit Size", type: "select", options: ["Small", "Medium", "Large"], required: true },
   ],
 };
 
 const CATEGORY_EXTRA_LINE_ORDER = {
   BAT: ["batWeight", "willowType", "batSize", "handleType"],
-  GLOVES: ["glovesType", "battingHand", "glovesSize"],
+  GLOVES: ["glovesType", "glovesSize", "battingHand"],
   PADS: ["padsType", "padsSize", "padsBattingHand"],
   HELMET: ["helmetSize", "grillType"],
   SHOES: ["shoesType", "nailsAvailable"],
-  KIT: ["kitType"],
+  KIT: ["kitType", "kitSize"],
 };
 
 const buildDefaultExtraDetails = (category) => {
@@ -79,7 +80,8 @@ const getActiveExtraFieldOrder = (category, details) => {
     return baseOrder.filter(
       (fieldName) =>
         fieldName === "glovesType" ||
-        (normalizedGlovesType === "batting gloves" && (fieldName === "battingHand" || fieldName === "glovesSize"))
+        fieldName === "glovesSize" ||
+        (normalizedGlovesType === "batting gloves" && fieldName === "battingHand")
     );
   }
 
@@ -87,7 +89,8 @@ const getActiveExtraFieldOrder = (category, details) => {
     return baseOrder.filter(
       (fieldName) =>
         fieldName === "padsType" ||
-        (normalizedPadsType === "batting pads" && (fieldName === "padsSize" || fieldName === "padsBattingHand"))
+        fieldName === "padsSize" ||
+        (normalizedPadsType === "batting pads" && fieldName === "padsBattingHand")
     );
   }
 
@@ -431,7 +434,9 @@ function MyListings() {
                         {editForm.category} details
                       </p>
                       <div className="grid gap-4 sm:grid-cols-2">
-                        {EXTRA_FIELDS[editForm.category].map((field) => (
+                        {EXTRA_FIELDS[editForm.category]
+                          .filter((field) => getActiveExtraFieldOrder(editForm.category, editExtraDetails).includes(field.name))
+                          .map((field) => (
                           <label key={field.name} className="space-y-2">
                             <span className="text-xs font-black uppercase tracking-widest text-faint">
                               {field.label} {field.required && "*"}

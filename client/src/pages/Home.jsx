@@ -72,21 +72,6 @@ function Home() {
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="absolute -bottom-6 -left-6 surface-card p-6 shadow-xl elevated fade-in-up">
-                <div className="flex items-center gap-4">
-                  <div className="flex -space-x-3">
-                    {[1, 2, 3].map(i => (
-                      <div key={i} className={`h-10 w-10 rounded-full border-2 border-surface bg-slate-200 overflow-hidden`}>
-                        <img src={`https://i.pravatar.cc/150?u=${i}`} alt="User" />
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-ink">Join 2,000+ players</p>
-                    <p className="text-xs text-muted">Trading gear every month</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
