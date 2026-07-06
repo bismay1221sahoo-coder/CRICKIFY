@@ -155,6 +155,16 @@ function Navbar() {
           <button onClick={toggleTheme} className="text-muted">
             {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
           </button>
+          {user && (
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-sm font-black text-on-brand shadow-sm"
+              aria-label="Open account menu"
+            >
+              {user.name?.[0]?.toUpperCase()}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -169,6 +179,19 @@ function Navbar() {
       {menuOpen && (
         <div className="absolute inset-x-0 top-full border-b border-line bg-surface shadow-xl elevated md:hidden">
           <nav className="flex flex-col p-4">
+            {user && (
+              <div className="mb-3 rounded-2xl border border-line bg-surface-2/50 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-sm font-black text-on-brand">
+                    {user.name?.[0]?.toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-ink">{user.name}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted">Verified Player</p>
+                  </div>
+                </div>
+              </div>
+            )}
             <NavLink to="/" end className={linkClass} onClick={() => setMenuOpen(false)}>
               Marketplace
             </NavLink>
@@ -184,6 +207,16 @@ function Navbar() {
               <NavLink to="/admin" className={linkClass} onClick={() => setMenuOpen(false)}>
                 Admin Panel
               </NavLink>
+            )}
+            {user && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="mt-3 flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-bold text-danger transition-colors hover:bg-danger/10"
+              >
+                <LogOut size={16} />
+                Sign Out
+              </button>
             )}
             {!user && (
               <Link to="/login" className="btn-primary mt-4 py-3" onClick={() => setMenuOpen(false)}>
