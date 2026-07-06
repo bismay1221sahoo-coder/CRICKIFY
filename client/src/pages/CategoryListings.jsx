@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, MapPin, Search } from "lucide-react";
+import { ArrowLeft, MapPin, Plus, Search } from "lucide-react";
 import { apiRequest } from "../lib/api";
 import CategoryIcon from "../components/CategoryIcon";
 
@@ -198,12 +198,32 @@ function CategoryListings() {
              </div>
             <h2 className="text-xl font-black text-ink">No gear found</h2>
             <p className="mt-2 text-muted">Try adjusting your filters or search criteria.</p>
-            <button onClick={() => { setCityFilter(""); setConditionFilter(""); setMinPrice(""); setMaxPrice(""); }} className="btn-ghost mt-6 px-8">
-              Clear all filters
-            </button>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link to="/sell" className="btn-primary px-8">
+                <Plus size={16} />
+                Be the first to sell this gear
+              </Link>
+              <button onClick={() => { setCityFilter(""); setConditionFilter(""); setMinPrice(""); setMaxPrice(""); }} className="btn-ghost px-8">
+                Clear all filters
+              </button>
+            </div>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="space-y-6">
+            <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-ink">
+                  Have {categoryKey === "ALL" ? "cricket gear" : meta.label.toLowerCase()} to sell?
+                </p>
+                <p className="text-xs font-bold text-muted">Add your listing and let local players find it.</p>
+              </div>
+              <Link to="/sell" className="btn-primary shrink-0 px-6 py-2.5 text-xs">
+                <Plus size={15} />
+                Add your gear
+              </Link>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {listings.map((listing) => {
               const photo = listing?.media?.find(m => m.type === "IMAGE")?.url;
               const cond = CONDITION_META[listing?.condition] || { label: listing?.condition, cls: "chip-neutral" };
@@ -251,6 +271,7 @@ function CategoryListings() {
                 </Link>
               );
             })}
+            </div>
           </div>
         )}
       </section>
