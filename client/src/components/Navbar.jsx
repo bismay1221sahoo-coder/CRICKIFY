@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { LogOut, Menu, Moon, ShoppingBag, Sun, X } from "lucide-react";
 import { clearSession, getUser } from "../lib/api";
 import { ThemeContext } from "../lib/themeContext";
 
@@ -19,7 +20,7 @@ function Navbar() {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -35,7 +36,7 @@ function Navbar() {
   }, []);
 
   const handleLogout = () => {
-    if (!window.confirm("Are you sure you want to logout from CRICKIFY?")) return;
+    if (!window.confirm("Are you sure you want to logout?")) return;
     clearSession();
     setUser(null);
     navigate("/login");
@@ -44,162 +45,154 @@ function Navbar() {
   };
 
   const linkClass = ({ isActive }) =>
-    `relative px-3 py-2 text-sm font-semibold rounded-xl transition-all duration-200 whitespace-nowrap ${
+    `px-4 py-2 text-sm font-bold rounded-xl transition-all ${
       isActive
-        ? "text-emerald-700 bg-emerald-50/80 shadow-sm"
-        : "text-slate-500 hover:text-slate-900 hover:bg-white/60"
+        ? "text-brand bg-brand-weak"
+        : "text-muted hover:text-ink hover:bg-surface-2"
     }`;
 
   return (
     <header
-      className={`sticky top-0 z-20 transition-all duration-300 ${
+      className={`sticky top-0 z-40 w-full transition-all duration-300 ${
         scrolled
-          ? "glass border-b border-white/50 shadow-sm"
-          : "bg-transparent border-b border-transparent"
+          ? "bg-surface/80 backdrop-blur-md border-b border-line shadow-sm"
+          : "bg-transparent"
       }`}
     >
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-10">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <span className="relative flex h-9 w-9 items-center justify-center rounded-xl text-xs font-black text-white shadow-md overflow-hidden"
-            style={{ background: "linear-gradient(135deg, #059669 0%, #0d9488 100%)" }}>
-            <span className="relative z-10">CR</span>
-            <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              style={{ background: "linear-gradient(135deg, #047857 0%, #0f766e 100%)" }} />
-          </span>
-          <span className="text-xl font-black tracking-tight text-slate-900 group-hover:text-emerald-700 transition-colors">
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-on-brand shadow-lg transition-transform group-hover:scale-110">
+            <ShoppingBag size={20} strokeWidth={2.5} />
+          </div>
+          <span className="text-xl font-black tracking-tight text-ink">
             CRICKIFY
           </span>
         </Link>
 
-        {/* Mobile toggle */}
-        <button
-          type="button"
-          onClick={() => setMenuOpen((c) => !c)}
-          className="glass flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:text-slate-900 transition-colors md:hidden"
-          aria-label="Toggle menu"
-        >
-          {menuOpen ? (
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-              <path d="M2 2l11 11M13 2L2 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          ) : (
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-              <path d="M2 4h11M2 7.5h11M2 11h11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          )}
-        </button>
-
-        {/* Nav links */}
-        <nav
-          className={`${
-            menuOpen ? "flex" : "hidden"
-          } absolute left-0 right-0 top-[57px] z-30 flex-col gap-1 border-b border-white/50 bg-white/90 backdrop-blur-xl px-4 pb-4 pt-2 shadow-xl md:static md:flex md:flex-row md:items-center md:gap-3 md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none`}
-        >
-          <NavLink to="/" end className={linkClass} onClick={() => setMenuOpen(false)}>
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex md:items-center md:gap-2">
+          <NavLink to="/" end className={linkClass}>
             Marketplace
           </NavLink>
-          <NavLink to="/sell" className={linkClass} onClick={() => setMenuOpen(false)}>
+          <NavLink to="/sell" className={linkClass}>
             Sell Gear
           </NavLink>
           {user && (
-            <NavLink to="/my-listings" className={linkClass} onClick={() => setMenuOpen(false)}>
+            <NavLink to="/my-listings" className={linkClass}>
               My Listings
             </NavLink>
           )}
           {user?.role === "ADMIN" && (
-            <NavLink to="/admin" className={linkClass} onClick={() => setMenuOpen(false)}>
+            <NavLink to="/admin" className={linkClass}>
               Admin
             </NavLink>
           )}
 
+          <div className="mx-2 h-4 w-px bg-line" />
+
           <button
             type="button"
             onClick={toggleTheme}
-            className="glass rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition-all hover:text-slate-900 hover:bg-white/70"
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-muted hover:bg-surface-2 hover:text-ink transition-colors"
             title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
-            {theme === "dark" ? "Light" : "Dark"}
+            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
           </button>
 
-          <div className="md:ml-2 md:pl-2 md:border-l md:border-slate-200/70">
-            {user ? (
-              <div className="relative" ref={profileRef}>
-                <button
-                  type="button"
-                  onClick={() => setProfileOpen((current) => !current)}
-                  className="glass flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-white/80"
-                  aria-haspopup="menu"
-                  aria-expanded={profileOpen}
-                >
-                  <span
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-black text-white"
-                    style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
-                  >
-                    {user.name?.[0]?.toUpperCase()}
-                  </span>
-                  <span className="hidden sm:inline">{user.name}</span>
-                </button>
-
-                {profileOpen && (
-                  <div className="absolute right-0 mt-3 w-60 overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 shadow-2xl md:top-full">
-                    <div className="flex items-center gap-3 px-4 py-3">
-                      <div
-                        className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-black text-white"
-                        style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
-                      >
-                        {user.name?.[0]?.toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-slate-900">{user.name}</p>
-                        <p className="text-[11px] font-semibold text-slate-400">Quick actions</p>
-                      </div>
-                    </div>
-                    <div className="h-px bg-slate-200/70" />
-                    <div className="grid p-2">
-                      <Link
-                        to="/my-listings"
-                        onClick={() => {
-                          setProfileOpen(false);
-                          setMenuOpen(false);
-                        }}
-                        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100"
-                      >
-                        My Listings
-                      </Link>
-                      <Link
-                        to="/sell"
-                        onClick={() => {
-                          setProfileOpen(false);
-                          setMenuOpen(false);
-                        }}
-                        className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100"
-                      >
-                        Sell Gear
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="rounded-lg px-3 py-2 text-left text-sm font-semibold text-red-600 transition-all hover:bg-red-50"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link
-                to="/login"
-                onClick={() => setMenuOpen(false)}
-                className="btn-primary rounded-xl px-5 py-2 text-sm"
+          {user ? (
+            <div className="relative" ref={profileRef}>
+              <button
+                type="button"
+                onClick={() => setProfileOpen(!profileOpen)}
+                className={`flex items-center gap-2 rounded-xl border p-1 pr-3 transition-all ${
+                  profileOpen ? "border-brand bg-brand-weak" : "border-line bg-surface hover:border-faint shadow-sm"
+                }`}
               >
-                Login
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-on-brand text-xs font-bold">
+                  {user.name?.[0]?.toUpperCase()}
+                </div>
+                <span className="text-xs font-bold text-ink">{user.name.split(" ")[0]}</span>
+              </button>
+
+              {profileOpen && (
+                <div className="absolute right-0 mt-3 w-56 origin-top-right overflow-hidden rounded-2xl border border-line bg-surface shadow-xl elevated">
+                  <div className="p-4 bg-surface-2/50">
+                    <p className="text-xs font-black text-ink truncate">{user.name}</p>
+                    <p className="text-[10px] font-bold text-muted mt-0.5">Verified Player</p>
+                  </div>
+                  <div className="h-px bg-line" />
+                  <div className="p-2">
+                    <Link
+                      to="/my-listings"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-bold text-muted hover:bg-brand-weak hover:text-brand transition-colors"
+                    >
+                      <ShoppingBag size={14} />
+                      Your Submissions
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs font-bold text-danger hover:bg-danger/10 transition-colors"
+                    >
+                      <LogOut size={14} />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link to="/login" className="btn-primary py-2 px-6 ml-2">
+              Login
+            </Link>
+          )}
+        </nav>
+
+        {/* Mobile Toggle */}
+        <div className="flex items-center gap-3 md:hidden">
+          <button onClick={toggleTheme} className="text-muted">
+            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-surface text-muted hover:text-ink"
+          >
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {menuOpen && (
+        <div className="absolute inset-x-0 top-full border-b border-line bg-surface shadow-xl elevated md:hidden">
+          <nav className="flex flex-col p-4">
+            <NavLink to="/" end className={linkClass} onClick={() => setMenuOpen(false)}>
+              Marketplace
+            </NavLink>
+            <NavLink to="/sell" className={linkClass} onClick={() => setMenuOpen(false)}>
+              Sell Gear
+            </NavLink>
+            {user && (
+              <NavLink to="/my-listings" className={linkClass} onClick={() => setMenuOpen(false)}>
+                My Listings
+              </NavLink>
+            )}
+            {user?.role === "ADMIN" && (
+              <NavLink to="/admin" className={linkClass} onClick={() => setMenuOpen(false)}>
+                Admin Panel
+              </NavLink>
+            )}
+            {!user && (
+              <Link to="/login" className="btn-primary mt-4 py-3" onClick={() => setMenuOpen(false)}>
+                Login to Crickify
               </Link>
             )}
-          </div>
-        </nav>
-      </div>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

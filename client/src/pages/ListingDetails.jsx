@@ -1,32 +1,14 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, Clock, Info, MapPin, Phone, ShieldCheck, X } from "lucide-react";
 import { apiRequest } from "../lib/api";
 import { parseListingDescription } from "../lib/listingDescription";
 
-const formatLabel = (v) => (v ? v.replaceAll("_", " ") : "-");
-const URL_REGEX = /(https?:\/\/[^\s]+)/g;
-
-const renderTextWithLinks = (text = "") =>
-  text.split(URL_REGEX).map((part, index) => {
-    if (!part.match(URL_REGEX)) return <span key={`txt-${index}`}>{part}</span>;
-    return (
-      <a
-        key={`url-${index}`}
-        href={part}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="break-all font-semibold text-sky-700 underline"
-      >
-        {part}
-      </a>
-    );
-  });
-
 const CONDITION_META = {
-  LIKE_NEW: { label: "Like New", cls: "bg-emerald-100/80 text-emerald-700 border border-emerald-200/60" },
-  GOOD: { label: "Good", cls: "bg-sky-100/80 text-sky-700 border border-sky-200/60" },
-  FAIR: { label: "Fair", cls: "bg-amber-100/80 text-amber-700 border border-amber-200/60" },
-  NEEDS_REPAIR: { label: "Needs Repair", cls: "bg-red-100/80 text-red-600 border border-red-200/60" },
+  LIKE_NEW: { label: "Like New", cls: "chip-brand-soft" },
+  GOOD: { label: "Good", cls: "chip-neutral" },
+  FAIR: { label: "Fair", cls: "chip-warn" },
+  NEEDS_REPAIR: { label: "Needs Repair", cls: "chip-danger" },
 };
 
 function ListingDetails() {
@@ -58,44 +40,10 @@ function ListingDetails() {
     load();
   }, [id]);
 
-  const media = useMemo(() => listing?.media || [], [listing]);
   const { cleanDescription, proofUrls, proofReason } = useMemo(
     () => parseListingDescription(listing?.description),
     [listing?.description]
   );
-  const isImageActive = activeMedia?.type !== "VIDEO" && Boolean(activeMedia?.url);
-
-  if (loading) {
-    return (
-      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-10">
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="shimmer aspect-[4/3] rounded-2xl" />
-          <div className="grid gap-4">
-            <div className="shimmer h-8 w-3/4 rounded-xl" />
-            <div className="shimmer h-5 w-1/2 rounded-xl" />
-            <div className="shimmer h-32 rounded-xl" />
-            <div className="shimmer h-24 rounded-xl" />
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  if (error || !listing) {
-    return (
-      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-10">
-        <div className="glass rounded-2xl border border-red-200/60 p-10 text-center">
-          <p className="font-bold text-red-700">{error || "Listing not found."}</p>
-          <Link to="/" className="mt-4 inline-block text-sm font-semibold text-sky-700 hover:underline">
-            Back to Marketplace
-          </Link>
-        </div>
-      </main>
-    );
-  }
-
-  const cond = CONDITION_META[listing.condition] || { label: formatLabel(listing.condition), cls: "bg-slate-100 text-slate-600" };
-  const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
 
   const submitReport = async () => {
     const reason = reportReason.trim();
@@ -120,244 +68,221 @@ function ListingDetails() {
     }
   };
 
+  if (loading) {
+    return (
+      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-2">
+          <div className="shimmer aspect-[4/3] rounded-[2rem]" />
+          <div className="space-y-6">
+            <div className="shimmer h-12 w-3/4 rounded-xl" />
+            <div className="shimmer h-6 w-1/4 rounded-xl" />
+            <div className="shimmer h-40 w-full rounded-2xl" />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !listing) {
+    return (
+      <main className="mx-auto max-w-2xl px-4 py-24 text-center">
+        <h1 className="text-2xl font-black text-ink">Listing not found</h1>
+        <p className="mt-2 text-muted">{error || "This item may have been sold or removed."}</p>
+        <Link to="/" className="btn-primary mt-8 px-8">Back to Marketplace</Link>
+      </main>
+    );
+  }
+
+  const cond = CONDITION_META[listing.condition] || { label: listing.condition, cls: "chip-neutral" };
+
   return (
-    <main className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
-      <div className="pointer-events-none absolute -right-40 top-0 h-96 w-96 rounded-full opacity-15 blur-3xl" style={{ background: "radial-gradient(circle, #6ee7b7, transparent)" }} />
+    <main className="min-h-screen bg-canvas pb-20">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <Link to="/" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-faint hover:text-ink mb-8 transition-colors">
+          <ArrowLeft size={14} /> Back to marketplace
+        </Link>
 
-      <Link to="/" className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition-colors hover:text-slate-900 sm:mb-6">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M9 2L4 7l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        Back to Marketplace
-      </Link>
-
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-start lg:gap-8">
-        <div className="glass rounded-2xl p-3 shadow-md sm:p-4">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-slate-100">
-            {activeMedia ? (
-              activeMedia.type === "VIDEO" ? (
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+          {/* Media Gallery */}
+          <div className="space-y-4">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] border border-line bg-surface shadow-lg elevated">
+              {activeMedia?.type === "VIDEO" ? (
                 <video src={activeMedia.url} controls className="h-full w-full object-cover" />
               ) : (
-                <button
-                  type="button"
-                  onClick={() => setLightboxOpen(true)}
-                  className="h-full w-full cursor-zoom-in"
-                  aria-label="Open full image"
-                >
-                  <img
-                    src={activeMedia.url}
-                    alt={listing.title}
-                    decoding="async"
-                    referrerPolicy="no-referrer"
-                    className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                  />
+                <button onClick={() => setLightboxOpen(true)} className="h-full w-full cursor-zoom-in group">
+                  <img src={activeMedia?.url} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 </button>
-              )
-            ) : (
-              <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-500">No media</div>
-            )}
-            <div className="absolute left-3 top-3">
-              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-md backdrop-blur-sm" style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}>
-                Admin Verified
-              </span>
+              )}
+              <div className="absolute left-4 top-4">
+                <span className="chip chip-brand shadow-xl py-1.5 px-3">
+                  <ShieldCheck size={12} className="mr-1" /> Verified Gear
+                </span>
+              </div>
             </div>
-          </div>
 
-          {media.length > 1 && (
-            <div className="mt-3">
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">More photos</p>
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 lg:grid-cols-6">
-                {media.map((item) => (
+            {listing.media?.length > 1 && (
+              <div className="flex flex-wrap gap-3">
+                {listing.media.map((m) => (
                   <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setActiveMedia(item)}
-                    className={`aspect-square overflow-hidden rounded-xl border-2 transition-all duration-200 ${
-                      activeMedia?.id === item.id ? "glow-emerald scale-105 border-emerald-500 shadow-md" : "border-transparent hover:scale-105 hover:border-slate-300"
+                    key={m.id}
+                    onClick={() => setActiveMedia(m)}
+                    className={`h-20 w-20 overflow-hidden rounded-2xl border-2 transition-all ${
+                      activeMedia?.id === m.id ? "border-brand scale-105 shadow-md" : "border-transparent hover:border-faint"
                     }`}
                   >
-                    {item.type === "VIDEO" ? (
-                      <div className="glass-dark flex h-full items-center justify-center text-[10px] font-bold text-white">VIDEO</div>
-                    ) : (
-                      <img
-                        src={item.url}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                        className="h-full w-full object-cover"
-                      />
-                    )}
+                    <img src={m.url} alt="" className="h-full w-full object-cover" />
                   </button>
                 ))}
               </div>
-            </div>
-          )}
-        </div>
-
-        <div className="grid gap-4 lg:sticky lg:top-20">
-          <div className="glass rounded-2xl p-4 shadow-md sm:p-6">
-            <div className="mb-4 flex flex-wrap gap-1.5">
-              <span className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white" style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}>
-                Verified
-              </span>
-              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase backdrop-blur-sm ${cond.cls}`}>{cond.label}</span>
-              <span className="rounded-full bg-slate-100/80 px-2.5 py-1 text-[10px] font-bold uppercase text-slate-600">{listing.category}</span>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
-                <h1 className="text-2xl font-black leading-tight text-slate-900">{listing.title}</h1>
-                {listing.brand && <p className="mt-1 text-sm font-semibold text-emerald-700">{listing.brand}</p>}
-                <p className="mt-1.5 text-sm text-slate-500">{listing.city}</p>
-              </div>
-              <div className="shrink-0 text-left sm:text-right">
-                <p className="gradient-text text-3xl font-black">Rs. {safePrice.toLocaleString()}</p>
-              </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-1 gap-3 rounded-xl bg-slate-50/70 p-4 backdrop-blur-sm sm:grid-cols-2">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Used for</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{listing.usedDuration}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Defects</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{listing.defects}</p>
-              </div>
-            </div>
-
-            <div className="mt-5">
-              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Description</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{renderTextWithLinks(cleanDescription)}</p>
-            </div>
-
-            {(proofUrls.length > 0 || proofReason) && (
-              <div className="mt-5 rounded-xl border border-sky-100 bg-sky-50/50 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-sky-700">Purchase Proof</p>
-                {proofUrls.length > 0 ? (
-                  <div className="mt-2 grid gap-1">
-                    {proofUrls.map((url) => (
-                      <a
-                        key={url}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="break-all text-sm font-semibold text-sky-700 underline"
-                      >
-                        {url}
-                      </a>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-2 text-sm text-slate-600">{proofReason}</p>
-                )}
-              </div>
             )}
           </div>
 
-          <div className="glass-emerald glow-emerald rounded-2xl p-5 shadow-md">
-            <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-emerald-700">Contact Seller</p>
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-black text-white shadow-md" style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}>
-                {listing.seller?.name?.[0]?.toUpperCase() || "S"}
+          {/* Details Sidebar */}
+          <div className="space-y-6">
+            <div className="surface-card p-8 shadow-lg elevated">
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className={`chip ${cond.cls}`}>{cond.label}</span>
+                <span className="chip chip-neutral">{listing.category}</span>
               </div>
-              <div>
-                <p className="font-bold text-slate-900">{listing.seller?.name || "Seller"}</p>
-                <p className="text-xs text-slate-500">{listing.seller?.city || listing.city}</p>
+              
+              <h1 className="text-3xl font-black text-ink leading-tight">{listing.title}</h1>
+              {listing.brand && <p className="text-lg font-bold text-brand mt-1">{listing.brand}</p>}
+              
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="text-4xl font-black text-ink">₹{Number(listing.price).toLocaleString()}</span>
+                <span className="text-xs font-black text-faint uppercase tracking-widest">Final Price</span>
+              </div>
+
+              <div className="mt-8 grid grid-cols-2 gap-4 border-y border-line py-6">
+                <div className="flex items-center gap-3 text-ink">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 text-brand">
+                    <Clock size={18} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-faint">Used for</p>
+                    <p className="text-sm font-bold">{listing.usedDuration}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-ink">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 text-brand">
+                    <MapPin size={18} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-faint">Location</p>
+                    <p className="text-sm font-bold">{listing.city}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-faint">Defects Reported</p>
+                <div className="text-sm font-bold text-ink bg-surface-2/50 p-4 rounded-xl border border-line">
+                  {listing.defects || "No major defects reported by seller."}
+                </div>
               </div>
             </div>
 
-            {listing.seller?.phone ? (
-              <a href={`tel:${listing.seller.phone}`} className="btn-primary mt-4 w-full py-3">
-                Call {listing.seller.phone}
-              </a>
-            ) : (
-              <p className="mt-4 rounded-xl border border-emerald-200/60 bg-white/50 px-4 py-3 text-center text-xs font-semibold text-slate-500 backdrop-blur-sm">
-                Contact details will be shared by seller
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={() => setReportOpen(true)}
-              className="mt-3 w-full rounded-xl border border-red-200/70 bg-white/70 px-4 py-2 text-xs font-bold text-red-600 transition-colors hover:bg-red-50"
-            >
-              Report listing
-            </button>
+            {/* Contact Panel */}
+            <div className="surface-card bg-brand p-8 text-on-brand shadow-xl elevated relative overflow-hidden">
+              <div className="absolute -right-4 -bottom-4 h-24 w-24 bg-white/10 rounded-full blur-2xl" />
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-70 relative z-10">Interested in this gear?</p>
+              <div className="mt-4 flex items-center gap-4 relative z-10">
+                <div className="h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center text-xl font-black">
+                  {listing.seller?.name?.[0]?.toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-lg font-black">{listing.seller?.name || "Seller"}</p>
+                  <p className="text-xs font-bold opacity-70 flex items-center gap-1">
+                    <MapPin size={10} /> {listing.seller?.city || listing.city}
+                  </p>
+                </div>
+              </div>
+
+              {listing.seller?.phone ? (
+                <a href={`tel:${listing.seller.phone}`} className="btn-primary mt-8 w-full bg-white text-ink hover:bg-slate-100 py-4 text-base relative z-10">
+                  <Phone size={18} /> Call Seller Now
+                </a>
+              ) : (
+                <div className="mt-8 rounded-2xl bg-white/10 p-4 border border-white/20 text-center relative z-10">
+                  <p className="text-sm font-bold">Contact details shared on request</p>
+                </div>
+              )}
+              
+              <button 
+                onClick={() => setReportOpen(true)}
+                className="mt-6 w-full text-[10px] font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 relative z-10"
+              >
+                <Info size={12} /> Report suspicious listing
+              </button>
+            </div>
+
+            {/* Description */}
+            <div className="surface-card p-8">
+              <h4 className="text-xs font-black uppercase tracking-widest text-faint mb-4">Product Description</h4>
+              <p className="text-sm font-medium leading-relaxed text-muted whitespace-pre-wrap">{cleanDescription}</p>
+              
+              {(proofUrls?.length > 0 || proofReason) && (
+                <div className="mt-8 rounded-2xl bg-surface-2 p-6 border border-line">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-brand mb-2">Proof of Ownership</p>
+                  {proofUrls?.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {proofUrls.map(url => (
+                        <a key={url} href={url} target="_blank" rel="noreferrer" className="text-xs font-bold text-brand underline hover:text-brand-strong transition-colors">View Invoice</a>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs font-medium text-muted italic">{proofReason}</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {reportToast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
-          <div className="glass-emerald rounded-2xl px-5 py-3 text-sm font-bold text-emerald-800 shadow-xl">
-            {reportToast}
-          </div>
-        </div>
-      )}
-
-      {lightboxOpen && isImageActive && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
-          onClick={() => setLightboxOpen(false)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Escape" || e.key === "Enter" || e.key === " ") setLightboxOpen(false);
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setLightboxOpen(false)}
-            className="absolute right-4 top-4 rounded-full bg-white/20 px-3 py-1 text-sm font-bold text-white hover:bg-white/30"
-          >
-            Close
-          </button>
-          <img
-            src={activeMedia.url}
-            alt={listing.title}
-            decoding="async"
-            referrerPolicy="no-referrer"
-            className="max-h-[90vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
-
+      {/* Modals & Toasts */}
       {reportOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="glass w-full max-w-md rounded-2xl p-5 shadow-2xl sm:p-6">
-            <h3 className="text-lg font-black text-slate-900">Report listing</h3>
-            <p className="mt-1 text-sm text-slate-500">
-              Tell us what is wrong with this listing. We review all reports.
-            </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4">
+          <div className="surface-card w-full max-w-md p-8 shadow-2xl elevated">
+            <div className="flex items-center justify-between mb-4">
+               <h3 className="text-xl font-black text-ink">Report Listing</h3>
+               <button onClick={() => setReportOpen(false)} className="text-muted hover:text-ink"><X size={20} /></button>
+            </div>
+            <p className="text-sm text-muted mb-6">Help us keep Crickify safe. Tell us what's wrong with this listing.</p>
             <textarea
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
               rows={4}
-              className="input-field mt-4 resize-none"
-              placeholder="Example: Scam attempt, misleading photos, suspicious price, etc."
+              className="input-field resize-none mb-6"
+              placeholder="e.g. Fake photos, suspicious price, scam attempt..."
               disabled={reportSubmitting}
             />
-            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={() => setReportOpen(false)}
-                className="glass rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-white/80"
-                disabled={reportSubmitting}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={submitReport}
-                className="rounded-xl bg-red-500 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button onClick={() => setReportOpen(false)} className="btn-ghost" disabled={reportSubmitting}>Cancel</button>
+              <button 
+                onClick={submitReport} 
+                className="btn-primary bg-danger text-white hover:bg-danger-ink" 
                 disabled={reportSubmitting || reportReason.trim().length < 10}
               >
-                {reportSubmitting ? "Submitting..." : "Submit report"}
+                {reportSubmitting ? "Submitting..." : "Submit Report"}
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {lightboxOpen && activeMedia?.url && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/95 p-4" onClick={() => setLightboxOpen(false)}>
+           <button className="absolute right-6 top-6 text-white/60 hover:text-white"><X size={32} /></button>
+           <img src={activeMedia.url} alt="" className="max-h-[90vh] max-w-full rounded-2xl shadow-2xl object-contain" onClick={e => e.stopPropagation()} />
+        </div>
+      )}
+
+      {reportToast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 fade-in-up">
+           <div className="chip chip-brand shadow-2xl py-3 px-6 text-sm">
+              {reportToast}
+           </div>
         </div>
       )}
     </main>

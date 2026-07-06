@@ -1,38 +1,34 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, MapPin, Search } from "lucide-react";
 import { apiRequest } from "../lib/api";
+import CategoryIcon from "../components/CategoryIcon";
 
 const CATEGORIES = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
 
 const CATEGORY_META = {
-  ALL: { label: "All Gear", gradient: "from-emerald-500 to-teal-500", bgImage: "https://res.cloudinary.com/dzlz0w47q/image/upload/v1777923286/thumbnail_IMG_1983_vzy0xp.jpg" },
-  BAT: { label: "Bats", gradient: "from-amber-500 to-orange-500", bgImage: "https://res.cloudinary.com/dzlz0w47q/image/upload/v1777923285/606010_DSC_1213_31Jan2024-scaled-e1709300843109_oqqrkq.webp" },
-  GLOVES: { label: "Gloves", gradient: "from-sky-500 to-blue-600", bgImage: "https://res.cloudinary.com/dzlz0w47q/image/upload/v1777923284/images_sd4ywb.jpg" },
-  PADS: { label: "Pads", gradient: "from-violet-500 to-purple-600", bgImage: "https://res.cloudinary.com/dzlz0w47q/image/upload/v1777923286/image_c08621c8-3d28-4c6b-b792-4019c239bb5f_zlnfiq.webp" },
-  HELMET: { label: "Helmets", gradient: "from-red-500 to-rose-600", bgImage: "https://res.cloudinary.com/dzlz0w47q/image/upload/v1777923533/Cricket-Helmets_r8r873_c_crop_w_1000_h_340_wdoy4r.webp" },
-  SHOES: { label: "Shoes", gradient: "from-cyan-500 to-sky-600", bgImage: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1600&q=80" },
-  KIT: { label: "Full Kits", gradient: "from-lime-500 to-green-600", bgImage: "https://res.cloudinary.com/dzlz0w47q/image/upload/v1777923285/2CE-banner_ummbw1.webp" },
-  OTHER: { label: "Other", gradient: "from-slate-500 to-slate-600", bgImage: "https://res.cloudinary.com/dzlz0w47q/image/upload/v1777923285/cricket-equipment-sportswear-set-players-tool-vector-icons-field-bat-ball-helmet-wicket-stumps-shoe-uniform-gloves-tools-219002067_bjjcu6.webp" },
+  ALL: { label: "All Gear", desc: "Browse every verified listing", bgImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1400" },
+  BAT: { label: "Bats", desc: "English & Kashmir Willow", bgImage: "https://images.unsplash.com/photo-1593341646782-e0b495cff86d?q=80&w=1400" },
+  GLOVES: { label: "Gloves", desc: "Batting & Keeping protection", bgImage: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?q=80&w=1400" },
+  PADS: { label: "Pads", desc: "Lightweight leg guards", bgImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1400" },
+  HELMET: { label: "Helmets", desc: "Safety certified headwear", bgImage: "https://images.unsplash.com/photo-1589188734056-cb8293963884?q=80&w=1400" },
+  SHOES: { label: "Shoes", desc: "Spikes & field shoes", bgImage: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1400" },
+  KIT: { label: "Full Kits", desc: "Complete sets for players", bgImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1400" },
+  OTHER: { label: "Accessories", desc: "Grips, balls, and more", bgImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1400" },
 };
 
 const CONDITION_META = {
-  LIKE_NEW: { label: "Like New", cls: "bg-emerald-100/80 text-emerald-700 border border-emerald-200/60" },
-  GOOD: { label: "Good", cls: "bg-sky-100/80 text-sky-700 border border-sky-200/60" },
-  FAIR: { label: "Fair", cls: "bg-amber-100/80 text-amber-700 border border-amber-200/60" },
-  NEEDS_REPAIR: { label: "Needs Repair", cls: "bg-red-100/80 text-red-600 border border-red-200/60" },
+  LIKE_NEW: { label: "Like New", cls: "chip-brand-soft" },
+  GOOD: { label: "Good", cls: "chip-neutral" },
+  FAIR: { label: "Fair", cls: "chip-warn" },
+  NEEDS_REPAIR: { label: "Repair Needed", cls: "chip-danger" },
 };
 
 const SORT_OPTIONS = [
-  { value: "newest", label: "Newest" },
+  { value: "newest", label: "Newest Arrivals" },
   { value: "price_low", label: "Price: Low to High" },
   { value: "price_high", label: "Price: High to Low" },
 ];
-
-const getCategoryKey = (categoryParam) => {
-  if (!categoryParam) return "ALL";
-  const normalized = categoryParam.toUpperCase();
-  return normalized === "ALL" ? "ALL" : normalized;
-};
 
 function CategoryListings() {
   const { category } = useParams();
@@ -48,7 +44,7 @@ function CategoryListings() {
   const [debouncedMin, setDebouncedMin] = useState("");
   const [debouncedMax, setDebouncedMax] = useState("");
 
-  const categoryKey = getCategoryKey(category);
+  const categoryKey = (category || "ALL").toUpperCase();
   const isValidCategory = categoryKey === "ALL" || CATEGORIES.includes(categoryKey);
   const meta = CATEGORY_META[categoryKey] || CATEGORY_META.ALL;
 
@@ -92,191 +88,167 @@ function CategoryListings() {
     load();
   }, [categoryKey, debouncedCity, conditionFilter, debouncedMin, debouncedMax, sort, isValidCategory]);
 
-  const headerCopy = useMemo(() => {
-    if (categoryKey === "ALL") return "Browse all verified listings in one place.";
-    return `Browse verified ${meta.label.toLowerCase()} listings in your city.`;
-  }, [categoryKey, meta.label]);
-
-  const getListingPhotos = (listing) =>
-    (listing?.media || []).filter((item) => item?.type === "IMAGE" && item?.url);
-
-  if (!isValidCategory) {
-    return (
-      <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-10">
-        <div className="glass rounded-2xl border border-red-200/70 p-10 text-center">
-          <h1 className="text-xl font-black text-slate-900">Category not found</h1>
-          <p className="mt-2 text-sm text-slate-500">Please choose a valid category.</p>
-          <Link to="/" className="btn-primary mt-6 inline-flex px-5 py-2 text-sm">
-            Back to Marketplace
-          </Link>
-        </div>
-      </main>
-    );
-  }
-
   return (
-    <main>
-      <section className="relative overflow-hidden border-b border-white/40">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${meta.bgImage})` }}
-        />
-        <div className="absolute inset-0 bg-black/55" />
-        <div className="relative mx-auto flex max-w-7xl flex-col gap-4 px-4 py-10 text-white sm:px-6 sm:py-12 lg:px-10">
-          <Link to="/" className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-widest text-white/70">
-            ← Back to marketplace
-          </Link>
-          <h1 className={`text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl ${meta.gradient} bg-gradient-to-r bg-clip-text text-transparent`}>
-            {meta.label}
-          </h1>
-          <p className="max-w-xl text-sm text-white/80 sm:text-base">{headerCopy}</p>
+    <main className="min-h-screen bg-canvas">
+      {/* Header */}
+      <section className="relative bg-ink py-16 text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <img src={meta.bgImage} alt="" className="h-full w-full object-cover" />
         </div>
-      </section>
-
-      <section className="sticky top-[57px] z-10 border-b border-white/40 bg-white/80 backdrop-blur-lg">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-2 px-4 py-3 sm:grid-cols-2 sm:gap-3 sm:px-6 lg:grid-cols-[1.1fr_0.7fr_0.7fr_0.9fr_1fr] lg:px-10">
-          <select
-            value={conditionFilter}
-            onChange={(e) => setConditionFilter(e.target.value)}
-            className="input-field py-2 text-xs"
-          >
-            <option value="">All conditions</option>
-            <option value="LIKE_NEW">Like New</option>
-            <option value="GOOD">Good</option>
-            <option value="FAIR">Fair</option>
-            <option value="NEEDS_REPAIR">Needs Repair</option>
-          </select>
-          <input
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-            placeholder="Min price"
-            type="number"
-            min="0"
-            className="input-field py-2 text-xs"
-          />
-          <input
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-            placeholder="Max price"
-            type="number"
-            min="0"
-            className="input-field py-2 text-xs"
-          />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="input-field py-2 text-xs"
-          >
-            {SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="12" height="12" viewBox="0 0 13 13" fill="none">
-              <circle cx="5.5" cy="5.5" r="4" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M9 9l2.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <input
-              value={cityFilter}
-              onChange={(e) => setCityFilter(e.target.value)}
-              placeholder="Filter by city..."
-              className="input-field w-full py-2 pl-8 text-xs"
-            />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Link to="/" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors mb-6">
+            <ArrowLeft size={14} /> Back to Marketplace
+          </Link>
+          <div className="flex items-center gap-6">
+             <div className="hidden sm:flex h-16 w-16 items-center justify-center rounded-2xl bg-brand text-on-brand shadow-lg">
+                <CategoryIcon name={categoryKey} size={32} />
+             </div>
+             <div>
+                <h1 className="text-4xl font-black sm:text-5xl">{meta.label}</h1>
+                <p className="mt-2 text-slate-300 font-bold">{meta.desc}</p>
+             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-10">
+      {/* Filter Bar */}
+      <section className="sticky top-16 z-30 border-b border-line bg-surface/80 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative">
+                <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
+                <input
+                  value={cityFilter}
+                  onChange={(e) => setCityFilter(e.target.value)}
+                  placeholder="Filter by city..."
+                  className="input-field w-full py-2 pl-9 text-xs sm:w-48"
+                />
+              </div>
+              <select
+                value={conditionFilter}
+                onChange={(e) => setConditionFilter(e.target.value)}
+                className="input-field py-2 text-xs sm:w-40"
+              >
+                <option value="">All Conditions</option>
+                <option value="LIKE_NEW">Like New</option>
+                <option value="GOOD">Good</option>
+                <option value="FAIR">Fair</option>
+                <option value="NEEDS_REPAIR">Needs Repair</option>
+              </select>
+              <div className="flex items-center gap-1">
+                 <input
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    placeholder="Min"
+                    type="number"
+                    className="input-field w-20 py-2 text-xs"
+                  />
+                  <span className="text-line">-</span>
+                  <input
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    placeholder="Max"
+                    type="number"
+                    className="input-field w-20 py-2 text-xs"
+                  />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 border-t border-line pt-4 lg:border-0 lg:pt-0">
+              <span className="text-[10px] font-black uppercase tracking-widest text-faint">Sort by:</span>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+                className="input-field py-2 text-xs sm:w-48"
+              >
+                {SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Listing Grid */}
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         {error && (
-          <div className="mb-6 rounded-xl border border-red-200/60 bg-red-50/70 px-4 py-3 text-sm font-semibold text-red-700">
+          <div className="mb-8 rounded-2xl border border-danger/30 bg-danger/10 px-4 py-4 text-sm font-bold text-danger-ink">
             {error}
           </div>
         )}
 
-        {loading && (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="glass overflow-hidden rounded-2xl">
+        {loading ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="surface-card overflow-hidden">
                 <div className="shimmer aspect-[4/3]" />
-                <div className="grid gap-2 p-4">
+                <div className="p-5 space-y-3">
                   <div className="shimmer h-4 w-3/4 rounded-lg" />
                   <div className="shimmer h-3 w-1/2 rounded-lg" />
                 </div>
               </div>
             ))}
           </div>
-        )}
-
-        {!loading && listings.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-200 py-10 text-center">
-            <p className="text-sm font-bold text-slate-400">No listings yet</p>
-            <Link to="/sell" className="btn-primary px-4 py-2 text-xs">
-              List first
-            </Link>
+        ) : listings.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-[2rem] border-2 border-dashed border-line py-24 text-center">
+             <div className="mb-4 rounded-full bg-surface-2 p-6 text-faint">
+                <Search size={40} />
+             </div>
+            <h2 className="text-xl font-black text-ink">No gear found</h2>
+            <p className="mt-2 text-muted">Try adjusting your filters or search criteria.</p>
+            <button onClick={() => { setCityFilter(""); setConditionFilter(""); setMinPrice(""); setMaxPrice(""); }} className="btn-ghost mt-6 px-8">
+              Clear all filters
+            </button>
           </div>
-        )}
-
-        {!loading && listings.length > 0 && (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {listings.map((listing) => {
-              const photos = getListingPhotos(listing);
-              const firstPhoto = photos[0];
-              const extraPhotoCount = Math.max(photos.length - 1, 0);
-              const cond = CONDITION_META[listing?.condition] || { label: listing?.condition || "Unknown", cls: "bg-slate-100 text-slate-600" };
-              const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
+              const photo = listing?.media?.find(m => m.type === "IMAGE")?.url;
+              const cond = CONDITION_META[listing?.condition] || { label: listing?.condition, cls: "chip-neutral" };
+              const price = Number(listing?.price || 0);
+
               return (
-                <article key={listing?.id || listing?.title} className="glass card-hover group overflow-hidden rounded-2xl">
-                  <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                    {firstPhoto ? (
-                      <div className="relative h-full w-full overflow-hidden bg-slate-100">
-                        <img
-                          src={firstPhoto.url}
-                          alt={listing?.title || "Listing"}
-                          loading="lazy"
-                          decoding="async"
-                          referrerPolicy="no-referrer"
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        {extraPhotoCount > 0 && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-lg font-black text-white">
-                            +{extraPhotoCount}
-                          </div>
-                        )}
-                      </div>
+                <Link 
+                  key={listing.id}
+                  to={`/listings/${listing.id}`}
+                  className="surface-card card-hover group overflow-hidden"
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-surface-2">
+                    {photo ? (
+                      <img
+                        src={photo}
+                        alt={listing.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
                     ) : (
-                      <div className="flex h-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-50 to-sky-50">
-                        <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-700">No photo</span>
+                      <div className="flex h-full items-center justify-center text-faint">
+                        <CategoryIcon name={listing.category} size={48} strokeWidth={1} />
                       </div>
                     )}
-
-                    <div className="absolute left-2.5 top-2.5">
-                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow backdrop-blur-sm" style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}>
-                        Verified
-                      </span>
+                    <div className="absolute left-3 top-3">
+                      <span className="chip chip-brand shadow-lg">Verified</span>
                     </div>
-                    <div className="absolute right-2.5 top-2.5">
-                      <span className="glass rounded-full px-2 py-0.5 text-xs font-black text-sky-700 shadow backdrop-blur-md">
-                        Rs. {safePrice.toLocaleString()}
+                  </div>
+                  
+                  <div className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <h3 className="truncate text-base font-black text-ink">{listing.title}</h3>
+                      <p className="text-lg font-black text-brand shrink-0">₹{price.toLocaleString()}</p>
+                    </div>
+                    <p className="mt-1 flex items-center gap-1 text-xs font-bold text-muted">
+                      <MapPin size={12} /> {listing.city}
+                    </p>
+                    
+                    <div className="mt-4 flex items-center justify-between border-t border-line pt-4">
+                      <span className={`chip ${cond.cls}`}>{cond.label}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-faint">
+                        by {listing?.seller?.name?.split(" ")[0] || "Seller" }
                       </span>
                     </div>
                   </div>
-                  <div className="p-4">
-                    <h3 className="truncate text-sm font-black text-slate-900">{listing?.title || "Untitled listing"}</h3>
-                    {listing?.brand && <p className="mt-0.5 text-xs font-semibold text-emerald-700">{listing.brand}</p>}
-                    <p className="mt-0.5 text-xs text-slate-500">{listing?.city || "Unknown city"}</p>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${cond.cls}`}>{cond.label}</span>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between border-t border-slate-100/60 pt-3">
-                      <p className="text-xs text-slate-500">by {listing?.seller?.name || "Seller"}</p>
-                      <Link to={`/listings/${listing.id}`} className="rounded-lg px-2.5 py-1 text-xs font-bold text-white" style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}>
-                        View
-                      </Link>
-                    </div>
-                  </div>
-                </article>
+                </Link>
               );
             })}
           </div>

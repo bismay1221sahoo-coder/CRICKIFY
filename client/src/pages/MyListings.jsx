@@ -1,12 +1,13 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { AlertCircle, Calendar, Edit3, ExternalLink, MapPin, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { apiRequest } from "../lib/api";
 import { parseListingDescription } from "../lib/listingDescription";
 
 const STATUS_META = {
-  PENDING: { label: "Pending", cls: "bg-amber-100/80 text-amber-700 border border-amber-200/60" },
-  APPROVED: { label: "Approved", cls: "bg-emerald-100/80 text-emerald-700 border border-emerald-200/60" },
-  REJECTED: { label: "Rejected", cls: "bg-red-100/80 text-red-600 border border-red-200/60" },
+  PENDING: { label: "Under Review", cls: "chip-warn" },
+  APPROVED: { label: "Live & Verified", cls: "chip-brand" },
+  REJECTED: { label: "Rejected", cls: "chip-danger" },
 };
 
 const CONDITION_META = {
@@ -18,7 +19,6 @@ const CONDITION_META = {
 
 const CATEGORY_OPTIONS = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
 const CONDITION_OPTIONS = ["LIKE_NEW", "GOOD", "FAIR", "NEEDS_REPAIR"];
-const HANDLE_OPTIONS = ["", "Round", "Oval"];
 
 const EXTRA_FIELDS = {
   BAT: [
@@ -135,31 +135,6 @@ const getUserDescription = (raw = "") => {
   return cleaned;
 };
 
-const getListingMeta = (raw = "") => {
-  const text = String(raw || "");
-  const [metaBlock] = text.split("\n\n");
-  const { proofUrls, proofReason } = parseListingDescription(text);
-  const metaParts = metaBlock
-    ? metaBlock
-        .split(/\s*\|\s*|\n/)
-        .map((part) => part.trim())
-        .filter(Boolean)
-        .filter(
-          (part) =>
-            !part.toLowerCase().startsWith("purchase proof:") &&
-            !part.toLowerCase().startsWith("purchase proof reason:")
-        )
-    : [];
-  const batWeight = metaParts.find((part) => part.toLowerCase().startsWith("bat weight")) || "";
-  const handleType = metaParts.find((part) => part.toLowerCase().startsWith("handle type")) || "";
-  const cleanedMetaParts = metaParts.filter(
-    (part) =>
-      !part.toLowerCase().startsWith("bat weight") &&
-      !part.toLowerCase().startsWith("handle type")
-  );
-  return { metaParts: cleanedMetaParts, proofUrls, proofReason, batWeight, handleType };
-};
-
 function MyListings() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -182,15 +157,17 @@ function MyListings() {
   });
   const location = useLocation();
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!location.state?.submitted) return;
-
-    setToast("Listing submitted! Admin will verify it shortly.");
-    const timer = setTimeout(() => setToast(""), 4000);
+    const showTimer = setTimeout(() => {
+      setToast("Listing submitted! Admin will verify it shortly.");
+    }, 0);
+    const hideTimer = setTimeout(() => setToast(""), 4000);
     window.history.replaceState({}, "", window.location.pathname);
-
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
   }, [location.state]);
 
   const load = async () => {
@@ -208,9 +185,11 @@ function MyListings() {
   };
 
   useEffect(() => {
-    load();
+    const timer = setTimeout(() => {
+      load();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   const deleteListing = async (id, title) => {
     if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
@@ -247,7 +226,6 @@ function MyListings() {
     if (editSubmitting) return;
     setEditOpen(false);
     setEditTargetId(null);
-    setEditExtraDetails(buildDefaultExtraDetails("BAT"));
   };
 
   const updateEditField = (e) => {
@@ -259,11 +237,6 @@ function MyListings() {
       }
       return nextForm;
     });
-  };
-
-  const updateEditExtra = (e) => {
-    const { name, value } = e.target;
-    setEditExtraDetails((current) => ({ ...current, [name]: value }));
   };
 
   const submitEdit = async (e) => {
@@ -299,404 +272,248 @@ function MyListings() {
     }
   };
 
-  const getListingPhotos = (listing) =>
-    (listing?.media || []).filter((item) => item?.type === "IMAGE" && item?.url);
-
   return (
-    <main className="relative mx-auto max-w-8xl px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
-      <div
-        className="pointer-events-none absolute -right-32 top-0 h-80 w-80 rounded-full opacity-15 blur-3xl"
-        style={{ background: "radial-gradient(circle, #6ee7b7, transparent)" }}
-      />
-
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 fade-in-up">
-          <div className="glass-emerald flex items-center gap-3 rounded-2xl px-5 py-3 shadow-xl">
-            <p className="text-sm font-bold text-emerald-800">{toast}</p>
+    <main className="min-h-screen bg-canvas py-12 pb-24">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between fade-in-up">
+          <div>
+            <span className="chip chip-neutral mb-3">Seller Dashboard</span>
+            <h1 className="text-4xl font-black text-ink">Your submissions</h1>
+            <p className="mt-2 text-muted font-bold">Manage your listed equipment and track verification status.</p>
           </div>
-        </div>
-      )}
-
-      <div className="fade-in-up mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-sky-50/80 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-sky-700 backdrop-blur-sm">
-            My listings
-          </span>
-          <h1 className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl">Your submissions</h1>
-          <p className="mt-1 text-sm text-slate-500">Track the status of all your listed equipment.</p>
-        </div>
-        <Link to="/sell" className="btn-primary shrink-0 px-5 py-2.5 text-sm">
-          + New listing
-        </Link>
-      </div>
-
-      {error && (
-        <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-200/60 bg-red-50/70 px-4 py-3 text-sm font-semibold text-red-700">
-          {error}
-        </div>
-      )}
-
-      {loading && (
-        <div className="grid gap-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="glass overflow-hidden rounded-2xl">
-              <div className="flex">
-                <div className="shimmer h-32 w-36 shrink-0" />
-                <div className="grid flex-1 gap-3 p-5">
-                  <div className="shimmer h-5 w-1/2 rounded-lg" />
-                  <div className="shimmer h-4 w-3/4 rounded-lg" />
-                  <div className="shimmer h-4 w-1/3 rounded-lg" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {!loading && !error && listings.length === 0 && (
-        <div className="glass rounded-2xl p-16 text-center shadow-md">
-          <h2 className="text-xl font-black text-slate-900">No listings yet</h2>
-          <p className="mt-2 text-sm text-slate-500">You have not submitted any equipment for sale.</p>
-          <Link to="/sell" className="btn-primary mt-6 inline-flex px-6 py-3">
-            List your first item
+          <Link to="/sell" className="btn-primary py-3 px-6 shadow-lg elevated">
+            <Plus size={18} /> New Listing
           </Link>
         </div>
-      )}
 
-      <div className="grid gap-4">
-        {listings.map((listing) => {
-          const photos = getListingPhotos(listing);
-          const firstPhoto = photos[0];
-          const extraPhotoCount = Math.max(photos.length - 1, 0);
-          const safeStatus = listing?.status || "PENDING";
-          const status = STATUS_META[safeStatus] || { label: safeStatus, cls: "bg-slate-100 text-slate-600" };
-          const safeTitle = listing?.title || "Untitled listing";
-          const safePrice = Number.isFinite(listing?.price) ? listing.price : Number(listing?.price) || 0;
-          const safeCreatedAt = listing?.createdAt ? new Date(listing.createdAt) : null;
-          const hasValidCreatedAt = safeCreatedAt && !Number.isNaN(safeCreatedAt.getTime());
-          const descriptionText = getUserDescription(listing?.description);
-          const listingMeta = getListingMeta(listing?.description);
+        {error && (
+          <div className="mb-8 rounded-xl bg-danger/10 p-4 border border-danger/20 text-sm font-bold text-danger-ink flex items-center gap-2">
+            <AlertCircle size={16} /> {error}
+          </div>
+        )}
 
-          return (
-            <article key={listing?.id || safeTitle} className="glass card-hover overflow-hidden rounded-2xl shadow-sm">
-              <div className="flex flex-col sm:flex-row">
-                <div className="relative h-44 w-full shrink-0 overflow-hidden bg-slate-100 sm:h-auto sm:w-44">
-                  {firstPhoto ? (
-                    <div className="relative h-full w-full overflow-hidden bg-slate-100">
-                      <img
-                        src={firstPhoto.url}
-                        alt={safeTitle}
-                        loading="lazy"
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                        className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
-                      />
-                      {extraPhotoCount > 0 && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/45 text-lg font-black text-white">
-                          +{extraPhotoCount}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex h-full min-h-[130px] items-center justify-center text-xs font-semibold text-slate-500">No image</div>
-                  )}
-                </div>
-
-                <div className="flex flex-1 flex-col justify-between gap-2 p-4 sm:p-5">
-                  <div>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
-                      <div className="min-w-0">
-                        <h2 className="truncate text-lg font-black text-slate-900">{safeTitle}</h2>
-                        <p className="mt-0.5 text-xs text-slate-500">
-                          {listing?.category || "Unknown"} · {CONDITION_META[listing?.condition] || listing?.condition || "Unknown"} · {listing?.city || "Unknown city"}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <p className="gradient-text text-base font-black">Rs. {safePrice.toLocaleString()}</p>
-                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${status.cls}`}>
-                          {status.label}
-                        </span>
-                      </div>
-                    </div>
-
-                    <p className="mt-2 line-clamp-2 text-sm text-slate-500">
-                      {descriptionText || "No description provided."}
-                    </p>
-                    {(listingMeta.batWeight || listingMeta.handleType || listingMeta.metaParts.length > 0 || listingMeta.proofUrls.length > 0 || listingMeta.proofReason) && (
-                      <div className="mt-2 rounded-xl border border-emerald-100/70 bg-emerald-50/40 px-3 py-2 text-xs text-slate-600">
-                        {listingMeta.batWeight && (
-                          <p className="mb-2 text-[11px] font-semibold text-emerald-700">
-                            {listingMeta.batWeight}
-                          </p>
-                        )}
-                        {listingMeta.handleType && (
-                          <p className="mb-2 text-[11px] font-semibold text-emerald-700">
-                            {listingMeta.handleType}
-                          </p>
-                        )}
-                        {listingMeta.metaParts.length > 0 && (
-                          <div className="mb-2 flex flex-wrap gap-2 text-[11px] font-semibold text-emerald-700">
-                            {listingMeta.metaParts.map((part) => (
-                              <span key={part} className="rounded-full bg-white/70 px-2.5 py-1">
-                                {part}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        {listingMeta.proofUrls.length > 0 ? (
-                          <div className="grid gap-1">
-                            <span className="font-bold text-slate-700">Purchase proof:</span>
-                            {listingMeta.proofUrls.map((url) => (
-                              <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="break-all text-emerald-700 underline">
-                                {url}
-                              </a>
-                            ))}
-                          </div>
-                        ) : (
-                          listingMeta.proofReason && (
-                            <p>
-                              <span className="font-bold text-slate-700">Purchase proof:</span> {listingMeta.proofReason}
-                            </p>
-                          )
-                        )}
-                      </div>
-                    )}
-                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
-                      <span><span className="font-semibold text-slate-700">Used for:</span> {listing?.usedDuration || "-"}</span>
-                      <span><span className="font-semibold text-slate-700">Defects:</span> {listing?.defects || "-"}</span>
-                    </div>
-
-                    {safeStatus === "REJECTED" && listing?.rejectReason && (
-                      <div className="mt-3 flex items-start gap-2 rounded-xl border border-red-200/60 bg-red-50/60 px-3 py-2.5">
-                        <p className="text-xs font-semibold text-red-700">Rejected: {listing.rejectReason}</p>
-                      </div>
-                    )}
-
-                    {safeStatus === "PENDING" && (
-                      <p className="mt-2 text-xs font-semibold text-amber-600">Awaiting admin verification</p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-2 border-t border-slate-100/60 pt-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-xs text-slate-400">
-                      {hasValidCreatedAt
-                        ? safeCreatedAt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
-                        : "Date unavailable"}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      {safeStatus === "APPROVED" && listing?.id && (
-                        <Link
-                          to={`/listings/${listing.id}`}
-                          className="rounded-lg px-3 py-1.5 text-xs font-bold text-white"
-                          style={{ background: "linear-gradient(135deg, #059669, #0d9488)" }}
-                        >
-                          View live
-                        </Link>
-                      )}
-                      {safeStatus === "PENDING" && listing?.id && (
-                        <button
-                          onClick={() => openEdit(listing)}
-                          className="rounded-lg border border-sky-200/60 bg-sky-50/60 px-3 py-1.5 text-xs font-bold text-sky-700 transition-colors hover:bg-sky-100"
-                        >
-                          Edit
-                        </button>
-                      )}
-                      {listing?.id && (
-                        <button
-                          onClick={() => deleteListing(listing.id, safeTitle)}
-                          className="rounded-lg border border-red-200/60 bg-red-50/60 px-3 py-1.5 text-xs font-bold text-red-600 transition-colors hover:bg-red-100"
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </div>
-                  </div>
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="surface-card p-4 flex gap-6 overflow-hidden">
+                <div className="shimmer h-32 w-40 rounded-xl shrink-0" />
+                <div className="flex-1 space-y-3 py-2">
+                   <div className="shimmer h-6 w-1/2 rounded-lg" />
+                   <div className="shimmer h-4 w-3/4 rounded-lg" />
+                   <div className="shimmer h-4 w-1/4 rounded-lg" />
                 </div>
               </div>
-            </article>
-          );
-        })}
-      </div>
+            ))}
+          </div>
+        ) : listings.length === 0 ? (
+          <div className="surface-card p-20 text-center shadow-lg">
+             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-surface-2 text-faint">
+                <ShoppingBag size={40} />
+             </div>
+             <h2 className="text-2xl font-black text-ink">No listings found</h2>
+             <p className="mt-2 text-muted font-medium">You haven't listed any gear for sale yet.</p>
+             <Link to="/sell" className="btn-primary mt-10 px-10">Start Selling</Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {listings.map((listing) => {
+              const photo = listing?.media?.find(m => m.type === "IMAGE")?.url;
+              const status = STATUS_META[listing.status] || STATUS_META.PENDING;
+              const createdAt = new Date(listing.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
-      {editOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <form
-            onSubmit={submitEdit}
-            className="glass flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl shadow-2xl"
-          >
-            <div className="p-5 sm:p-6">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-lg font-black text-slate-900">Edit listing</h3>
-                <p className="text-sm text-slate-500">Only pending listings can be edited.</p>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-5 sm:px-6">
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                  Title
-                  <input
-                    name="title"
-                    value={editForm.title}
-                    onChange={updateEditField}
-                    className="input-field"
-                    required
-                  />
-                </label>
-                <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                  Brand
-                  <input
-                    name="brand"
-                    value={editForm.brand}
-                    onChange={updateEditField}
-                    className="input-field"
-                  />
-                </label>
-                <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                  Category
-                  <select
-                    name="category"
-                    value={editForm.category}
-                    onChange={updateEditField}
-                    className="input-field"
-                    required
-                  >
-                    {CATEGORY_OPTIONS.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat.replace("_", " ")}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {EXTRA_FIELDS[editForm.category] && getActiveExtraFieldOrder(editForm.category, editExtraDetails).map((fieldName) => {
-                  const field = EXTRA_FIELDS[editForm.category].find((item) => item.name === fieldName);
-                  if (!field) return null;
-
-                  return (
-                    <label key={field.name} className="grid gap-1 text-sm font-semibold text-slate-700">
-                      {field.label}
-                      {field.type === "select" ? (
-                        <select
-                          name={field.name}
-                          value={editExtraDetails[field.name] || ""}
-                          onChange={updateEditExtra}
-                          className="input-field"
-                          required={field.required}
-                        >
-                          {field.options.map((opt) => (
-                            <option key={opt} value={opt}>
-                              {opt || "-- Select --"}
-                            </option>
-                          ))}
-                        </select>
+              return (
+                <article key={listing.id} className="surface-card group overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex flex-col sm:flex-row">
+                    <div className="relative h-48 w-full shrink-0 overflow-hidden sm:h-auto sm:w-48 bg-surface-2">
+                      {photo ? (
+                        <img src={photo} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
-                        <input
-                          name={field.name}
-                          value={editExtraDetails[field.name] || ""}
-                          onChange={updateEditExtra}
-                          placeholder={field.placeholder}
-                          className="input-field"
-                          required={field.required}
-                        />
+                        <div className="flex h-full items-center justify-center text-faint"><ShoppingBag size={32} /></div>
                       )}
-                    </label>
-                  );
-                })}
-                <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                  Condition
-                  <select
-                    name="condition"
-                    value={editForm.condition}
-                    onChange={updateEditField}
-                    className="input-field"
-                    required
-                  >
-                    {CONDITION_OPTIONS.map((cond) => (
-                      <option key={cond} value={cond}>
-                        {cond.replace(/_/g, " ")}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                  Price (Rs.)
-                  <input
-                    name="price"
-                    type="number"
-                    min="1"
-                    value={editForm.price}
-                    onChange={updateEditField}
-                    className="input-field"
-                    required
-                  />
-                </label>
-                <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                  City
-                  <input
-                    name="city"
-                    value={editForm.city}
-                    onChange={updateEditField}
-                    className="input-field"
-                    required
-                  />
-                </label>
-              </div>
+                      <div className="absolute top-3 left-3">
+                         <span className={`chip ${status.cls} shadow-lg`}>{status.label}</span>
+                      </div>
+                    </div>
 
-              <div className="mt-4 grid gap-4">
-                <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                  Used duration
-                  <input
-                    name="usedDuration"
-                    value={editForm.usedDuration}
-                    onChange={updateEditField}
-                    className="input-field"
-                    required
-                  />
-                </label>
-                <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                  Defects
-                  <input
-                    name="defects"
-                    value={editForm.defects}
-                    onChange={updateEditField}
-                    className="input-field"
-                    required
-                  />
-                </label>
-                <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                  Description
-                  <textarea
-                    name="description"
-                    rows={4}
-                    value={editForm.description}
-                    onChange={updateEditField}
-                    className="input-field resize-none"
-                    required
-                  />
-                </label>
-              </div>
-            </div>
+                    <div className="flex flex-1 flex-col justify-between p-6 sm:p-8">
+                      <div>
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                           <h2 className="text-xl font-black text-ink">{listing.title}</h2>
+                           <p className="text-2xl font-black text-brand">₹{Number(listing.price).toLocaleString()}</p>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-bold text-muted uppercase tracking-widest">
+                           <span className="flex items-center gap-1"><MapPin size={12} /> {listing.city}</span>
+                           <span>{listing.category} · {CONDITION_META[listing.condition]}</span>
+                        </div>
+                        
+                        {listing.status === "REJECTED" && listing.rejectReason && (
+                          <div className="mt-4 rounded-xl bg-danger/5 p-4 border border-danger/10 text-xs font-bold text-danger-ink">
+                             Reason: {listing.rejectReason}
+                          </div>
+                        )}
+                      </div>
 
-            <div className="flex flex-col gap-2 border-t border-white/70 p-5 sm:flex-row sm:justify-end sm:p-6">
-              <button
-                type="button"
-                onClick={closeEdit}
-                className="glass rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-white/80"
-                disabled={editSubmitting}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn-primary px-5 py-2 text-sm"
-                disabled={editSubmitting}
-              >
-                {editSubmitting ? "Saving..." : "Save changes"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+                      <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-t border-line pt-6">
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-faint">
+                           <Calendar size={12} /> Submitted {createdAt}
+                        </div>
+                        <div className="flex items-center gap-3">
+                           {listing.status === "APPROVED" && (
+                             <Link to={`/listings/${listing.id}`} className="btn-ghost py-2 px-4 text-xs">
+                                <ExternalLink size={14} className="mr-1" /> View Live
+                             </Link>
+                           )}
+                           {listing.status === "PENDING" && (
+                             <button onClick={() => openEdit(listing)} className="btn-ghost border-brand text-brand hover:bg-brand-weak py-2 px-4 text-xs">
+                                <Edit3 size={14} className="mr-1" /> Edit Details
+                             </button>
+                           )}
+                           <button onClick={() => deleteListing(listing.id, listing.title)} className="btn-ghost border-danger text-danger hover:bg-danger/10 py-2 px-4 text-xs">
+                              <Trash2 size={14} className="mr-1" /> Remove
+                           </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Edit Modal */}
+        {editOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4">
+             <div className="surface-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 shadow-2xl elevated">
+                <div className="flex items-center justify-between mb-8">
+                   <h3 className="text-2xl font-black text-ink">Edit Submission</h3>
+                   <button onClick={closeEdit} className="text-muted hover:text-ink"><X size={24} /></button>
+                </div>
+                <form onSubmit={submitEdit} className="space-y-6">
+                   <div className="grid gap-6 sm:grid-cols-2">
+                      <label className="space-y-2">
+                         <span className="text-xs font-black uppercase tracking-widest text-faint">Title</span>
+                         <input name="title" value={editForm.title} onChange={updateEditField} className="input-field" required />
+                      </label>
+                      <label className="space-y-2">
+                         <span className="text-xs font-black uppercase tracking-widest text-faint">Brand</span>
+                         <input name="brand" value={editForm.brand} onChange={updateEditField} className="input-field" />
+                      </label>
+                      <label className="space-y-2">
+                         <span className="text-xs font-black uppercase tracking-widest text-faint">Category</span>
+                         <select name="category" value={editForm.category} onChange={updateEditField} className="input-field" required>
+                            {CATEGORY_OPTIONS.map((category) => (
+                              <option key={category} value={category}>{category}</option>
+                            ))}
+                         </select>
+                      </label>
+                      <label className="space-y-2">
+                         <span className="text-xs font-black uppercase tracking-widest text-faint">Condition</span>
+                         <select name="condition" value={editForm.condition} onChange={updateEditField} className="input-field" required>
+                            {CONDITION_OPTIONS.map((condition) => (
+                              <option key={condition} value={condition}>{CONDITION_META[condition]}</option>
+                            ))}
+                         </select>
+                      </label>
+                      <label className="space-y-2">
+                         <span className="text-xs font-black uppercase tracking-widest text-faint">Price (₹)</span>
+                         <input name="price" type="number" value={editForm.price} onChange={updateEditField} className="input-field" required />
+                      </label>
+                      <label className="space-y-2">
+                         <span className="text-xs font-black uppercase tracking-widest text-faint">City</span>
+                         <input name="city" value={editForm.city} onChange={updateEditField} className="input-field" required />
+                      </label>
+                   </div>
+
+                   {EXTRA_FIELDS[editForm.category]?.length > 0 && (
+                    <div className="rounded-2xl border border-line bg-surface-2/40 p-5">
+                      <p className="mb-4 text-xs font-black uppercase tracking-widest text-faint">
+                        {editForm.category} details
+                      </p>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {EXTRA_FIELDS[editForm.category].map((field) => (
+                          <label key={field.name} className="space-y-2">
+                            <span className="text-xs font-black uppercase tracking-widest text-faint">
+                              {field.label} {field.required && "*"}
+                            </span>
+                            {field.type === "select" ? (
+                              <select
+                                name={field.name}
+                                value={editExtraDetails[field.name] || ""}
+                                onChange={(e) =>
+                                  setEditExtraDetails((current) => ({
+                                    ...current,
+                                    [e.target.name]: e.target.value,
+                                  }))
+                                }
+                                className="input-field"
+                                required={field.required}
+                              >
+                                {field.options.map((option) => (
+                                  <option key={option} value={option}>{option || "-- Select --"}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                name={field.name}
+                                value={editExtraDetails[field.name] || ""}
+                                onChange={(e) =>
+                                  setEditExtraDetails((current) => ({
+                                    ...current,
+                                    [e.target.name]: e.target.value,
+                                  }))
+                                }
+                                className="input-field"
+                                placeholder={field.placeholder}
+                                required={field.required}
+                              />
+                            )}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                   )}
+
+                   <div className="grid gap-6 sm:grid-cols-2">
+                      <label className="space-y-2">
+                         <span className="text-xs font-black uppercase tracking-widest text-faint">Used for</span>
+                         <input name="usedDuration" value={editForm.usedDuration} onChange={updateEditField} className="input-field" required />
+                      </label>
+                      <label className="space-y-2">
+                         <span className="text-xs font-black uppercase tracking-widest text-faint">Defects</span>
+                         <input name="defects" value={editForm.defects} onChange={updateEditField} className="input-field" required />
+                      </label>
+                   </div>
+
+                   <label className="block space-y-2">
+                      <span className="text-xs font-black uppercase tracking-widest text-faint">Description</span>
+                      <textarea
+                        name="description"
+                        value={editForm.description}
+                        onChange={updateEditField}
+                        rows={5}
+                        className="input-field resize-none"
+                        required
+                      />
+                   </label>
+
+                   <div className="pt-6 flex justify-end gap-3">
+                      <button type="button" onClick={closeEdit} className="btn-ghost">Cancel</button>
+                      <button type="submit" disabled={editSubmitting} className="btn-primary px-10">
+                         {editSubmitting ? "Saving..." : "Save Changes"}
+                      </button>
+                   </div>
+                </form>
+             </div>
+          </div>
+        )}
+
+        {toast && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 fade-in-up">
+            <div className="chip chip-brand shadow-2xl py-3 px-6 text-sm">{toast}</div>
+          </div>
+        )}
+      </div>
     </main>
   );
 }
