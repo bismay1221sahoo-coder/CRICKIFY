@@ -117,22 +117,23 @@ function Home() {
       {/* CTA Section */}
       <section className="py-20 bg-canvas">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-[2rem] bg-ink px-8 py-12 text-center text-white sm:px-16 sm:py-20">
-            <div className="absolute inset-0 opacity-10">
+          <div className="relative overflow-hidden rounded-[2rem] bg-[#101814] px-8 py-12 text-center text-white shadow-xl sm:px-16 sm:py-20">
+            <div className="absolute inset-0">
               <img 
                 src="https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1600&auto=format&fit=crop" 
                 alt="Stadium background" 
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover opacity-35"
               />
             </div>
+            <div className="absolute inset-0 bg-[#101814]/65" />
             <div className="relative z-10 mx-auto max-w-2xl">
-              <h2 className="text-3xl font-black sm:text-4xl lg:text-5xl">Ready to upgrade your game?</h2>
-              <p className="mt-4 text-slate-300">List your unused gear today and get it in front of thousands of local players.</p>
+              <h2 className="text-3xl font-black text-white sm:text-4xl lg:text-5xl">Ready to upgrade your game?</h2>
+              <p className="mt-4 text-white/80">List your unused gear today and get it in front of thousands of local players.</p>
               <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-                <Link to="/sell" className="btn-primary bg-white text-ink hover:bg-slate-100 px-10">
+                <Link to="/sell" className="inline-flex items-center justify-center rounded-xl bg-white px-10 py-3.5 text-sm font-black text-[#101814] shadow-lg transition hover:bg-slate-100">
                   List Gear Now
                 </Link>
-                <Link to="/categories/ALL" className="btn-ghost border-slate-700 text-white hover:bg-white/10 px-10">
+                <Link to="/categories/ALL" className="inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/10 px-10 py-3.5 text-sm font-black text-white transition hover:bg-white/20">
                   Browse Marketplace
                 </Link>
               </div>
