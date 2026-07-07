@@ -3,14 +3,56 @@ import { ArrowRight, CheckCircle2, ShieldCheck, Tag, Zap } from "lucide-react";
 import CategoryIcon from "../components/CategoryIcon";
 
 const CATEGORIES = [
-  { id: "BAT", label: "Cricket Bats", description: "English & Kashmir Willow" },
-  { id: "GLOVES", label: "Batting Gloves", description: "Pro-grade protection" },
-  { id: "PADS", label: "Leg Guards", description: "Lightweight batting pads" },
-  { id: "HELMET", label: "Helmets", description: "Safety certified gear" },
-  { id: "SHOES", label: "Shoes", description: "Spikes & rubber studs" },
-  { id: "KIT", label: "Full Kits", description: "Complete gear bags" },
-  { id: "OTHER", label: "Accessories", description: "Balls, grips, & more" },
+  {
+    id: "BAT",
+    label: "Cricket Bats",
+    description: "English & Kashmir Willow",
+    image: "https://images.unsplash.com/photo-1593341646782-e0b495cff86d?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: "GLOVES",
+    label: "Batting Gloves",
+    description: "Pro-grade protection",
+    image: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: "PADS",
+    label: "Leg Guards",
+    description: "Lightweight batting pads",
+    image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: "HELMET",
+    label: "Helmets",
+    description: "Safety certified gear",
+    image: "https://images.unsplash.com/photo-1589188734056-cb8293963884?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: "SHOES",
+    label: "Shoes",
+    description: "Spikes & rubber studs",
+    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: "KIT",
+    label: "Full Kits",
+    description: "Complete gear bags",
+    image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: "OTHER",
+    label: "Accessories",
+    description: "Balls, grips, & more",
+    image: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=1200&auto=format&fit=crop",
+  },
 ];
+
+const ALL_CATEGORY = {
+  id: "ALL",
+  label: "All Marketplace",
+  description: "View all gear",
+  image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop",
+};
 
 function Home() {
   return (
@@ -85,29 +127,32 @@ function Home() {
             <p className="mt-2 text-muted">Find exactly what you need for your next match</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            <Link 
-              to="/categories/ALL"
-              className="surface-card card-hover group flex flex-col items-center justify-center p-8 text-center sm:col-span-1"
-            >
-              <div className="mb-4 rounded-2xl bg-brand-weak p-4 text-brand transition-colors group-hover:bg-brand group-hover:text-on-brand">
-                <CategoryIcon name="ALL" size={32} />
-              </div>
-              <h3 className="font-bold text-ink">All Marketplace</h3>
-              <p className="text-xs text-muted mt-1">View all gear</p>
-            </Link>
-
-            {CATEGORIES.map((cat) => (
-              <Link 
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[ALL_CATEGORY, ...CATEGORIES].map((cat) => (
+              <Link
                 key={cat.id}
                 to={`/categories/${cat.id}`}
-                className="surface-card card-hover group flex flex-col items-center justify-center p-8 text-center"
+                className="group relative isolate min-h-56 overflow-hidden rounded-2xl border border-line bg-surface shadow-sm transition duration-300 hover:-translate-y-1 hover:border-brand/50 hover:shadow-xl"
               >
-                <div className="mb-4 rounded-2xl bg-surface-2 p-4 text-muted transition-colors group-hover:bg-brand group-hover:text-on-brand">
-                  <CategoryIcon name={cat.id} size={32} />
+                <img
+                  src={cat.image}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#07120c]/90 via-[#07120c]/45 to-[#07120c]/15" />
+                <div className="absolute inset-x-0 top-0 h-px bg-white/25" />
+                <div className="relative flex h-full min-h-56 flex-col justify-end p-6 text-left">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/90 text-brand shadow-lg backdrop-blur-sm transition group-hover:bg-brand group-hover:text-on-brand">
+                    <CategoryIcon name={cat.id} size={26} />
+                  </div>
+                  <h3 className="text-2xl font-black leading-none text-white">{cat.label}</h3>
+                  <p className="mt-2 text-sm font-bold text-white/75">{cat.description}</p>
+                  <span className="mt-5 inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-white/80">
+                    Tap to browse
+                    <ArrowRight size={14} className="transition group-hover:translate-x-1" />
+                  </span>
                 </div>
-                <h3 className="font-bold text-ink">{cat.label}</h3>
-                <p className="text-xs text-muted mt-1">{cat.description}</p>
               </Link>
             ))}
           </div>
