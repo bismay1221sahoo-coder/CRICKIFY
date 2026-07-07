@@ -7,7 +7,7 @@ const storage = multer.memoryStorage();
 export const uploadListingMediaFile = multer({
   storage,
   limits: {
-    fileSize: 25 * 1024 * 1024,
+    fileSize: 8 * 1024 * 1024,
   },
   fileFilter: (req, file, callback) => {
     if (!allowedTypes.includes(file.mimetype)) {

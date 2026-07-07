@@ -46,10 +46,11 @@ export const apiRequest = async (path, options = {}) => {
   return data;
 };
 
-export const uploadListingMedia = async (file) => {
+export const uploadListingMedia = async (file, { purpose = "listing" } = {}) => {
   const token = getToken();
   const formData = new FormData();
   formData.append("media", file);
+  formData.append("purpose", purpose);
 
   const response = await fetch(`${API_URL}/api/uploads/listing-media`, {
     method: "POST",

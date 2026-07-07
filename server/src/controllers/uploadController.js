@@ -9,6 +9,7 @@ const ALLOWED_MIME_TYPES = new Set([
   "video/quicktime",
   "video/webm",
 ]);
+const MAX_PROOF_MEDIA_SIZE = 500 * 1024;
 
 const uploadToCloudinary = (file) =>
   new Promise((resolve, reject) => {
@@ -40,6 +41,10 @@ export const uploadListingMedia = async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "Media file is required." });
+    }
+
+    if (req.body?.purpose === "proof" && req.file.size > MAX_PROOF_MEDIA_SIZE) {
+      return res.status(400).json({ message: "Invoice/proof file size must be 500KB or less." });
     }
 
     const detectedType = await fileTypeFromBuffer(req.file.buffer);

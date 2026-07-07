@@ -5,6 +5,8 @@ import { apiRequest, getToken, uploadListingMedia } from "../lib/api";
 
 const CATEGORIES = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
 const CONDITIONS = ["LIKE_NEW", "GOOD", "FAIR", "NEEDS_REPAIR"];
+const MAX_PRODUCT_MEDIA_SIZE = 8 * 1024 * 1024;
+const MAX_PROOF_MEDIA_SIZE = 500 * 1024;
 
 const EXTRA_FIELDS = {
   BAT: [
@@ -149,10 +151,15 @@ function Sell() {
   const uploadFiles = async (files) => {
     if (!files.length) return;
     setError("");
+    const oversized = files.find((file) => file.size > MAX_PRODUCT_MEDIA_SIZE);
+    if (oversized) {
+      setError("Product photo/video file size must be 8MB or less.");
+      return;
+    }
     setUploading(true);
     try {
       const results = await Promise.allSettled(
-        files.map((file) => uploadListingMedia(file))
+        files.map((file) => uploadListingMedia(file, { purpose: "listing" }))
       );
 
       const uploaded = results
@@ -196,16 +203,15 @@ function Sell() {
   const uploadProofFiles = async (files) => {
     if (!files.length) return;
     setError("");
-    const maxProofSize = 1 * 1024 * 1024;
-    const oversized = files.find((file) => file.size > maxProofSize);
+    const oversized = files.find((file) => file.size > MAX_PROOF_MEDIA_SIZE);
     if (oversized) {
-      setError("Invoice/proof file size must be 1MB or less.");
+      setError("Invoice/proof file size must be 500KB or less.");
       return;
     }
     setProofUploading(true);
     try {
       const results = await Promise.allSettled(
-        files.map((file) => uploadListingMedia(file))
+        files.map((file) => uploadListingMedia(file, { purpose: "proof" }))
       );
 
       const uploaded = results
@@ -392,7 +398,7 @@ function Sell() {
           {/* Section: Purchase Proof */}
           <div className="surface-card p-8 shadow-lg">
              <h2 className="text-lg font-black text-ink mb-2">Purchase Proof</h2>
-             <p className="text-xs font-bold text-muted mb-8">Upload bill/invoice or provide a valid reason below.</p>
+             <p className="text-xs font-bold text-muted mb-8">Upload bill/invoice up to 500KB or provide a valid reason below.</p>
              
              <label 
                 onDragOver={(e) => { e.preventDefault(); setProofDragOver(true); }}
@@ -427,7 +433,7 @@ function Sell() {
           {/* Section: Photos & Media */}
           <div className="surface-card p-8 shadow-lg">
             <h2 className="text-lg font-black text-ink mb-2">Photos & Videos</h2>
-            <p className="text-xs font-bold text-muted mb-8">Upload clear media from multiple angles. Max 25MB.</p>
+            <p className="text-xs font-bold text-muted mb-8">Upload clear media from multiple angles. Max 8MB.</p>
 
             <label 
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
