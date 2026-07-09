@@ -18,6 +18,11 @@ const listingInclude = {
     },
   },
   media: true,
+  _count: {
+    select: {
+      savedBy: true,
+    },
+  },
 };
 
 const validCategories = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
@@ -136,6 +141,8 @@ const buildExtraMetaParts = (category, data = {}) =>
 const sanitizeListingForResponse = (listing) => ({
   ...listing,
   description: stripProofMarker(listing.description),
+  savedCount: listing?._count?.savedBy || 0,
+  _count: undefined,
 });
 
 export const createListing = async (req, res, next) => {
@@ -144,7 +151,7 @@ export const createListing = async (req, res, next) => {
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid listing payload." });
     }
-    const { title, brand, category, condition, price, city, usedDuration, defects, description, media } = parsed.data;
+    const { title, brand, category, condition, price, city, usedDuration, defects, description, negotiable, media } = parsed.data;
 
     const listing = await prisma.listing.create({
       data: {
@@ -157,6 +164,7 @@ export const createListing = async (req, res, next) => {
         usedDuration,
         defects,
         description,
+        negotiable,
         sellerId: req.user.id,
         media: { create: normalizeMedia(media) },
       },
@@ -178,10 +186,20 @@ export const getApprovedListings = async (req, res, next) => {
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid listing filters." });
     }
-    const { category, city, condition, minPrice, maxPrice, sort } = parsed.data;
+    const { q, category, city, condition, minPrice, maxPrice, sort } = parsed.data;
 
     const filters = {
       status: "APPROVED",
+      ...(q
+        ? {
+            OR: [
+              { title: { contains: q, mode: "insensitive" } },
+              { brand: { contains: q, mode: "insensitive" } },
+              { description: { contains: q, mode: "insensitive" } },
+              { city: { contains: q, mode: "insensitive" } },
+            ],
+          }
+        : {}),
       ...(category ? { category } : {}),
       ...(city ? { city: { contains: city, mode: "insensitive" } } : {}),
       ...(condition ? { condition } : {}),
@@ -322,6 +340,7 @@ export const updateListing = async (req, res, next) => {
         usedDuration: parsed.data.usedDuration,
         defects: parsed.data.defects,
         description: nextDescription,
+        negotiable: parsed.data.negotiable,
       },
       include: listingInclude,
     });
@@ -341,6 +360,172 @@ export const getMyListings = async (req, res, next) => {
       where: { sellerId: req.user.id },
       include: { media: true },
       orderBy: { createdAt: "desc" },
+    });
+
+    return res.json({ listings: listings.map(sanitizeListingForResponse) });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSavedListings = async (req, res, next) => {
+  try {
+    const saved = await prisma.savedListing.findMany({
+      where: {
+        userId: req.user.id,
+        listing: { status: "APPROVED" },
+      },
+      include: {
+        listing: {
+          include: listingInclude,
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return res.json({
+      listings: saved.map((item) => sanitizeListingForResponse(item.listing)),
+      savedIds: saved.map((item) => item.listingId),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const saveListing = async (req, res, next) => {
+  try {
+    const paramsParsed = listingIdParamSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).json({ message: "Invalid listing id." });
+    }
+
+    const listing = await prisma.listing.findFirst({
+      where: { id: paramsParsed.data.id, status: "APPROVED" },
+      select: { id: true, sellerId: true },
+    });
+
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found." });
+    }
+
+    if (listing.sellerId === req.user.id) {
+      return res.status(400).json({ message: "You cannot save your own listing." });
+    }
+
+    await prisma.savedListing.upsert({
+      where: {
+        userId_listingId: {
+          userId: req.user.id,
+          listingId: listing.id,
+        },
+      },
+      update: {},
+      create: {
+        userId: req.user.id,
+        listingId: listing.id,
+      },
+    });
+
+    return res.status(201).json({ message: "Listing saved.", saved: true });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const unsaveListing = async (req, res, next) => {
+  try {
+    const paramsParsed = listingIdParamSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).json({ message: "Invalid listing id." });
+    }
+
+    await prisma.savedListing.deleteMany({
+      where: {
+        userId: req.user.id,
+        listingId: paramsParsed.data.id,
+      },
+    });
+
+    return res.json({ message: "Listing removed from saved items.", saved: false });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSellerProfile = async (req, res, next) => {
+  try {
+    const sellerId = String(req.params.sellerId || "").trim();
+    if (!sellerId) {
+      return res.status(400).json({ message: "Invalid seller id." });
+    }
+
+    const seller = await prisma.user.findUnique({
+      where: { id: sellerId },
+      select: {
+        id: true,
+        name: true,
+        city: true,
+        createdAt: true,
+        _count: {
+          select: {
+            listings: {
+              where: { status: "APPROVED" },
+            },
+          },
+        },
+      },
+    });
+
+    if (!seller) {
+      return res.status(404).json({ message: "Seller not found." });
+    }
+
+    const listings = await prisma.listing.findMany({
+      where: { sellerId, status: "APPROVED" },
+      include: listingInclude,
+      orderBy: { createdAt: "desc" },
+    });
+
+    return res.json({
+      seller: {
+        id: seller.id,
+        name: seller.name,
+        city: seller.city,
+        createdAt: seller.createdAt,
+        approvedListingsCount: seller._count.listings,
+      },
+      listings: listings.map(sanitizeListingForResponse),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getRelatedListings = async (req, res, next) => {
+  try {
+    const paramsParsed = listingIdParamSchema.safeParse(req.params);
+    if (!paramsParsed.success) {
+      return res.status(400).json({ message: "Invalid listing id." });
+    }
+
+    const listing = await prisma.listing.findFirst({
+      where: { id: paramsParsed.data.id, status: "APPROVED" },
+      select: { id: true, category: true, city: true },
+    });
+
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found." });
+    }
+
+    const listings = await prisma.listing.findMany({
+      where: {
+        id: { not: listing.id },
+        status: "APPROVED",
+        OR: [{ category: listing.category }, { city: { equals: listing.city, mode: "insensitive" } }],
+      },
+      include: listingInclude,
+      orderBy: [{ category: "asc" }, { createdAt: "desc" }],
+      take: 4,
     });
 
     return res.json({ listings: listings.map(sanitizeListingForResponse) });

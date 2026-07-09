@@ -157,6 +157,7 @@ function MyListings() {
     usedDuration: "",
     defects: "",
     description: "",
+    negotiable: false,
   });
   const location = useLocation();
 
@@ -220,6 +221,7 @@ function MyListings() {
       usedDuration: listing.usedDuration || "",
       defects: listing.defects || "",
       description: userDescription,
+      negotiable: Boolean(listing.negotiable),
     });
     setEditExtraDetails(extras);
     setEditOpen(true);
@@ -232,9 +234,9 @@ function MyListings() {
   };
 
   const updateEditField = (e) => {
-    const { name, value } = e.target;
+    const { name, type, checked, value } = e.target;
     setEditForm((current) => {
-      const nextForm = { ...current, [name]: value };
+      const nextForm = { ...current, [name]: type === "checkbox" ? checked : value };
       if (name === "category") {
         setEditExtraDetails(buildDefaultExtraDetails(value));
       }
@@ -342,7 +344,12 @@ function MyListings() {
                       <div>
                         <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
                            <h2 className="text-xl font-black text-ink">{listing.title}</h2>
-                           <p className="text-2xl font-black text-brand">₹{Number(listing.price).toLocaleString()}</p>
+                           <div className="text-right">
+                             <p className="text-2xl font-black text-brand">₹{Number(listing.price).toLocaleString()}</p>
+                             {listing.negotiable && (
+                               <p className="text-[10px] font-black uppercase tracking-widest text-faint">Negotiable</p>
+                             )}
+                           </div>
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-bold text-muted uppercase tracking-widest">
                            <span className="flex items-center gap-1"><MapPin size={12} /> {listing.city}</span>
@@ -421,6 +428,16 @@ function MyListings() {
                       <label className="space-y-2">
                          <span className="text-xs font-black uppercase tracking-widest text-faint">Price (₹)</span>
                          <input name="price" type="number" value={editForm.price} onChange={updateEditField} className="input-field" required />
+                      </label>
+                      <label className="flex items-center gap-3 rounded-2xl border border-line bg-surface-2/40 px-4 py-4 sm:mt-7">
+                         <input
+                           name="negotiable"
+                           type="checkbox"
+                           checked={editForm.negotiable}
+                           onChange={updateEditField}
+                           className="h-4 w-4"
+                         />
+                         <span className="text-xs font-black uppercase tracking-widest text-muted">Price negotiable</span>
                       </label>
                       <label className="space-y-2">
                          <span className="text-xs font-black uppercase tracking-widest text-faint">City</span>

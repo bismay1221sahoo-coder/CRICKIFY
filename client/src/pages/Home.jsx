@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle2, ShieldCheck, Tag, Zap } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, CheckCircle2, Search, ShieldCheck, Tag, Zap } from "lucide-react";
 import CategoryIcon from "../components/CategoryIcon";
 
 const CATEGORIES = [
@@ -60,6 +61,15 @@ const ALL_CATEGORY = {
 };
 
 function Home() {
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+
+  const submitSearch = (event) => {
+    event.preventDefault();
+    const query = search.trim();
+    navigate(query ? `/categories/ALL?q=${encodeURIComponent(query)}` : "/categories/ALL");
+  };
+
   return (
     <main className="min-h-screen bg-canvas">
       {/* Hero Section */}
@@ -92,6 +102,21 @@ function Home() {
                   Browse marketplace
                 </Link>
               </div>
+
+              <form onSubmit={submitSearch} className="flex max-w-xl flex-col gap-3 rounded-2xl border border-line bg-surface p-2 shadow-sm sm:flex-row">
+                <div className="relative flex-1">
+                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-faint" />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search bats, gloves, helmets, city..."
+                    className="h-12 w-full rounded-xl bg-transparent pl-11 pr-3 text-sm font-bold text-ink outline-none placeholder:text-faint"
+                  />
+                </div>
+                <button type="submit" className="btn-primary h-12 px-6">
+                  Search
+                </button>
+              </form>
 
               <div className="grid grid-cols-2 gap-6 pt-4 sm:grid-cols-4">
                 {[
@@ -144,6 +169,7 @@ function Home() {
                   alt=""
                   className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   loading="lazy"
+                  decoding="async"
                   onError={(event) => {
                     if (!cat.fallbackImage) return;
                     event.currentTarget.onerror = null;

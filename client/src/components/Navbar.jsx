@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { LogOut, Menu, Moon, ShoppingBag, Sun, X } from "lucide-react";
+import { Heart, LogOut, Menu, Moon, ShoppingBag, Sun, X } from "lucide-react";
 import { clearSession, getUser } from "../lib/api";
 import { ThemeContext } from "../lib/themeContext";
 
@@ -83,6 +83,11 @@ function Navbar() {
               My Listings
             </NavLink>
           )}
+          {user && (
+            <NavLink to="/saved" className={linkClass}>
+              Saved
+            </NavLink>
+          )}
           {user?.role === "ADMIN" && (
             <NavLink to="/admin" className={linkClass}>
               Admin
@@ -130,6 +135,14 @@ function Navbar() {
                     >
                       <ShoppingBag size={14} />
                       Your Submissions
+                    </Link>
+                    <Link
+                      to="/saved"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-bold text-muted hover:bg-brand-weak hover:text-brand transition-colors"
+                    >
+                      <Heart size={14} />
+                      Saved Gear
                     </Link>
                     <button
                       type="button"
@@ -201,6 +214,11 @@ function Navbar() {
             {user && (
               <NavLink to="/my-listings" className={linkClass} onClick={() => setMenuOpen(false)}>
                 My Listings
+              </NavLink>
+            )}
+            {user && (
+              <NavLink to="/saved" className={linkClass} onClick={() => setMenuOpen(false)}>
+                Saved Gear
               </NavLink>
             )}
             {user?.role === "ADMIN" && (

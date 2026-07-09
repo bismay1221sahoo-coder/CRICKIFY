@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, MapPin, Plus, Search } from "lucide-react";
-import { apiRequest } from "../lib/api";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Heart, MapPin, Plus, Search } from "lucide-react";
+import { apiRequest, getUser } from "../lib/api";
 import CategoryIcon from "../components/CategoryIcon";
 
 const CATEGORIES = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
@@ -32,7 +32,10 @@ const SORT_OPTIONS = [
 
 function CategoryListings() {
   const { category } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [listings, setListings] = useState([]);
+  const [savedIds, setSavedIds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [cityFilter, setCityFilter] = useState("");
@@ -45,8 +48,25 @@ function CategoryListings() {
   const [debouncedMax, setDebouncedMax] = useState("");
 
   const categoryKey = (category || "ALL").toUpperCase();
+  const query = searchParams.get("q")?.trim() || "";
   const isValidCategory = categoryKey === "ALL" || CATEGORIES.includes(categoryKey);
   const meta = CATEGORY_META[categoryKey] || CATEGORY_META.ALL;
+
+  useEffect(() => {
+    if (!getUser()) {
+      setSavedIds([]);
+      return;
+    }
+    const loadSaved = async () => {
+      try {
+        const data = await apiRequest("/api/listings/saved");
+        setSavedIds(Array.isArray(data.savedIds) ? data.savedIds : []);
+      } catch {
+        setSavedIds([]);
+      }
+    };
+    loadSaved();
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedCity(cityFilter.trim()), 350);
@@ -70,6 +90,7 @@ function CategoryListings() {
       setError("");
       try {
         const params = new URLSearchParams();
+        if (query) params.set("q", query);
         if (categoryKey !== "ALL") params.set("category", categoryKey);
         if (debouncedCity) params.set("city", debouncedCity);
         if (conditionFilter) params.set("condition", conditionFilter);
@@ -86,7 +107,29 @@ function CategoryListings() {
       }
     };
     load();
-  }, [categoryKey, debouncedCity, conditionFilter, debouncedMin, debouncedMax, sort, isValidCategory]);
+  }, [categoryKey, query, debouncedCity, conditionFilter, debouncedMin, debouncedMax, sort, isValidCategory]);
+
+  const toggleSaved = async (event, listingId) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!getUser()) {
+      navigate("/login");
+      return;
+    }
+    const isSaved = savedIds.includes(listingId);
+    setSavedIds((current) =>
+      isSaved ? current.filter((id) => id !== listingId) : [...current, listingId]
+    );
+    try {
+      await apiRequest(`/api/listings/${listingId}/save`, {
+        method: isSaved ? "DELETE" : "POST",
+      });
+    } catch {
+      setSavedIds((current) =>
+        isSaved ? [...current, listingId] : current.filter((id) => id !== listingId)
+      );
+    }
+  };
 
   return (
     <main className="min-h-screen bg-canvas">
@@ -106,6 +149,11 @@ function CategoryListings() {
              <div>
                 <h1 className="text-4xl font-black sm:text-5xl">{meta.label}</h1>
                 <p className="mt-2 text-slate-300 font-bold">{meta.desc}</p>
+                {query && (
+                  <p className="mt-3 text-sm font-bold text-white/80">
+                    Search results for "{query}"
+                  </p>
+                )}
              </div>
           </div>
         </div>
@@ -250,12 +298,29 @@ function CategoryListings() {
                     <div className="absolute left-3 top-3">
                       <span className="chip chip-brand shadow-lg">Verified</span>
                     </div>
+                    <button
+                      type="button"
+                      onClick={(event) => toggleSaved(event, listing.id)}
+                      className={`absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-xl shadow-lg transition ${
+                        savedIds.includes(listing.id)
+                          ? "bg-brand text-on-brand"
+                          : "bg-white/90 text-ink hover:bg-white"
+                      }`}
+                      aria-label={savedIds.includes(listing.id) ? "Remove saved listing" : "Save listing"}
+                    >
+                      <Heart size={18} fill={savedIds.includes(listing.id) ? "currentColor" : "none"} />
+                    </button>
                   </div>
                   
                   <div className="p-5">
                     <div className="flex items-start justify-between gap-4">
                       <h3 className="truncate text-base font-black text-ink">{listing.title}</h3>
-                      <p className="text-lg font-black text-brand shrink-0">₹{price.toLocaleString()}</p>
+                      <div className="text-right">
+                        <p className="text-lg font-black text-brand shrink-0">₹{price.toLocaleString()}</p>
+                        {listing.negotiable && (
+                          <p className="text-[10px] font-black uppercase tracking-widest text-faint">Negotiable</p>
+                        )}
+                      </div>
                     </div>
                     <p className="mt-1 flex items-center gap-1 text-xs font-bold text-muted">
                       <MapPin size={12} /> {listing.city}

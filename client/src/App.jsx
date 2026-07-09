@@ -7,6 +7,8 @@ import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import Sell from "./pages/Sell";
 import MyListings from "./pages/MyListings";
+import SavedListings from "./pages/SavedListings";
+import SellerProfile from "./pages/SellerProfile";
 import ListingDetails from "./pages/ListingDetails";
 import CategoryListings from "./pages/CategoryListings";
 import { getUser } from "./lib/api";
@@ -69,8 +71,10 @@ function App() {
           <Route path="/categories/:category" element={<CategoryListings />} />
           <Route path="/login" element={<Login />} />
           <Route path="/listings/:id" element={<ListingDetails />} />
+          <Route path="/sellers/:sellerId" element={<SellerProfile />} />
           <Route path="/sell" element={<AuthRoute><Sell /></AuthRoute>} />
           <Route path="/my-listings" element={<AuthRoute><MyListings /></AuthRoute>} />
+          <Route path="/saved" element={<AuthRoute><SavedListings /></AuthRoute>} />
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         </Routes>
         <Footer />

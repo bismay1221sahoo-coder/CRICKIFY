@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Clock, Info, MapPin, Phone, ShieldCheck, X } from "lucide-react";
-import { apiRequest } from "../lib/api";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Clock, Heart, Info, MapPin, Phone, ShieldCheck, X } from "lucide-react";
+import { apiRequest, getUser } from "../lib/api";
 import { parseListingDescription } from "../lib/listingDescription";
+import CategoryIcon from "../components/CategoryIcon";
 
 const CONDITION_META = {
   LIKE_NEW: { label: "Like New", cls: "chip-brand-soft" },
@@ -13,7 +14,10 @@ const CONDITION_META = {
 
 function ListingDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [listing, setListing] = useState(null);
+  const [related, setRelated] = useState([]);
+  const [savedIds, setSavedIds] = useState([]);
   const [activeMedia, setActiveMedia] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -31,6 +35,12 @@ function ListingDetails() {
         const data = await apiRequest(`/api/listings/${id}`);
         setListing(data.listing);
         setActiveMedia(data.listing?.media?.[0] || null);
+        const [relatedData, savedData] = await Promise.all([
+          apiRequest(`/api/listings/${id}/related`).catch(() => ({ listings: [] })),
+          getUser() ? apiRequest("/api/listings/saved").catch(() => ({ savedIds: [] })) : Promise.resolve({ savedIds: [] }),
+        ]);
+        setRelated(Array.isArray(relatedData.listings) ? relatedData.listings : []);
+        setSavedIds(Array.isArray(savedData.savedIds) ? savedData.savedIds : []);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -39,6 +49,27 @@ function ListingDetails() {
     };
     load();
   }, [id]);
+
+  const toggleSaved = async () => {
+    if (!listing) return;
+    if (!getUser()) {
+      navigate("/login");
+      return;
+    }
+    const isSaved = savedIds.includes(listing.id);
+    setSavedIds((current) =>
+      isSaved ? current.filter((savedId) => savedId !== listing.id) : [...current, listing.id]
+    );
+    try {
+      await apiRequest(`/api/listings/${listing.id}/save`, {
+        method: isSaved ? "DELETE" : "POST",
+      });
+    } catch {
+      setSavedIds((current) =>
+        isSaved ? [...current, listing.id] : current.filter((savedId) => savedId !== listing.id)
+      );
+    }
+  };
 
   const { cleanDescription, proofUrls, proofReason } = useMemo(
     () => parseListingDescription(listing?.description),
@@ -143,6 +174,7 @@ function ListingDetails() {
               <div className="flex flex-wrap gap-2 mb-4">
                 <span className={`chip ${cond.cls}`}>{cond.label}</span>
                 <span className="chip chip-neutral">{listing.category}</span>
+                {listing.negotiable && <span className="chip chip-brand-soft">Negotiable</span>}
               </div>
               
               <h1 className="text-3xl font-black text-ink leading-tight">{listing.title}</h1>
@@ -150,8 +182,18 @@ function ListingDetails() {
               
               <div className="mt-6 flex items-baseline gap-2">
                 <span className="text-4xl font-black text-ink">₹{Number(listing.price).toLocaleString()}</span>
-                <span className="text-xs font-black text-faint uppercase tracking-widest">Final Price</span>
+                <span className="text-xs font-black text-faint uppercase tracking-widest">
+                  {listing.negotiable ? "Asking Price" : "Final Price"}
+                </span>
               </div>
+              <button
+                type="button"
+                onClick={toggleSaved}
+                className="btn-ghost mt-5 w-full py-3"
+              >
+                <Heart size={17} fill={savedIds.includes(listing.id) ? "currentColor" : "none"} />
+                {savedIds.includes(listing.id) ? "Saved" : "Save Listing"}
+              </button>
 
               <div className="mt-8 grid grid-cols-2 gap-4 border-y border-line py-6">
                 <div className="flex items-center gap-3 text-ink">
@@ -191,7 +233,9 @@ function ListingDetails() {
                   {listing.seller?.name?.[0]?.toUpperCase()}
                 </div>
                 <div>
-                  <p className="text-lg font-black">{listing.seller?.name || "Seller"}</p>
+                  <Link to={`/sellers/${listing.seller?.id}`} className="text-lg font-black hover:underline">
+                    {listing.seller?.name || "Seller"}
+                  </Link>
                   <p className="text-xs font-bold opacity-70 flex items-center gap-1">
                     <MapPin size={10} /> {listing.seller?.city || listing.city}
                   </p>
@@ -238,6 +282,48 @@ function ListingDetails() {
             </div>
           </div>
         </div>
+
+        {related.length > 0 && (
+          <section className="mt-14">
+            <div className="mb-5 flex items-end justify-between">
+              <div>
+                <h2 className="text-2xl font-black text-ink">Related gear</h2>
+                <p className="mt-1 text-sm font-bold text-muted">Similar category or city.</p>
+              </div>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {related.map((item) => {
+                const photo = item?.media?.find((media) => media.type === "IMAGE")?.url;
+                const price = Number(item?.price || 0);
+                return (
+                  <Link key={item.id} to={`/listings/${item.id}`} className="surface-card group overflow-hidden">
+                    <div className="aspect-[4/3] overflow-hidden bg-surface-2">
+                      {photo ? (
+                        <img src={photo} alt={item.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-faint">
+                          <CategoryIcon name={item.category} size={42} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="truncate text-base font-black text-ink">{item.title}</h3>
+                        <div className="text-right">
+                          <p className="text-lg font-black text-brand">₹{price.toLocaleString()}</p>
+                          {item.negotiable && <p className="text-[10px] font-black uppercase tracking-widest text-faint">Negotiable</p>}
+                        </div>
+                      </div>
+                      <p className="mt-1 flex items-center gap-1 text-xs font-bold text-muted">
+                        <MapPin size={12} /> {item.city}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Modals & Toasts */}

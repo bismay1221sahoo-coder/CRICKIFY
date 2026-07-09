@@ -15,6 +15,7 @@ export const createListingSchema = z.object({
   usedDuration: z.string().trim().min(1).max(100),
   defects: z.string().trim().min(1).max(500),
   description: z.string().trim().min(1).max(5000),
+  negotiable: z.coerce.boolean().optional().default(false),
   media: z
     .array(
       z.object({
@@ -46,6 +47,7 @@ export const createListingSchema = z.object({
   });
 
 export const listingsQuerySchema = z.object({
+  q: z.string().trim().min(1).max(100).optional(),
   category: z.enum(categories).optional(),
   city: z.string().trim().min(1).optional(),
   condition: z.enum(conditions).optional(),

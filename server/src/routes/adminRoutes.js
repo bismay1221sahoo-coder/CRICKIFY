@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   bulkApproveListings,
   approveListing,
+  getAdminSummary,
   getPendingListings,
   getListingReports,
   rejectListing,
@@ -12,6 +13,7 @@ const router = Router();
 
 router.use(requireAuth, requireAdmin);
 
+router.get("/summary", getAdminSummary);
 router.get("/listings/pending", getPendingListings);
 router.get("/reports", getListingReports);
 router.patch("/listings/approve", bulkApproveListings);

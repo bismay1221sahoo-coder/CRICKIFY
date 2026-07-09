@@ -58,6 +58,27 @@ export const getPendingListings = async (req, res, next) => {
   }
 };
 
+export const getAdminSummary = async (req, res, next) => {
+  try {
+    const [pendingCount, approvedCount, rejectedCount, reportCount] = await Promise.all([
+      prisma.listing.count({ where: { status: "PENDING" } }),
+      prisma.listing.count({ where: { status: "APPROVED" } }),
+      prisma.listing.count({ where: { status: "REJECTED" } }),
+      prisma.listingReport.count({
+        where: {
+          listing: {
+            status: { not: "REJECTED" },
+          },
+        },
+      }),
+    ]);
+
+    return res.json({ pendingCount, approvedCount, rejectedCount, reportCount });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const bulkApproveListings = async (req, res, next) => {
   try {
     const parsed = bulkApproveSchema.safeParse(req.body);

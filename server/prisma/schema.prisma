@@ -49,6 +49,7 @@ model User {
   role      UserRole  @default(USER)
   listings  Listing[]
   reports   ListingReport[]
+  savedListings SavedListing[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -64,18 +65,33 @@ model Listing {
   usedDuration String
   defects      String
   description  String
+  negotiable   Boolean            @default(false)
   status       ListingStatus      @default(PENDING)
   rejectReason String?
   sellerId     String
   seller       User               @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   media        ListingMedia[]
   reports      ListingReport[]
+  savedBy      SavedListing[]
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
 
   @@index([status])
   @@index([category])
   @@index([city])
+}
+
+model SavedListing {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([userId])
+  @@index([listingId])
 }
 
 model ListingMedia {

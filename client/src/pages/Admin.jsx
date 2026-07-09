@@ -54,6 +54,7 @@ function Admin() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [actionListingIds, setActionListingIds] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [summary, setSummary] = useState(null);
 
   const visibleReports = useMemo(
     () => reports.filter((report) => report.listing?.status !== "REJECTED"),
@@ -90,14 +91,24 @@ function Admin() {
     }
   }, []);
 
+  const loadSummary = useCallback(async () => {
+    try {
+      const data = await apiRequest("/api/admin/summary");
+      setSummary(data);
+    } catch {
+      setSummary(null);
+    }
+  }, []);
+
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
+    loadSummary();
     if (view === "pending") {
       loadPendingListings();
     } else {
       loadReports();
     }
-  }, [loadPendingListings, loadReports, view]);
+  }, [loadPendingListings, loadReports, loadSummary, view]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 350);
@@ -327,6 +338,22 @@ function Admin() {
       {error && (
         <div className="mb-6 rounded-xl border border-red-200/60 bg-red-50/70 px-4 py-3 text-sm font-semibold text-red-700">
           {error}
+        </div>
+      )}
+
+      {summary && (
+        <div className="mb-6 grid gap-3 sm:grid-cols-4">
+          {[
+            { label: "Pending", value: summary.pendingCount },
+            { label: "Approved", value: summary.approvedCount },
+            { label: "Rejected", value: summary.rejectedCount },
+            { label: "Open Reports", value: summary.reportCount },
+          ].map((item) => (
+            <div key={item.label} className="rounded-2xl border border-slate-200/60 bg-white/70 px-4 py-3 shadow-sm">
+              <p className="text-2xl font-black text-slate-900">{Number(item.value || 0).toLocaleString()}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{item.label}</p>
+            </div>
+          ))}
         </div>
       )}
 

@@ -120,7 +120,7 @@ const getActiveExtraFieldOrder = (category, details) => {
 
 const initialForm = {
   title: "", brand: "", category: "BAT", condition: "GOOD",
-  price: "", city: "", usedDuration: "", defects: "", description: "",
+  price: "", city: "", usedDuration: "", defects: "", description: "", negotiable: false,
 };
 
 function Sell() {
@@ -139,7 +139,10 @@ function Sell() {
     buildDefaultExtraDetails(initialForm.category)
   );
   const isLoggedIn = Boolean(getToken());
-  const updateField = (e) => setForm((c) => ({ ...c, [e.target.name]: e.target.value }));
+  const updateField = (e) => {
+    const { name, type, checked, value } = e.target;
+    setForm((c) => ({ ...c, [name]: type === "checkbox" ? checked : value }));
+  };
   const updateExtra = (e) => setExtraDetails((c) => ({ ...c, [e.target.name]: e.target.value }));
 
   const handleCategoryChange = (e) => {
@@ -343,6 +346,16 @@ function Sell() {
               <label className="space-y-2">
                 <span className="text-xs font-black uppercase tracking-widest text-faint">Price (₹) *</span>
                 <input name="price" type="number" value={form.price} onChange={updateField} placeholder="e.g. 4500" className="input-field" required />
+              </label>
+              <label className="flex items-center gap-3 rounded-2xl border border-line bg-surface-2/40 px-4 py-4 sm:mt-7">
+                <input
+                  name="negotiable"
+                  type="checkbox"
+                  checked={form.negotiable}
+                  onChange={updateField}
+                  className="h-4 w-4"
+                />
+                <span className="text-xs font-black uppercase tracking-widest text-muted">Price negotiable</span>
               </label>
               <label className="space-y-2">
                 <span className="text-xs font-black uppercase tracking-widest text-faint">City *</span>
