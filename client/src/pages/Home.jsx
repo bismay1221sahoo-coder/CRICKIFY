@@ -11,21 +11,24 @@ const CATEGORIES = [
   },
   {
     id: "GLOVES",
-    label: "Batting Gloves",
+    label: "Gloves",
     description: "Pro-grade protection",
-    image: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?q=80&w=1200&auto=format&fit=crop",
+    image: "/category-images/gloves.jpg",
+    fallbackImage: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?q=80&w=1200&auto=format&fit=crop",
   },
   {
     id: "PADS",
     label: "Leg Guards",
     description: "Lightweight batting pads",
-    image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop",
+    image: "/category-images/leg-guards.jpg",
+    fallbackImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop",
   },
   {
     id: "HELMET",
     label: "Helmets",
     description: "Safety certified gear",
-    image: "https://images.unsplash.com/photo-1589188734056-cb8293963884?q=80&w=1200&auto=format&fit=crop",
+    image: "/category-images/helmet.jpg",
+    fallbackImage: "https://images.unsplash.com/photo-1589188734056-cb8293963884?q=80&w=1200&auto=format&fit=crop",
   },
   {
     id: "SHOES",
@@ -37,7 +40,8 @@ const CATEGORIES = [
     id: "KIT",
     label: "Full Kits",
     description: "Complete gear bags",
-    image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop",
+    image: "/category-images/kit.jpg",
+    fallbackImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop",
   },
   {
     id: "OTHER",
@@ -51,7 +55,8 @@ const ALL_CATEGORY = {
   id: "ALL",
   label: "All Marketplace",
   description: "View all gear",
-  image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop",
+  image: "/category-images/all-marketplace.jpg",
+  fallbackImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1200&auto=format&fit=crop",
 };
 
 function Home() {
@@ -139,6 +144,11 @@ function Home() {
                   alt=""
                   className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   loading="lazy"
+                  onError={(event) => {
+                    if (!cat.fallbackImage) return;
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = cat.fallbackImage;
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#07120c]/90 via-[#07120c]/45 to-[#07120c]/15" />
                 <div className="absolute inset-x-0 top-0 h-px bg-white/25" />
