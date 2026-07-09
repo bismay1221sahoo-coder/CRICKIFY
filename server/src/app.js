@@ -8,9 +8,6 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import {
   adminActionRateLimiter,
-  authRateLimiter,
-  listingWriteRateLimiter,
-  reportRateLimiter,
   uploadRateLimiter,
 } from "./middleware/rateLimitMiddleware.js";
 
@@ -41,9 +38,8 @@ app.get("/", (req, res) => {
   res.send("CRICKIFY API RUNNING");
 });
 
-app.use("/api/auth", authRateLimiter, authRoutes);
-app.use("/api/listings", listingWriteRateLimiter, listingRoutes);
-app.use("/api/listings/:id/report", reportRateLimiter);
+app.use("/api/auth", authRoutes);
+app.use("/api/listings", listingRoutes);
 app.use("/api/admin", adminActionRateLimiter, adminRoutes);
 app.use("/api/uploads", uploadRateLimiter, uploadRoutes);
 

@@ -11,9 +11,9 @@ const ALLOWED_MIME_TYPES = new Set([
 ]);
 const MAX_PROOF_MEDIA_SIZE = 500 * 1024;
 
-const uploadToCloudinary = (file) =>
+const uploadToCloudinary = (file, detectedMime) =>
   new Promise((resolve, reject) => {
-    const resourceType = file.mimetype.startsWith("video/") ? "video" : "image";
+    const resourceType = detectedMime.startsWith("video/") ? "video" : "image";
 
     const stream = cloudinary.uploader.upload_stream(
       {
@@ -52,7 +52,11 @@ export const uploadListingMedia = async (req, res, next) => {
       return res.status(400).json({ message: "Uploaded file content is not a supported media type." });
     }
 
-    const media = await uploadToCloudinary(req.file);
+    if (req.body?.purpose === "proof" && detectedType.mime.startsWith("video/")) {
+      return res.status(400).json({ message: "Purchase proof must be an image file." });
+    }
+
+    const media = await uploadToCloudinary(req.file, detectedType.mime);
 
     return res.status(201).json({
       message: "Media uploaded successfully.",

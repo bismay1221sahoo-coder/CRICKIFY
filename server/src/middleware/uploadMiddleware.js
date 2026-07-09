@@ -11,7 +11,9 @@ export const uploadListingMediaFile = multer({
   },
   fileFilter: (req, file, callback) => {
     if (!allowedTypes.includes(file.mimetype)) {
-      callback(new Error("Only JPG, PNG, WEBP, MP4, MOV, and WEBM files are allowed."));
+      const error = new Error("Only JPG, PNG, WEBP, MP4, MOV, and WEBM files are allowed.");
+      error.status = 400;
+      callback(error);
       return;
     }
 
