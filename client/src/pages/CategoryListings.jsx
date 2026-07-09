@@ -7,13 +7,13 @@ import CategoryIcon from "../components/CategoryIcon";
 const CATEGORIES = ["BAT", "GLOVES", "PADS", "HELMET", "SHOES", "KIT", "OTHER"];
 
 const CATEGORY_META = {
-  ALL: { label: "All Gear", desc: "Browse every verified listing", bgImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1400" },
+  ALL: { label: "All Gear", desc: "Browse every verified listing", bgImage: "/category-images/all-marketplace.jpg" },
   BAT: { label: "Bats", desc: "English & Kashmir Willow", bgImage: "https://images.unsplash.com/photo-1593341646782-e0b495cff86d?q=80&w=1400" },
-  GLOVES: { label: "Gloves", desc: "Batting & Keeping protection", bgImage: "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?q=80&w=1400" },
-  PADS: { label: "Pads", desc: "Lightweight leg guards", bgImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1400" },
-  HELMET: { label: "Helmets", desc: "Safety certified headwear", bgImage: "https://images.unsplash.com/photo-1589188734056-cb8293963884?q=80&w=1400" },
+  GLOVES: { label: "Gloves", desc: "Batting & Keeping protection", bgImage: "/category-images/gloves.jpg" },
+  PADS: { label: "Pads", desc: "Lightweight leg guards", bgImage: "/category-images/leg-guards.jpg" },
+  HELMET: { label: "Helmets", desc: "Safety certified headwear", bgImage: "/category-images/helmet.jpg" },
   SHOES: { label: "Shoes", desc: "Spikes & field shoes", bgImage: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1400" },
-  KIT: { label: "Full Kits", desc: "Complete sets for players", bgImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1400" },
+  KIT: { label: "Full Kits", desc: "Complete sets for players", bgImage: "/category-images/kit.jpg" },
   OTHER: { label: "Accessories", desc: "Grips, balls, and more", bgImage: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?q=80&w=1400" },
 };
 
